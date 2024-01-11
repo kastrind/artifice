@@ -1,5 +1,5 @@
 #OBJS specifies which files to compile as part of the project
-OBJS = artifice.cpp Player.cpp EventController.cpp LTimer.cpp
+OBJS = artifice.cpp Player.cpp EventController.cpp LTimer.cpp Engine3D.cpp
 
 #CC specifies which compiler we're using
 CC = g++

@@ -1,4 +1,21 @@
+#pragma once
+
+
+#include "Configuration.h"
+#include <SDL.h>
+#define _USE_MATH_DEFINES
 #include <cmath>
+#include <vector>
+#include <list>
+#include <thread>
+#include <atomic>
+#include <mutex>
+#include <chrono>
+#include <algorithm>
+#include <string>
+#include <iostream>
+#include <sstream>
+#include <stdio.h>
 
 typedef enum {
 	NORTH,
@@ -11,43 +28,42 @@ struct mat4x4
 {
 	float m[4][4] = { 0 };
 
-	inline mat4x4 operator*(mat4x4& in)
-	{
-		mat4x4 matrix;
-		for (int c = 0; c < 4; c++) {
-			for (int r = 0; r < 4; r++) {
-				matrix.m[r][c] = m[r][0] * in.m[0][c] + m[r][1] * in.m[1][c] + m[r][2] * in.m[2][c] + m[r][3] * in.m[3][c];
-			}
-		}
-		return matrix;
-	}
+	// inline mat4x4 operator*(mat4x4& in)
+	// {
+	// 	mat4x4 matrix;
+	// 	for (int c = 0; c < 4; c++) {
+	// 		for (int r = 0; r < 4; r++) {
+	// 			matrix.m[r][c] = m[r][0] * in.m[0][c] + m[r][1] * in.m[1][c] + m[r][2] * in.m[2][c] + m[r][3] * in.m[3][c];
+	// 		}
+	// 	}
+	// 	return matrix;
+	// }
 
-	inline mat4x4 invertRotationOrTranslationMatrix() {
-		mat4x4 matrix;
-		matrix.m[0][0] = m[0][0]; matrix.m[0][1] = m[1][0]; matrix.m[0][2] = m[2][0]; matrix.m[0][3] = 0.0f;
-		matrix.m[1][0] = m[0][1]; matrix.m[1][1] = m[1][1]; matrix.m[1][2] = m[2][1]; matrix.m[1][3] = 0.0f;
-		matrix.m[2][0] = m[0][2]; matrix.m[2][1] = m[1][2]; matrix.m[2][2] = m[2][2]; matrix.m[2][3] = 0.0f;
-		matrix.m[3][0] = -(m[3][0] * matrix.m[0][0] + m[3][1] * matrix.m[1][0] + m[3][2] * matrix.m[2][0]);
-		matrix.m[3][1] = -(m[3][0] * matrix.m[0][1] + m[3][1] * matrix.m[1][1] + m[3][2] * matrix.m[2][1]);
-		matrix.m[3][2] = -(m[3][0] * matrix.m[0][2] + m[3][1] * matrix.m[1][2] + m[3][2] * matrix.m[2][2]);
-		matrix.m[3][3] = 1.0f;
-		return matrix;
-	}
+	// inline mat4x4 invertRotationOrTranslationMatrix() {
+	// 	mat4x4 matrix;
+	// 	matrix.m[0][0] = m[0][0]; matrix.m[0][1] = m[1][0]; matrix.m[0][2] = m[2][0]; matrix.m[0][3] = 0.0f;
+	// 	matrix.m[1][0] = m[0][1]; matrix.m[1][1] = m[1][1]; matrix.m[1][2] = m[2][1]; matrix.m[1][3] = 0.0f;
+	// 	matrix.m[2][0] = m[0][2]; matrix.m[2][1] = m[1][2]; matrix.m[2][2] = m[2][2]; matrix.m[2][3] = 0.0f;
+	// 	matrix.m[3][0] = -(m[3][0] * matrix.m[0][0] + m[3][1] * matrix.m[1][0] + m[3][2] * matrix.m[2][0]);
+	// 	matrix.m[3][1] = -(m[3][0] * matrix.m[0][1] + m[3][1] * matrix.m[1][1] + m[3][2] * matrix.m[2][1]);
+	// 	matrix.m[3][2] = -(m[3][0] * matrix.m[0][2] + m[3][1] * matrix.m[1][2] + m[3][2] * matrix.m[2][2]);
+	// 	matrix.m[3][3] = 1.0f;
+	// 	return matrix;
+	// }
 
 };
-
-struct vec2d {
+struct vec2d
+{
 	float u = 0;
 	float v = 0;
 	float w = 1;
 };
-
 struct vec3d
 {
 	float x = 0;
 	float y = 0;
 	float z = 0;
-	float w = 1;
+	/*float w = 1;
 
 	inline vec3d getNormal(const vec3d& v) {
 		vec3d normal;
@@ -132,19 +148,19 @@ struct vec3d
 	{
 		vec3d pos = { x, y, z, w };
 
-		// Calc. new forward direction
+		// calc. new forward direction
 		vec3d newForward = target - pos;
 		newForward.normalize();
 
-		// Calc. new up direction
+		// calc. new up direction
 		vec3d a = newForward * up.getDotProduct(newForward);
 		vec3d newUp = up - a;
 		newUp.normalize();
 
-		// New right direction is the cross product
+		// new right direction is the cross product
 		vec3d newRight = newUp.getNormal(newForward);
 
-		// Construct Dimensioning and Translation Matrix	
+		// construct dimensioning and translation Matrix	
 		mat4x4 matrix;
 		matrix.m[0][0] = newRight.x;	matrix.m[0][1] = newRight.y;	matrix.m[0][2] = newRight.z;	matrix.m[0][3] = 0.0f;
 		matrix.m[1][0] = newUp.x;		matrix.m[1][1] = newUp.y;		matrix.m[1][2] = newUp.z;		matrix.m[1][3] = 0.0f;
@@ -163,5 +179,126 @@ struct vec3d
 		vec3d lineStartToEnd = lineEnd - lineStart;
 		vec3d lineToIntersect = lineStartToEnd * t;
 		return lineStart + lineToIntersect;
-	}
+	}*/
+};
+
+struct triangle
+{
+	vec3d p[3] = { 0, 0, 0 }; // points
+
+	// unsigned char R = 255; unsigned char G = 255; unsigned char B = 255;
+
+	// float luminance = 0.0f;
+
+	// inline triangle operator+(const vec3d& in) {
+	// 	triangle out;
+	// 	out.luminance = luminance; out.R = R; out.G = G; out.B = B;
+	// 	out.p[0] = p[0] + in; out.p[1] = p[1] + in; out.p[2] = p[2] + in;
+	// 	return out;
+	// }
+
+	// inline triangle operator-(const vec3d& in) {
+	// 	triangle out;
+	// 	out.luminance = luminance; out.R = R; out.G = G; out.B = B;
+	// 	out.p[0] = p[0] - in; out.p[1] = p[1] - in; out.p[2] = p[2] - in;
+	// 	return out;
+	// }
+
+	// inline triangle operator*(const vec3d& in) {
+	// 	triangle out;
+	// 	out.luminance = luminance; out.R = R; out.G = G; out.B = B;
+	// 	out.p[0] = p[0] * in; out.p[1] = p[1] * in; out.p[2] = p[2] * in;
+	// 	return out;
+	// }
+
+	// inline triangle operator*(const mat4x4& in) {
+	// 	triangle out;
+	// 	out.luminance = luminance; out.R = R; out.G = G; out.B = B;
+	// 	out.p[0] = p[0] * in; out.p[1] = p[1] * in; out.p[2] = p[2] * in;
+	// 	return out;
+	// }
+
+	// inline triangle operator/(const vec3d& in) {
+	// 	triangle out;
+	// 	out.luminance = luminance; out.R = R; out.G = G; out.B = B;
+	// 	out.p[0] = p[0] / in; out.p[1] = p[1] / in; out.p[2] = p[2] / in;
+	// 	return out;
+	// }
+};
+
+struct mesh
+{
+	std::vector<triangle> tris;
+};
+
+struct model {
+	mesh modelMesh;
+};
+
+class Engine3D
+{
+	public:
+
+		Engine3D(std::string name, int width=320, int height=240, float near = 0.1f, float far = 1000.0f, float fov = 90.0f);
+
+		std::thread startEngine();
+
+		bool onUserCreate();
+
+		bool onUserUpdate(float elapsedTime);
+
+		virtual bool onUserDestroy();
+
+		void fillProjMatrix();
+
+		mat4x4 getProjMatrix();
+
+		mat4x4 getIdMatrix();
+
+		mat4x4 getTranslMatrix(float x, float y, float z);
+
+		mat4x4 getRotMatrixX(float theta);
+
+		mat4x4 getRotMatrixY(float theta);
+
+		mat4x4 getRotMatrixZ(float theta);
+
+		void clearDepthBuffer();
+
+		std::atomic<bool> isActive;
+
+		std::atomic<bool> blockRaster;
+
+		float elapsedTime;
+
+		std::string name;
+
+		std::mutex mtx;
+
+		std::vector<triangle> trianglesToRaster;
+
+		model mdl;
+
+	protected:
+
+		int width;
+		int height;
+		float near;
+		float far;
+		float fov;
+		float aspectRatio;
+		float fovRad;
+
+		mat4x4 matProj;
+
+		float* depthBuffer = nullptr;
+
+		float theta = 0;
+	
+	private:
+
+		void engineThread();
+
+		void MultiplyMatrixVector(vec3d& in, vec3d& out, mat4x4& m);
+
 };
