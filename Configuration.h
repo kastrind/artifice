@@ -10,7 +10,7 @@ typedef struct Configuration
 
 	const std::string VERSION = "0.0.1";
 
-	const int SCREEN_FPS = 200;
+	const int SCREEN_FPS = 60;
 
 	const int SCREEN_WIDTH = 800;
 

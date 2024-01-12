@@ -28,28 +28,28 @@ struct mat4x4
 {
 	float m[4][4] = { 0 };
 
-	// inline mat4x4 operator*(mat4x4& in)
-	// {
-	// 	mat4x4 matrix;
-	// 	for (int c = 0; c < 4; c++) {
-	// 		for (int r = 0; r < 4; r++) {
-	// 			matrix.m[r][c] = m[r][0] * in.m[0][c] + m[r][1] * in.m[1][c] + m[r][2] * in.m[2][c] + m[r][3] * in.m[3][c];
-	// 		}
-	// 	}
-	// 	return matrix;
-	// }
+	inline mat4x4 operator*(mat4x4& in)
+	{
+		mat4x4 matrix;
+		for (int c = 0; c < 4; c++) {
+			for (int r = 0; r < 4; r++) {
+				matrix.m[r][c] = m[r][0] * in.m[0][c] + m[r][1] * in.m[1][c] + m[r][2] * in.m[2][c] + m[r][3] * in.m[3][c];
+			}
+		}
+		return matrix;
+	}
 
-	// inline mat4x4 invertRotationOrTranslationMatrix() {
-	// 	mat4x4 matrix;
-	// 	matrix.m[0][0] = m[0][0]; matrix.m[0][1] = m[1][0]; matrix.m[0][2] = m[2][0]; matrix.m[0][3] = 0.0f;
-	// 	matrix.m[1][0] = m[0][1]; matrix.m[1][1] = m[1][1]; matrix.m[1][2] = m[2][1]; matrix.m[1][3] = 0.0f;
-	// 	matrix.m[2][0] = m[0][2]; matrix.m[2][1] = m[1][2]; matrix.m[2][2] = m[2][2]; matrix.m[2][3] = 0.0f;
-	// 	matrix.m[3][0] = -(m[3][0] * matrix.m[0][0] + m[3][1] * matrix.m[1][0] + m[3][2] * matrix.m[2][0]);
-	// 	matrix.m[3][1] = -(m[3][0] * matrix.m[0][1] + m[3][1] * matrix.m[1][1] + m[3][2] * matrix.m[2][1]);
-	// 	matrix.m[3][2] = -(m[3][0] * matrix.m[0][2] + m[3][1] * matrix.m[1][2] + m[3][2] * matrix.m[2][2]);
-	// 	matrix.m[3][3] = 1.0f;
-	// 	return matrix;
-	// }
+	inline mat4x4 invertRotationOrTranslationMatrix() {
+		mat4x4 matrix;
+		matrix.m[0][0] = m[0][0]; matrix.m[0][1] = m[1][0]; matrix.m[0][2] = m[2][0]; matrix.m[0][3] = 0.0f;
+		matrix.m[1][0] = m[0][1]; matrix.m[1][1] = m[1][1]; matrix.m[1][2] = m[2][1]; matrix.m[1][3] = 0.0f;
+		matrix.m[2][0] = m[0][2]; matrix.m[2][1] = m[1][2]; matrix.m[2][2] = m[2][2]; matrix.m[2][3] = 0.0f;
+		matrix.m[3][0] = -(m[3][0] * matrix.m[0][0] + m[3][1] * matrix.m[1][0] + m[3][2] * matrix.m[2][0]);
+		matrix.m[3][1] = -(m[3][0] * matrix.m[0][1] + m[3][1] * matrix.m[1][1] + m[3][2] * matrix.m[2][1]);
+		matrix.m[3][2] = -(m[3][0] * matrix.m[0][2] + m[3][1] * matrix.m[1][2] + m[3][2] * matrix.m[2][2]);
+		matrix.m[3][3] = 1.0f;
+		return matrix;
+	}
 
 };
 struct vec2d
@@ -63,7 +63,7 @@ struct vec3d
 	float x = 0;
 	float y = 0;
 	float z = 0;
-	/*float w = 1;
+	float w = 1;
 
 	inline vec3d getNormal(const vec3d& v) {
 		vec3d normal;
@@ -179,51 +179,51 @@ struct vec3d
 		vec3d lineStartToEnd = lineEnd - lineStart;
 		vec3d lineToIntersect = lineStartToEnd * t;
 		return lineStart + lineToIntersect;
-	}*/
+	}
 };
 
 struct triangle
 {
 	vec3d p[3] = { 0, 0, 0 }; // points
 
-	// unsigned char R = 255; unsigned char G = 255; unsigned char B = 255;
+	unsigned char R = 255; unsigned char G = 255; unsigned char B = 255;
 
-	// float luminance = 0.0f;
+	float luminance = 0.0f;
 
-	// inline triangle operator+(const vec3d& in) {
-	// 	triangle out;
-	// 	out.luminance = luminance; out.R = R; out.G = G; out.B = B;
-	// 	out.p[0] = p[0] + in; out.p[1] = p[1] + in; out.p[2] = p[2] + in;
-	// 	return out;
-	// }
+	inline triangle operator+(const vec3d& in) {
+		triangle out;
+		out.luminance = luminance; out.R = R; out.G = G; out.B = B;
+		out.p[0] = p[0] + in; out.p[1] = p[1] + in; out.p[2] = p[2] + in;
+		return out;
+	}
 
-	// inline triangle operator-(const vec3d& in) {
-	// 	triangle out;
-	// 	out.luminance = luminance; out.R = R; out.G = G; out.B = B;
-	// 	out.p[0] = p[0] - in; out.p[1] = p[1] - in; out.p[2] = p[2] - in;
-	// 	return out;
-	// }
+	inline triangle operator-(const vec3d& in) {
+		triangle out;
+		out.luminance = luminance; out.R = R; out.G = G; out.B = B;
+		out.p[0] = p[0] - in; out.p[1] = p[1] - in; out.p[2] = p[2] - in;
+		return out;
+	}
 
-	// inline triangle operator*(const vec3d& in) {
-	// 	triangle out;
-	// 	out.luminance = luminance; out.R = R; out.G = G; out.B = B;
-	// 	out.p[0] = p[0] * in; out.p[1] = p[1] * in; out.p[2] = p[2] * in;
-	// 	return out;
-	// }
+	inline triangle operator*(const vec3d& in) {
+		triangle out;
+		out.luminance = luminance; out.R = R; out.G = G; out.B = B;
+		out.p[0] = p[0] * in; out.p[1] = p[1] * in; out.p[2] = p[2] * in;
+		return out;
+	}
 
-	// inline triangle operator*(const mat4x4& in) {
-	// 	triangle out;
-	// 	out.luminance = luminance; out.R = R; out.G = G; out.B = B;
-	// 	out.p[0] = p[0] * in; out.p[1] = p[1] * in; out.p[2] = p[2] * in;
-	// 	return out;
-	// }
+	inline triangle operator*(const mat4x4& in) {
+		triangle out;
+		out.luminance = luminance; out.R = R; out.G = G; out.B = B;
+		out.p[0] = p[0] * in; out.p[1] = p[1] * in; out.p[2] = p[2] * in;
+		return out;
+	}
 
-	// inline triangle operator/(const vec3d& in) {
-	// 	triangle out;
-	// 	out.luminance = luminance; out.R = R; out.G = G; out.B = B;
-	// 	out.p[0] = p[0] / in; out.p[1] = p[1] / in; out.p[2] = p[2] / in;
-	// 	return out;
-	// }
+	inline triangle operator/(const vec3d& in) {
+		triangle out;
+		out.luminance = luminance; out.R = R; out.G = G; out.B = B;
+		out.p[0] = p[0] / in; out.p[1] = p[1] / in; out.p[2] = p[2] / in;
+		return out;
+	}
 };
 
 struct mesh

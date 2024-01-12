@@ -65,36 +65,31 @@ void Engine3D::engineThread()
 bool Engine3D::onUserCreate()
 {
 	depthBuffer = new float[width * height];
-	// triangle a({0,0,0, 0,1,0, 1,1,0});
-	// // triangle b;
-	// // triangle c;
-	// mdl.modelMesh.tris.push_back(a);
-
     mdl.modelMesh.tris = {
 
             // SOUTH
-            {0.0f, 0.0f, 0.0f,      0.0f, 1.0f, 0.0f,       1.0f, 1.0f, 0.0f},
-            {0.0f, 0.0f, 0.0f,      1.0f, 1.0f, 0.0f,       1.0f, 0.0f, 0.0f},
+            {0.0f, 0.0f, 0.0f, 1.0f,      0.0f, 1.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f,      1.0f, 0.0f, 0.0f, 1.0f},
 
             // EAST
-            {1.0f, 0.0f, 0.0f,      1.0f, 1.0f, 0.0f,       1.0f, 1.0f, 1.0f},
-            {1.0f, 0.0f, 0.0f,      1.0f, 1.0f, 1.0f,       1.0f, 0.0f, 1.0f},
+            {1.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f,      1.0f, 1.0f, 1.0f, 1.0f},
+            {1.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 1.0f, 1.0f,      1.0f, 0.0f, 1.0f, 1.0f},
 
             // NORTH
-            {1.0f, 0.0f, 1.0f,      1.0f, 1.0f, 1.0f,       0.0f, 1.0f, 1.0f},
-            {1.0f, 0.0f, 1.0f,      0.0f, 1.0f, 1.0f,       0.0f, 0.0f, 1.0f},
+            {1.0f, 0.0f, 1.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f},
+            {1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     0.0f, 0.0f, 1.0f, 1.0f},
 
             // WEST
-            {0.0f, 0.0f, 1.0f,      0.0f, 1.0f, 1.0f,       0.0f, 1.0f, 0.0f},
-            {0.0f, 0.0f, 1.0f,      0.0f, 1.0f, 0.0f,       0.0f, 0.0f, 0.0f},
+            {0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 0.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f},
 
             // TOP
-            {0.0f, 1.0f, 0.0f,      0.0f, 1.0f, 1.0f,       1.0f, 1.0f, 1.0f},
-            {0.0f, 1.0f, 0.0f,      1.0f, 1.0f, 1.0f,       1.0f, 1.0f, 0.0f},
+            {0.0f, 1.0f, 0.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f},
+            {0.0f, 1.0f, 0.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f,     1.0f, 1.0f, 0.0f, 1.0f},
 
             // BOTTOM
-            {1.0f, 0.0f, 1.0f,      0.0f, 0.0f, 1.0f,       0.0f, 0.0f, 0.0f},
-            {1.0f, 0.0f, 1.0f,      0.0f, 0.0f, 0.0f,       1.0f, 0.0f, 0.0f},
+            {1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f},
+            {1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f,     1.0f, 0.0f, 0.0f, 1.0f},
 
     };
 	return true;
@@ -102,86 +97,48 @@ bool Engine3D::onUserCreate()
 
 bool Engine3D::onUserUpdate(float elapsedTime)
 {
-	theta += 1.0f*elapsedTime;
+	theta += 1.0f * elapsedTime;
 	//std::cout<< "theta:" << theta << std::endl;
 	std::vector<triangle> newTrianglesToProject;
 
+	//rotate
 	mat4x4 matRotZ = getRotMatrixZ(theta);
-    mat4x4 matRotX = getRotMatrixX(theta);
+	mat4x4 matRotX = getRotMatrixX(theta);
 	mat4x4 matRotY = getRotMatrixY(theta);
+	//translate further along Z
+	mat4x4 matTrans = getTranslMatrix(0.0f, 0.0f, 3.0f);
 
-    // mat4x4 matTrans = getTranslMatrix(0.0f, 0.0f, 5.0f);
+	mat4x4 matWorld = matTrans;
+	matWorld = matRotZ * matWorld;
+	matWorld = matRotX * matWorld;
 
-    // mat4x4 matWorld = matTrans;
-    // //matWorld = matWorld * matRotZ;
-    // matWorld = matWorld * matRotY;
-    // matWorld = matTrans * matWorld;
+	std::vector<triangle> trianglesToProject;
 
-    std::vector<triangle> trianglesToProject;
+	//project triangles into camera view
+	for (auto &tri : mdl.modelMesh.tris)
+	{
+		triangle triProjected, triTranslated, triRotatedZ, triRotatedZX;
 
-    // Project triangles into camera view
-    for (auto &tri : mdl.modelMesh.tris)
-    {
+		//rotate, translate further along Z
+		triTranslated = tri * matWorld;
 
+		//project triangles from 3D -> 2D
+		triProjected = triTranslated * matProj;
+		if (triProjected.p[0].w>0) triProjected.p[0] = triProjected.p[0] / triProjected.p[0].w;
+		if (triProjected.p[1].w>0) triProjected.p[1] = triProjected.p[1] / triProjected.p[1].w;
+		if (triProjected.p[2].w>0) triProjected.p[2] = triProjected.p[2] / triProjected.p[2].w;
 
-			triangle triProjected, triTranslated, triRotatedZ, triRotatedZX;
+		//convert to screen coords: -1...+1 => 0...2 and adjust it with halved screen dimensions
+		triProjected = triProjected + vec3d{ 1, 1, 0, 0 };
+		triProjected = triProjected * vec3d{ 0.5f * (float)width, 0.5f * (float)height, 1, 1 };
 
-            // Rotate Z
-            mat4x4 matRotZ = getRotMatrixZ(theta);
-            MultiplyMatrixVector(tri.p[0], triRotatedZ.p[0], matRotZ);
-            MultiplyMatrixVector(tri.p[1], triRotatedZ.p[1], matRotZ);
-            MultiplyMatrixVector(tri.p[2], triRotatedZ.p[2], matRotZ);
+		newTrianglesToProject.push_back(triProjected);
 
-            // Rotate X
-            mat4x4 matRotX = getRotMatrixX(theta);
-            MultiplyMatrixVector(triRotatedZ.p[0], triRotatedZX.p[0], matRotX);
-            MultiplyMatrixVector(triRotatedZ.p[1], triRotatedZX.p[1], matRotX);
-            MultiplyMatrixVector(triRotatedZ.p[2], triRotatedZX.p[2], matRotX);
+	}
 
-            // Translate further along Z
-            triTranslated = triRotatedZX;
-            triTranslated.p[0].z = triRotatedZX.p[0].z + 3.0f;
-            triTranslated.p[1].z = triRotatedZX.p[1].z + 3.0f;
-            triTranslated.p[2].z = triRotatedZX.p[2].z + 3.0f;
-
-            MultiplyMatrixVector(triTranslated.p[0], triProjected.p[0], matProj);
-            MultiplyMatrixVector(triTranslated.p[1], triProjected.p[1], matProj);
-            MultiplyMatrixVector(triTranslated.p[2], triProjected.p[2], matProj);
-
-            // Scale into view
-            triProjected.p[0].x += 1.0f; triProjected.p[0].y += 1.0f;
-            triProjected.p[1].x += 1.0f; triProjected.p[1].y += 1.0f;
-            triProjected.p[2].x += 1.0f; triProjected.p[2].y += 1.0f;
-
-            triProjected.p[0].x *= 0.5f * (float)width;
-            triProjected.p[0].y *= 0.5f * (float)height;
-            triProjected.p[1].x *= 0.5f * (float)width;
-            triProjected.p[1].y *= 0.5f * (float)height;
-            triProjected.p[2].x *= 0.5f * (float)width;
-            triProjected.p[2].y *= 0.5f * (float)height;
-
-            newTrianglesToProject.push_back(triProjected);
-
-
-        // triangle triTranslated, triProjected;
-
-        // triTranslated = tri * matWorld;
-
-		// // Project triangles from 3D -> 2D
-		// triProjected = triTranslated * matProj;
-
-		// // Convert to screen coords: -1...+1 => 0...2 and adjust it with halved screen dimensions
-		// triProjected = triProjected + vec3d{ 1, 1, 0, 0 };
-		// triProjected = triProjected * vec3d{ 0.5f * (float)width, 0.5f * (float)height, 1, 1 };
-		// triProjected = triProjected * vec3d{ 1, -1, 1, 1 };
-		// triProjected = triProjected + vec3d{ 0, (float)height, 0, 0 };
-
-		// newTrianglesToProject.push_back(triProjected);
-    }
-
-    mtx.lock();
-    trianglesToRaster = newTrianglesToProject;
-    mtx.unlock();   
+	mtx.lock();
+	trianglesToRaster = newTrianglesToProject;
+	mtx.unlock();
 
 	return true;
 }
