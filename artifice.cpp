@@ -50,6 +50,9 @@ bool init()
 		{
 			//create renderer for window
 			gRenderer = SDL_CreateRenderer( gWindow, -1, SDL_RENDERER_ACCELERATED /*| SDL_RENDERER_PRESENTVSYNC*/);
+			//confine mouse cursor to the window and hide it
+			SDL_SetWindowMouseGrab(gWindow, SDL_TRUE);
+			SDL_SetRelativeMouseMode(SDL_TRUE);
 		}
 	}
 	return success;
@@ -74,8 +77,9 @@ int main( int argc, char* args[] )
 	}
 	else
 	{
+		EventController eventController;
 		std::string engineName = cfg.NAME + " v." + cfg.VERSION + '\0';
-		artificeEngine = new Engine3D(engineName, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, cfg.NEAR, cfg.FAR, cfg.FOV);
+		artificeEngine = new Engine3D(engineName, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, cfg.NEAR, cfg.FAR, cfg.FOV, &eventController);
 		std::thread t = artificeEngine->startEngine();
 		std::thread t2 = std::thread(run);
 
@@ -87,7 +91,6 @@ int main( int argc, char* args[] )
 		float avgFPS;
 		//start counting frames per second
 		int countedFrames = 0;
-		EventController eventController;
 		Player player(vec3d{100, 100, 0}, gRenderer, &eventController);
 		//main loop flag
 		bool quit = false;
@@ -102,6 +105,8 @@ int main( int argc, char* args[] )
 			//start cap timer
 			capTimer.start();
 
+			eventController.clearMouseMotionState();
+
 			//poll events
 			while( SDL_PollEvent( &e ) )
 			{
@@ -111,9 +116,17 @@ int main( int argc, char* args[] )
 					quit = true;
 					artificeEngine->isActive = false;
 					isActive = false;
+				}else if (e.key.keysym.sym == SDLK_ESCAPE && SDL_GetWindowMouseGrab(gWindow) == SDL_TRUE) {
+					//free mouse cursor from the window and reveal it
+					SDL_SetWindowMouseGrab(gWindow, SDL_FALSE);
+					SDL_SetRelativeMouseMode(SDL_FALSE);
+				}else if (e.type == SDL_MOUSEBUTTONDOWN && SDL_GetWindowMouseGrab(gWindow) == SDL_FALSE) {
+					//confine mouse cursor to the window and hide it
+					SDL_SetWindowMouseGrab(gWindow, SDL_TRUE);
+					SDL_SetRelativeMouseMode(SDL_TRUE);
 				}
 				//user presses or releases a key
-				else if( e.type == SDL_KEYDOWN || e.type == SDL_KEYUP )
+				else if( e.type == SDL_KEYDOWN || e.type == SDL_KEYUP || e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP )
 				{
 					eventController.processEvent(&e);
 				}

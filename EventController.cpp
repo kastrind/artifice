@@ -5,8 +5,44 @@ bool* EventController::getKeysPressed()
 	return keysPressed;
 }
 
+void EventController::clearMouseMotionState ()
+{
+	keysPressed[SupportedKeys::MOUSE_UP] = false;
+	keysPressed[SupportedKeys::MOUSE_DOWN] = false;
+	keysPressed[SupportedKeys::MOUSE_LEFT] = false;
+	keysPressed[SupportedKeys::MOUSE_RIGHT] = false;
+}
+
 void EventController::processEvent(SDL_Event* e)
 {
+	if (e->type == SDL_MOUSEMOTION) {
+		//get mouse position
+		//SDL_GetMouseState( &mousePosX, &mousePosY );
+		SDL_GetRelativeMouseState( &mousePosX, &mousePosY );
+		if (mousePosX < prevMousePosX) {
+			keysPressed[SupportedKeys::MOUSE_RIGHT] = true;
+			keysPressed[SupportedKeys::MOUSE_LEFT] = false;
+		}else if (mousePosX > prevMousePosX) {
+			keysPressed[SupportedKeys::MOUSE_LEFT] = true;
+			keysPressed[SupportedKeys::MOUSE_RIGHT] = false;
+		}else {
+			keysPressed[SupportedKeys::MOUSE_LEFT] = false;
+			keysPressed[SupportedKeys::MOUSE_RIGHT] = false;
+		}
+		if (mousePosY < prevMousePosY) {
+			keysPressed[SupportedKeys::MOUSE_DOWN] = true;
+			keysPressed[SupportedKeys::MOUSE_UP] = false;
+		}else if (mousePosY > prevMousePosY) {
+			keysPressed[SupportedKeys::MOUSE_UP] = true;
+			keysPressed[SupportedKeys::MOUSE_DOWN] = false;
+		}else {
+			keysPressed[SupportedKeys::MOUSE_UP] = false;
+			keysPressed[SupportedKeys::MOUSE_DOWN] = false;
+		}
+		prevMousePosX = mousePosX;
+		prevMousePosY = mousePosY;
+	}
+
 	//User presses a key
 	if( e->type == SDL_KEYDOWN )
 	{
@@ -25,6 +61,14 @@ void EventController::processEvent(SDL_Event* e)
 		else if (e->key.keysym.sym == SDLK_RIGHT)
 		{
 			keysPressed[SupportedKeys::RIGHT_ARROW] = true;
+		}
+		else if (e->key.keysym.sym == SDLK_w)
+		{
+			keysPressed[SupportedKeys::W] = true;
+		}
+		else if (e->key.keysym.sym == SDLK_s)
+		{
+			keysPressed[SupportedKeys::S] = true;
 		}
 		else if (e->key.keysym.sym == SDLK_a)
 		{
@@ -53,6 +97,14 @@ void EventController::processEvent(SDL_Event* e)
 		else if (e->key.keysym.sym == SDLK_RIGHT)
 		{
 			keysPressed[SupportedKeys::RIGHT_ARROW] = false;
+		}
+		else if (e->key.keysym.sym == SDLK_w)
+		{
+			keysPressed[SupportedKeys::W] = false;
+		}
+		else if (e->key.keysym.sym == SDLK_s)
+		{
+			keysPressed[SupportedKeys::S] = false;
 		}
 		else if (e->key.keysym.sym == SDLK_a)
 		{

@@ -2,6 +2,7 @@
 
 
 #include "Configuration.h"
+#include "EventController.h"
 #include <SDL.h>
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -144,6 +145,12 @@ struct vec3d
 		return out;
 	}
 
+	inline vec3d divByW(const float& w) {
+		vec3d out;
+		out.x = x / w; out.y = y / w; out.z = z / w;
+		return out;
+	}
+
 	inline mat4x4 pointAt(vec3d& target, vec3d& up)
 	{
 		vec3d pos = { x, y, z, w };
@@ -224,6 +231,14 @@ struct triangle
 		out.p[0] = p[0] / in; out.p[1] = p[1] / in; out.p[2] = p[2] / in;
 		return out;
 	}
+
+	inline triangle divByW() {
+		triangle out;
+		out.p[0] = p[0].w > 0 ? p[0].divByW(p[0].w) : p[0];
+		out.p[1] = p[1].w > 0 ? p[1].divByW(p[1].w) : p[1];
+		out.p[2] = p[2].w > 0 ? p[2].divByW(p[2].w) : p[2];
+		return out;
+	}
 };
 
 struct mesh
@@ -239,7 +254,7 @@ class Engine3D
 {
 	public:
 
-		Engine3D(std::string name, int width=320, int height=240, float near = 0.1f, float far = 1000.0f, float fov = 90.0f);
+		Engine3D(std::string name, int width=320, int height=240, float near = 0.1f, float far = 1000.0f, float fov = 90.0f, EventController* eventController = nullptr);
 
 		std::thread startEngine();
 
@@ -279,7 +294,7 @@ class Engine3D
 
 		model mdl;
 
-	protected:
+	private:
 
 		int width;
 		int height;
@@ -294,11 +309,31 @@ class Engine3D
 		float* depthBuffer = nullptr;
 
 		float theta = 0;
-	
-	private:
+
+		float yaw = 0;
+
+		float pitch = 0;
+
+		mat4x4 matCameraRotY90CW;
+
+		mat4x4 matCameraRotY90CCW;
+
+		vec3d lookDir;
+
+		vec3d up;
+
+		vec3d camera;
+
+		vec3d target;
+
+		vec3d forward;
+
+		vec3d right;
+
+		vec3d left;
+
+		EventController* eventController;
 
 		void engineThread();
-
-		void MultiplyMatrixVector(vec3d& in, vec3d& out, mat4x4& m);
 
 };

@@ -1,13 +1,24 @@
 #include "Engine3D.h"
 
-Engine3D::Engine3D(std::string name, int width, int height, float near, float far, float fov)
-			: name(name), width(width), height(height), near(near), far(far), fov(fov)
+Engine3D::Engine3D(std::string name, int width, int height, float near, float far, float fov, EventController* ec)
+			: name(name), width(width), height(height), near(near), far(far), fov(fov), eventController(ec)
 {
 	aspectRatio = (float)height / (float)width;
 	fovRad = 1.0f / tanf(fov * 0.5f / 180.0f * M_PI);
 	isActive = false;
 
 	fillProjMatrix();
+
+	camera = { 0, 0, 0 };
+	lookDir = { 0, 0, 1 };
+	up = { 0, 1, 0 };
+	target = { 0, 0, 1 };
+	right = { 1, 0, 0 };
+	left = {-1, 0, 0 };
+	forward = { 0, 0, 1 };
+
+	matCameraRotY90CW = getRotMatrixY(-cfg.M_PI_HALF);
+	matCameraRotY90CCW = getRotMatrixY(cfg.M_PI_HALF);
 }
 
 std::thread Engine3D::startEngine()
@@ -97,36 +108,88 @@ bool Engine3D::onUserCreate()
 
 bool Engine3D::onUserUpdate(float elapsedTime)
 {
-	theta += 1.0f * elapsedTime;
+
+	//theta += 1.0f * elapsedTime;
+
+	if (eventController != nullptr)
+	{
+		bool* keysPressed = eventController->getKeysPressed();
+
+		if (keysPressed[SupportedKeys::W]) {
+			//camera.z += 1.0f * elapsedTime;
+			camera = camera + forward;
+		} else if (keysPressed[SupportedKeys::S]) {
+			//camera.z -= 1.0f * elapsedTime;
+			camera = camera - forward;
+		}
+
+		if (keysPressed[SupportedKeys::A]) {
+			//camera.x -= 1.0f * elapsedTime;
+			right = forward * matCameraRotY90CCW;
+			camera = camera + right;
+
+		} else if (keysPressed[SupportedKeys::D]) {
+			//camera.x += 1.0f * elapsedTime;
+			left = forward * matCameraRotY90CW;
+			camera = camera + left;
+		}
+
+		if (keysPressed[SupportedKeys::LEFT_ARROW] || keysPressed[SupportedKeys::MOUSE_LEFT]) {
+			yaw += 1.0f * elapsedTime;
+		} else if (keysPressed[SupportedKeys::RIGHT_ARROW] || keysPressed[SupportedKeys::MOUSE_RIGHT]) {
+			yaw -= 1.0f * elapsedTime;
+		}
+
+		if (keysPressed[SupportedKeys::UP_ARROW] || keysPressed[SupportedKeys::MOUSE_UP]) {
+			pitch += 1.0f * elapsedTime;
+		} else if (keysPressed[SupportedKeys::DOWN_ARROW] || keysPressed[SupportedKeys::MOUSE_DOWN]) {
+			pitch -= 1.0f * elapsedTime;
+		}
+	}
+
 	//std::cout<< "theta:" << theta << std::endl;
 	std::vector<triangle> newTrianglesToProject;
 
 	//rotate
-	mat4x4 matRotZ = getRotMatrixZ(theta);
-	mat4x4 matRotX = getRotMatrixX(theta);
-	mat4x4 matRotY = getRotMatrixY(theta);
+	//mat4x4 matRotZ = getRotMatrixZ(theta);
+	//mat4x4 matRotX = getRotMatrixX(theta);
+	//mat4x4 matRotY = getRotMatrixY(theta);
+
 	//translate further along Z
-	mat4x4 matTrans = getTranslMatrix(0.0f, 0.0f, 3.0f);
+	mat4x4 matTrans = getTranslMatrix(0.0f, 0.0f, 5.0f);
 
 	mat4x4 matWorld = matTrans;
-	matWorld = matRotZ * matWorld;
-	matWorld = matRotX * matWorld;
+	//matWorld = matRotZ * matWorld;
+	//matWorld = matRotX * matWorld;
+
+	up = { 0, 1, 0 };
+	target = { 0, 0, 1 };
+	forward = lookDir * 1.0f * elapsedTime;
+	mat4x4 matCameraRotY = getRotMatrixY(yaw);
+	mat4x4 matCameraRotX = getRotMatrixX(pitch);
+	lookDir = (target * matCameraRotX) * matCameraRotY;
+	target = camera + lookDir;
+
+	mat4x4 matCamera = camera.pointAt(target, up);
+
+	mat4x4 matView = matCamera.invertRotationOrTranslationMatrix();
 
 	std::vector<triangle> trianglesToProject;
 
 	//project triangles into camera view
 	for (auto &tri : mdl.modelMesh.tris)
 	{
-		triangle triProjected, triTranslated, triRotatedZ, triRotatedZX;
+		triangle triProjected, triTranslated, triViewed;
 
 		//rotate, translate further along Z
 		triTranslated = tri * matWorld;
 
+		//convert to view space
+		triViewed = triTranslated * matView;
+
 		//project triangles from 3D -> 2D
-		triProjected = triTranslated * matProj;
-		if (triProjected.p[0].w>0) triProjected.p[0] = triProjected.p[0] / triProjected.p[0].w;
-		if (triProjected.p[1].w>0) triProjected.p[1] = triProjected.p[1] / triProjected.p[1].w;
-		if (triProjected.p[2].w>0) triProjected.p[2] = triProjected.p[2] / triProjected.p[2].w;
+		triProjected = triViewed * matProj;
+		triProjected = triProjected.divByW();
 
 		//convert to screen coords: -1...+1 => 0...2 and adjust it with halved screen dimensions
 		triProjected = triProjected + vec3d{ 1, 1, 0, 0 };
@@ -141,17 +204,6 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	mtx.unlock();
 
 	return true;
-}
-
-void Engine3D::MultiplyMatrixVector(vec3d& in, vec3d& out, mat4x4& m) {
-	out.x = in.x * m.m[0][0] + in.y * m.m[1][0] + in.z * m.m[2][0] + m.m[3][0];
-	out.y = in.x * m.m[0][1] + in.y * m.m[1][1] + in.z * m.m[2][1] + m.m[3][1];
-	out.z = in.x * m.m[0][2] + in.y * m.m[1][2] + in.z * m.m[2][2] + m.m[3][2];
-	float w = in.x * m.m[0][3] + in.y * m.m[1][3] + in.z * m.m[2][3] + m.m[3][3];
-
-	if (w != 0.0f) {
-		out.x /= w; out.y /= w; out.z /= w;
-	}
 }
 
 bool Engine3D::onUserDestroy()
