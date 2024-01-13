@@ -40,6 +40,10 @@ class EventController
 
 		bool* getKeysPressed();
 
+		int getMouseDistanceX();
+
+		int getMouseDistanceY();
+
 	private:
 
 		bool keysPressed[SupportedKeys::ALL_KEYS];
@@ -49,5 +53,8 @@ class EventController
 
 		int mousePosY = 0;
 		int prevMousePosY = 0;
+
+		int mouseDistanceX = 0;
+		int mouseDistanceY = 0;
 
 };

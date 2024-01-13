@@ -114,6 +114,10 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	if (eventController != nullptr)
 	{
 		bool* keysPressed = eventController->getKeysPressed();
+		int mouseDistanceX = eventController->getMouseDistanceX();
+		int mouseDistanceY = eventController->getMouseDistanceY();
+		float multiplierX = std::max((float)mouseDistanceX/5, 1.0f);
+		float multiplierY = std::max((float)mouseDistanceY/5, 1.0f);
 
 		if (keysPressed[SupportedKeys::W]) {
 			//camera.z += 1.0f * elapsedTime;
@@ -135,15 +139,15 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		}
 
 		if (keysPressed[SupportedKeys::LEFT_ARROW] || keysPressed[SupportedKeys::MOUSE_LEFT]) {
-			yaw += 1.0f * elapsedTime;
+			yaw += multiplierX * elapsedTime;
 		} else if (keysPressed[SupportedKeys::RIGHT_ARROW] || keysPressed[SupportedKeys::MOUSE_RIGHT]) {
-			yaw -= 1.0f * elapsedTime;
+			yaw -= multiplierX * elapsedTime;
 		}
 
 		if (keysPressed[SupportedKeys::UP_ARROW] || keysPressed[SupportedKeys::MOUSE_UP]) {
-			pitch += 1.0f * elapsedTime;
+			pitch += multiplierY * elapsedTime;
 		} else if (keysPressed[SupportedKeys::DOWN_ARROW] || keysPressed[SupportedKeys::MOUSE_DOWN]) {
-			pitch -= 1.0f * elapsedTime;
+			pitch -= multiplierY * elapsedTime;
 		}
 	}
 

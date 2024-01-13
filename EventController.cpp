@@ -5,12 +5,24 @@ bool* EventController::getKeysPressed()
 	return keysPressed;
 }
 
+int EventController::getMouseDistanceX()
+{
+	return mouseDistanceX;
+}
+
+int EventController::getMouseDistanceY()
+{
+	return mouseDistanceY;
+}
+
 void EventController::clearMouseMotionState ()
 {
 	keysPressed[SupportedKeys::MOUSE_UP] = false;
 	keysPressed[SupportedKeys::MOUSE_DOWN] = false;
 	keysPressed[SupportedKeys::MOUSE_LEFT] = false;
 	keysPressed[SupportedKeys::MOUSE_RIGHT] = false;
+	mouseDistanceX = 0;
+	mouseDistanceY = 0;
 }
 
 void EventController::processEvent(SDL_Event* e)
@@ -19,6 +31,8 @@ void EventController::processEvent(SDL_Event* e)
 		//get mouse position
 		//SDL_GetMouseState( &mousePosX, &mousePosY );
 		SDL_GetRelativeMouseState( &mousePosX, &mousePosY );
+		mouseDistanceX = abs(mousePosX - prevMousePosX);
+		mouseDistanceY = abs(mousePosY - prevMousePosY);
 		if (mousePosX < prevMousePosX) {
 			keysPressed[SupportedKeys::MOUSE_RIGHT] = true;
 			keysPressed[SupportedKeys::MOUSE_LEFT] = false;
