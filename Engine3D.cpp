@@ -16,6 +16,7 @@ Engine3D::Engine3D(std::string name, int width, int height, float near, float fa
 	right = { 1, 0, 0 };
 	left = {-1, 0, 0 };
 	forward = { 0, 0, 1 };
+	light = { 0, 1, -1 };
 
 	matCameraRotY90CW = getRotMatrixY(-cfg.M_PI_HALF);
 	matCameraRotY90CCW = getRotMatrixY(cfg.M_PI_HALF);
@@ -76,33 +77,49 @@ void Engine3D::engineThread()
 bool Engine3D::onUserCreate()
 {
 	depthBuffer = new float[width * height];
-    mdl.modelMesh.tris = {
 
-            // SOUTH
-            {0.0f, 0.0f, 0.0f, 1.0f,      0.0f, 1.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f,      1.0f, 0.0f, 0.0f, 1.0f},
+	//rectangle rect{0, 0, 0, 1,    1, 1};
+	// std::cout << rect.w << rect.h << std::endl;
+	std::vector<triangle> tris;
+	//rect.toTriangles(tris);
+	// std::cout << "tris size: " << tris.size() << std::endl;
+	// std::cout << tris.at(0).p->x << ", " << tris.at(0).p->y << ", " << tris.at(0).p->z << std::endl;
+	cuboid box1{0, 0, 0, 1,    1, 1, 1};
+	cuboid box2{5, 0, 0, 1,    2, 2, 2};
+	cuboid box3{10, 0, 7, 1,    3, 3, 3};
+	cuboid box4{15, -3, 12, 1,    4, 4, 4};
+	box1.toTriangles(tris);
+	box2.toTriangles(tris);
+	box3.toTriangles(tris);
+	box4.toTriangles(tris);
+	mdl.modelMesh.tris = tris;
+    // mdl.modelMesh.tris = {
 
-            // EAST
-            {1.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f,      1.0f, 1.0f, 1.0f, 1.0f},
-            {1.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 1.0f, 1.0f,      1.0f, 0.0f, 1.0f, 1.0f},
+    //         //SOUTH
+    //         {0.0f, 0.0f, 0.0f, 1.0f,      0.0f, 1.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f},
+    //         {0.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f,      1.0f, 0.0f, 0.0f, 1.0f},
 
-            // NORTH
-            {1.0f, 0.0f, 1.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f},
-            {1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     0.0f, 0.0f, 1.0f, 1.0f},
+    //         //EAST
+    //         {1.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f,      1.0f, 1.0f, 1.0f, 1.0f},
+    //         {1.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 1.0f, 1.0f,      1.0f, 0.0f, 1.0f, 1.0f},
 
-            // WEST
-            {0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 0.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f},
+    //         //NORTH
+    //         {1.0f, 0.0f, 1.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f},
+    //         {1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     0.0f, 0.0f, 1.0f, 1.0f},
 
-            // TOP
-            {0.0f, 1.0f, 0.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f},
-            {0.0f, 1.0f, 0.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f,     1.0f, 1.0f, 0.0f, 1.0f},
+    //         //WEST
+    //         {0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     0.0f, 1.0f, 0.0f, 1.0f},
+    //         {0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 0.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f},
 
-            // BOTTOM
-            {1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f},
-            {1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f,     1.0f, 0.0f, 0.0f, 1.0f},
+    //         //BOTTOM
+    //         {0.0f, 1.0f, 0.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f},
+    //         {0.0f, 1.0f, 0.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f,     1.0f, 1.0f, 0.0f, 1.0f},
 
-    };
+    //         //TOP
+    //         {1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f},
+    //         {1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f,     1.0f, 0.0f, 0.0f, 1.0f},
+
+    // };
 	return true;
 }
 
@@ -139,15 +156,16 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		}
 
 		if (keysPressed[SupportedKeys::LEFT_ARROW] || keysPressed[SupportedKeys::MOUSE_LEFT]) {
-			yaw += multiplierX * elapsedTime;
+			yaw += (multiplierX * elapsedTime) > 0.000001f ? multiplierX * elapsedTime : 0;
+			//yaw = yaw > 0.1 ? yaw : 0;
 		} else if (keysPressed[SupportedKeys::RIGHT_ARROW] || keysPressed[SupportedKeys::MOUSE_RIGHT]) {
-			yaw -= multiplierX * elapsedTime;
+			yaw -= (multiplierX * elapsedTime) > 0.000001f ? multiplierX * elapsedTime : 0;
 		}
 
 		if (keysPressed[SupportedKeys::UP_ARROW] || keysPressed[SupportedKeys::MOUSE_UP]) {
-			pitch += multiplierY * elapsedTime;
+			pitch += (multiplierY * elapsedTime) > 0.000001f ? multiplierY * elapsedTime : 0;
 		} else if (keysPressed[SupportedKeys::DOWN_ARROW] || keysPressed[SupportedKeys::MOUSE_DOWN]) {
-			pitch -= multiplierY * elapsedTime;
+			pitch -= (multiplierY * elapsedTime) > 0.000001f ? multiplierY * elapsedTime : 0;
 		}
 	}
 
@@ -180,6 +198,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 	std::vector<triangle> trianglesToProject;
 
+	vec3d normal, line1, line2, camLine, lightLine;
+
 	//project triangles into camera view
 	for (auto &tri : mdl.modelMesh.tris)
 	{
@@ -188,18 +208,43 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		//rotate, translate further along Z
 		triTranslated = tri * matWorld;
 
-		//convert to view space
-		triViewed = triTranslated * matView;
+		//get the triangle normal
+		line1 = triTranslated.p[1] - triTranslated.p[0];
+		line2 = triTranslated.p[2] - triTranslated.p[0];
+		normal = line1.getNormal(line2);
+		normal.normalize();
+		//get the camera line
+		camLine = triTranslated.p[0] - camera;
+		camLine.normalize();
+		
+		//align light with camera
+		light = camera;
 
-		//project triangles from 3D -> 2D
-		triProjected = triViewed * matProj;
-		triProjected = triProjected.divByW();
+		//only render visible triangles, i.e. whose normals have negative dot product with the camera line
+		if (normal.getDotProduct(camLine) < 0.0f)
+		{
 
-		//convert to screen coords: -1...+1 => 0...2 and adjust it with halved screen dimensions
-		triProjected = triProjected + vec3d{ 1, 1, 0, 0 };
-		triProjected = triProjected * vec3d{ 0.5f * (float)width, 0.5f * (float)height, 1, 1 };
+			//illumination
+			lightLine = triTranslated.p[0] - light;
+			lightLine.normalize();
+			triTranslated.luminance = std::max(0.2f, std::abs(normal.getDotProduct(lightLine)));
 
-		newTrianglesToProject.push_back(triProjected);
+			//convert to view space
+			triViewed = triTranslated * matView;
+
+			//project triangles from 3D -> 2D
+			triProjected = triViewed * matProj;
+			triProjected = triProjected.divByW();
+
+			//convert to screen coords: -1...+1 => 0...2 and adjust it with halved screen dimensions
+			triProjected = triProjected + vec3d{ 1, 1, 0, 0 };
+			triProjected = triProjected * vec3d{ 0.5f * (float)width, 0.5f * (float)height, 1, 1 };
+
+			//carry luminance
+			triProjected.luminance = triTranslated.luminance;
+
+			newTrianglesToProject.push_back(triProjected);
+		}
 
 	}
 

@@ -2,8 +2,7 @@
 
 void Player::render()
 {
-	std::cout<<"player render called"<<std::endl;
-	//Render red filled quad
+	//render red filled quad
 	SDL_Rect fillRect = { p.x, p.y, DOT_WIDTH, DOT_HEIGHT };
 	SDL_SetRenderDrawColor( gRenderer, 0x00, 0x7F, 0x00, 0xFF );
 	SDL_RenderFillRect( gRenderer, &fillRect );

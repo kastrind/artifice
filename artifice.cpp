@@ -20,6 +20,9 @@ SDL_Window* gWindow = NULL;
 //the window renderer
 SDL_Renderer* gRenderer = NULL;
 
+//window mouse barrier
+SDL_Rect windowRect{0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT};
+
 //the graphics engine
 Engine3D* artificeEngine;
 
@@ -53,6 +56,7 @@ bool init()
 			//confine mouse cursor to the window and hide it
 			SDL_SetWindowMouseGrab(gWindow, SDL_TRUE);
 			SDL_SetRelativeMouseMode(SDL_TRUE);
+			SDL_SetWindowMouseRect(gWindow, &windowRect);
 		}
 	}
 	return success;
@@ -120,10 +124,12 @@ int main( int argc, char* args[] )
 					//free mouse cursor from the window and reveal it
 					SDL_SetWindowMouseGrab(gWindow, SDL_FALSE);
 					SDL_SetRelativeMouseMode(SDL_FALSE);
+					SDL_SetWindowMouseRect(gWindow, NULL);
 				}else if (e.type == SDL_MOUSEBUTTONDOWN && SDL_GetWindowMouseGrab(gWindow) == SDL_FALSE) {
 					//confine mouse cursor to the window and hide it
 					SDL_SetWindowMouseGrab(gWindow, SDL_TRUE);
 					SDL_SetRelativeMouseMode(SDL_TRUE);
+					SDL_SetWindowMouseRect(gWindow, &windowRect);
 				}
 				//user presses or releases a key
 				else if( e.type == SDL_KEYDOWN || e.type == SDL_KEYUP || e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP )
@@ -139,7 +145,7 @@ int main( int argc, char* args[] )
 				avgFPS = 0;
 			}
 
-			std::cout << "avg fps:" << avgFPS << std::endl;
+			//std::cout << "avg fps:" << avgFPS << std::endl;
 
 			//clear screen
 			SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0x00, 0x00 );
@@ -150,6 +156,18 @@ int main( int argc, char* args[] )
 
 			//render player
 			player.render();
+
+			unsigned char r, g, b;
+			std::vector<SDL_Vertex> verts;
+			for (auto tri : artificeEngine->trianglesToRaster)
+			{
+				r = (float)tri.R * tri.luminance; g = (float)tri.G * tri.luminance; b = (float)tri.B * tri.luminance;
+				verts.push_back({ SDL_FPoint {tri.p[0].x, tri.p[0].y}, SDL_Color{ r, g, b, 255 }, SDL_FPoint{ 0 } });
+				verts.push_back({ SDL_FPoint {tri.p[1].x, tri.p[1].y}, SDL_Color{ r, g, b, 255 }, SDL_FPoint{ 0 } });
+				verts.push_back({ SDL_FPoint {tri.p[2].x, tri.p[2].y}, SDL_Color{ r, g, b, 255 }, SDL_FPoint{ 0 } });
+			}
+			SDL_RenderGeometry(gRenderer, nullptr, verts.data(), verts.size(), nullptr, 0);
+
 
 			//std::cout << "triangles to raster: " << artificeEngine->trianglesToRaster.size() << std::endl;
 			for (auto tri : artificeEngine->trianglesToRaster)

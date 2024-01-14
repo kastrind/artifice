@@ -188,7 +188,6 @@ struct vec3d
 		return lineStart + lineToIntersect;
 	}
 };
-
 struct triangle
 {
 	vec3d p[3] = { 0, 0, 0 }; // points
@@ -239,6 +238,51 @@ struct triangle
 		out.p[2] = p[2].w > 0 ? p[2].divByW(p[2].w) : p[2];
 		return out;
 	}
+};
+
+struct rectangle
+{
+	vec3d p;
+	float w; float h; //width along x, height along y
+	float zOff = 0;
+
+	inline void toTriangles(std::vector<triangle>& triangles) {
+		triangles.push_back({ p.x, p.y, p.z, 1.0f,      p.x, p.y + h, p.z, 1.0f,          p.x + w, p.y + h, p.z + zOff, 1.0f });
+		triangles.push_back({ p.x, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z + zOff, 1.0f,      p.x + w, p.y, p.z + zOff, 1.0f });
+	}
+};
+
+struct cuboid
+{
+	vec3d p;
+	float w; float h; float d;  //width along x, height along y, depth along z
+
+	inline void toTriangles(std::vector<triangle>& triangles) {
+		//SOUTH
+		triangles.push_back({ p.x, p.y, p.z, 1.0f,      p.x, p.y + h, p.z, 1.0f,          p.x + w, p.y + h, p.z, 1.0f });
+		triangles.push_back({ p.x, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z, 1.0f,      p.x + w, p.y, p.z, 1.0f });
+
+		//EAST
+		triangles.push_back({ p.x + w, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z, 1.0f,          p.x + w, p.y + h, p.z + d, 1.0f });
+		triangles.push_back({ p.x + w, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z + d, 1.0f,      p.x + w, p.y, p.z + d, 1.0f });
+
+		//NORTH
+		triangles.push_back({ p.x + w, p.y, p.z + d, 1.0f,      p.x + w, p.y + h, p.z + d, 1.0f,          p.x, p.y + h, p.z + d, 1.0f });
+		triangles.push_back({ p.x + w, p.y, p.z + d, 1.0f,      p.x, p.y + h, p.z + d, 1.0f,              p.x, p.y, p.z + d, 1.0f });
+
+		//WEST
+		triangles.push_back({ p.x, p.y, p.z + d, 1.0f,      p.x, p.y + h, p.z + d, 1.0f,          p.x, p.y + h, p.z, 1.0f });
+		triangles.push_back({ p.x, p.y, p.z + d, 1.0f,      p.x, p.y + h, p.z, 1.0f,              p.x, p.y, p.z, 1.0f });
+
+		//BOTTOM
+		triangles.push_back({ p.x, p.y + h, p.z, 1.0f,      p.x, p.y + h, p.z + d, 1.0f,          p.x + w, p.y + h, p.z + d, 1.0f });
+		triangles.push_back({ p.x, p.y + h, p.z, 1.0f,      p.x + w, p.y + h, p.z + d, 1.0f,      p.x + w, p.y + h, p.z, 1.0f });
+
+		//TOP
+		triangles.push_back({ p.x + w, p.y, p.z + d, 1.0f,      p.x, p.y, p.z + d, 1.0f,          p.x, p.y, p.z, 1.0f });
+		triangles.push_back({ p.x + w, p.y, p.z + d, 1.0f,      p.x, p.y, p.z, 1.0f,              p.x + w, p.y, p.z, 1.0f });
+	}
+
 };
 
 struct mesh
@@ -331,6 +375,8 @@ class Engine3D
 		vec3d right;
 
 		vec3d left;
+
+		vec3d light;
 
 		EventController* eventController;
 

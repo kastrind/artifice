@@ -31,8 +31,8 @@ void EventController::processEvent(SDL_Event* e)
 		//get mouse position
 		//SDL_GetMouseState( &mousePosX, &mousePosY );
 		SDL_GetRelativeMouseState( &mousePosX, &mousePosY );
-		mouseDistanceX = abs(mousePosX - prevMousePosX);
-		mouseDistanceY = abs(mousePosY - prevMousePosY);
+		mouseDistanceX = std::abs(mousePosX - prevMousePosX);
+		mouseDistanceY = std::abs(mousePosY - prevMousePosY);
 		if (mousePosX < prevMousePosX) {
 			keysPressed[SupportedKeys::MOUSE_RIGHT] = true;
 			keysPressed[SupportedKeys::MOUSE_LEFT] = false;
