@@ -190,7 +190,8 @@ struct vec3d
 };
 struct triangle
 {
-	vec3d p[3] = { 0, 0, 0 }; // points
+	vec3d p[3] = { 0, 0, 0 }; //points
+	vec2d t[3] = { { 0, 0 }, { 0, 0 }, { 0, 0 } };    //texture points
 
 	unsigned char R = 255; unsigned char G = 255; unsigned char B = 255;
 
@@ -237,6 +238,155 @@ struct triangle
 		out.p[1] = p[1].w > 0 ? p[1].divByW(p[1].w) : p[1];
 		out.p[2] = p[2].w > 0 ? p[2].divByW(p[2].w) : p[2];
 		return out;
+	}
+
+	inline int clipAgainstPlane(vec3d planePoint, vec3d planeNormal, triangle& outTriangle1, triangle& outTriangle2)
+	{
+		// Make sure plane normal is indeed normal
+		planeNormal.normalize();
+
+		// Return signed shortest distance from point to plane, plane normal must be normalised
+		auto dist = [&](vec3d& p)
+		{
+			return (planeNormal.getDotProduct(p) - planeNormal.getDotProduct(planePoint));
+		};
+
+		// Create two temporary storage arrays to classify points either side of plane
+		// If distance sign is positive, point lies on "inside" of plane
+		vec3d* inside_points[3];  int nInsidePointCount = 0;
+		vec3d* outside_points[3]; int nOutsidePointCount = 0;
+		vec2d* inside_tex[3]; int nInsideTexCount = 0;
+		vec2d* outside_tex[3]; int nOutsideTexCount = 0;
+
+		// Get signed distance of each point in triangle to plane
+		float d0 = dist(p[0]);
+		float d1 = dist(p[1]);
+		float d2 = dist(p[2]);
+
+		//wchar_t s[256];
+		//swprintf_s(s, 256, L"   d0= %3.2f d1= %3.2f d2= %3.2f", d0, d1, d2);
+		//OutputDebugString(s);
+
+		if (d0 >= 0) {
+			inside_points[nInsidePointCount++] = &p[0];
+			inside_tex[nInsideTexCount++] = &t[0];
+		}
+		else {
+			outside_points[nOutsidePointCount++] = &p[0];
+			outside_tex[nOutsideTexCount++] = &t[0];
+		}
+		if (d1 >= 0) {
+			inside_points[nInsidePointCount++] = &p[1];
+			inside_tex[nInsideTexCount++] = &t[1];
+		}
+		else {
+			outside_points[nOutsidePointCount++] = &p[1];
+			outside_tex[nOutsideTexCount++] = &t[1];
+		}
+		if (d2 >= 0) {
+			inside_points[nInsidePointCount++] = &p[2];
+			inside_tex[nInsideTexCount++] = &t[2];
+		}
+		else {
+			outside_points[nOutsidePointCount++] = &p[2];
+			outside_tex[nOutsideTexCount++] = &t[2];
+		}
+
+		// Now classify triangle points, and break the input triangle into 
+		// smaller output triangles if required. There are four possible
+		// outcomes...
+		if (nInsidePointCount == 0)
+		{
+			// All points lie on the outside of plane, so clip whole triangle
+			// It ceases to exist
+			return 0; // No returned triangles are valid
+		}
+
+		if (nInsidePointCount == 3)
+		{
+			// All points lie on the inside of plane, so do nothing
+			// and allow the triangle to simply pass through
+			outTriangle1 = *this;
+			return 1; // Just the one returned original triangle is valid
+		}
+
+		if (nInsidePointCount == 1 && nOutsidePointCount == 2)
+		{
+			// Triangle should be clipped. As two points lie outside
+			// the plane, the triangle simply becomes a smaller triangle
+
+			// Copy appearance info to new triangle
+			outTriangle1.luminance = luminance;
+			outTriangle1.R = 255; outTriangle1.G = 1; outTriangle1.B = 1;
+
+			// The inside point is valid, so keep that...
+			outTriangle1.p[0] = *inside_points[0];
+
+			// but the two new points are at the locations where the 
+			// original sides of the triangle (lines) intersect with the plane
+			float  t1; float t2;
+			outTriangle1.p[1] = planePoint.intersectPlane(planeNormal, *inside_points[0], *outside_points[0], t1);
+			outTriangle1.p[2] = planePoint.intersectPlane(planeNormal, *inside_points[0], *outside_points[1], t2);
+
+			// Calculate texture coordinates from the points
+			outTriangle1.t[0] = *inside_tex[0];
+			outTriangle1.t[1].u = t1 * (outside_tex[0]->u - inside_tex[0]->u) + inside_tex[0]->u;
+			outTriangle1.t[1].v = t1 * (outside_tex[0]->v - inside_tex[0]->v) + inside_tex[0]->v;
+			outTriangle1.t[1].w = t1 * (outside_tex[0]->w - inside_tex[0]->w) + inside_tex[0]->w;
+			outTriangle1.t[2].u = t2 * (outside_tex[1]->u - inside_tex[0]->u) + inside_tex[0]->u;
+			outTriangle1.t[2].v = t2 * (outside_tex[1]->v - inside_tex[0]->v) + inside_tex[0]->v;
+			outTriangle1.t[2].w = t2 * (outside_tex[1]->w - inside_tex[0]->w) + inside_tex[0]->w;
+
+			return 1; // Return the newly formed single triangle
+		}
+
+		if (nInsidePointCount == 2 && nOutsidePointCount == 1)
+		{
+			// Triangle should be clipped. As two points lie inside the plane,
+			// the clipped triangle becomes a "quad". Fortunately, we can
+			// represent a quad with two new triangles
+
+			// Copy appearance info to new triangles
+			outTriangle1.luminance = this->luminance;
+			outTriangle2.luminance = this->luminance;
+
+			outTriangle1.R = 1; outTriangle1.G = 255; outTriangle1.B = 1;
+			outTriangle2.R = 1; outTriangle2.G = 1; outTriangle2.B = 255;
+
+			// The first triangle consists of the two inside points and a new
+			// point determined by the location where one side of the triangle
+			// intersects with the plane
+			outTriangle1.p[0] = *inside_points[0];
+			outTriangle1.p[1] = *inside_points[1];
+			float t1;
+			outTriangle1.p[2] = planePoint.intersectPlane(planeNormal, *inside_points[0], *outside_points[0], t1);
+
+			// Calculate texture coordinates from the points
+			outTriangle1.t[0] = *inside_tex[0];
+			outTriangle1.t[1] = *inside_tex[1];
+			outTriangle1.t[2].u = t1 * (outside_tex[0]->u - inside_tex[0]->u) + inside_tex[0]->u;
+			outTriangle1.t[2].v = t1 * (outside_tex[0]->v - inside_tex[0]->v) + inside_tex[0]->v;
+			outTriangle1.t[2].w = t1 * (outside_tex[0]->w - inside_tex[0]->w) + inside_tex[0]->w;
+
+			// The second triangle is composed of one of the inside points, a
+			// new point determined by the intersection of the other side of the 
+			// triangle and the plane, and the newly created point above
+			outTriangle2.p[0] = *inside_points[1];
+			outTriangle2.p[1] = outTriangle1.p[2];
+			float t2;
+			outTriangle2.p[2] = planePoint.intersectPlane(planeNormal, *inside_points[1], *outside_points[0], t2);
+
+			// Calculate texture coordinates from the points
+			outTriangle2.t[0] = *inside_tex[1];
+			outTriangle2.t[1] = outTriangle1.t[2];
+			outTriangle2.t[2].u = t2 * (outside_tex[0]->u - inside_tex[1]->u) + inside_tex[1]->u;
+			outTriangle2.t[2].v = t2 * (outside_tex[0]->v - inside_tex[1]->v) + inside_tex[1]->v;
+			outTriangle2.t[2].w = t2 * (outside_tex[0]->w - inside_tex[1]->w) + inside_tex[1]->w;
+
+			return 2; // Return two newly formed triangles which form a quad
+		}
+
+		return -1;
 	}
 };
 

@@ -85,41 +85,42 @@ bool Engine3D::onUserCreate()
 	// std::cout << "tris size: " << tris.size() << std::endl;
 	// std::cout << tris.at(0).p->x << ", " << tris.at(0).p->y << ", " << tris.at(0).p->z << std::endl;
 	cuboid box1{0, 0, 0, 1,    1, 1, 1};
-	cuboid box2{5, 0, 0, 1,    2, 2, 2};
-	cuboid box3{10, 0, 7, 1,    3, 3, 3};
-	cuboid box4{15, -3, 12, 1,    4, 4, 4};
+	// cuboid box2{5, 0, 0, 1,    2, 2, 2};
+	// cuboid box3{10, 0, 7, 1,    8, 3, 3};
+	// cuboid box4{15, -3, 12, 1,    4, 8, 4};
 	box1.toTriangles(tris);
-	box2.toTriangles(tris);
-	box3.toTriangles(tris);
-	box4.toTriangles(tris);
+	// box2.toTriangles(tris);
+	// box3.toTriangles(tris);
+	// box4.toTriangles(tris);
 	mdl.modelMesh.tris = tris;
-    // mdl.modelMesh.tris = {
 
-    //         //SOUTH
-    //         {0.0f, 0.0f, 0.0f, 1.0f,      0.0f, 1.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f},
-    //         {0.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f,      1.0f, 0.0f, 0.0f, 1.0f},
+	// mdl.modelMesh.tris = {
 
-    //         //EAST
-    //         {1.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f,      1.0f, 1.0f, 1.0f, 1.0f},
-    //         {1.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 1.0f, 1.0f,      1.0f, 0.0f, 1.0f, 1.0f},
+	// 		//SOUTH
+	// 		{0.0f, 0.0f, 0.0f, 1.0f,      0.0f, 1.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f},
+	// 		{0.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f,      1.0f, 0.0f, 0.0f, 1.0f},
 
-    //         //NORTH
-    //         {1.0f, 0.0f, 1.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f},
-    //         {1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     0.0f, 0.0f, 1.0f, 1.0f},
+	// 		//EAST
+	// 		{1.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f,      1.0f, 1.0f, 1.0f, 1.0f},
+	// 		{1.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 1.0f, 1.0f,      1.0f, 0.0f, 1.0f, 1.0f},
 
-    //         //WEST
-    //         {0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     0.0f, 1.0f, 0.0f, 1.0f},
-    //         {0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 0.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f},
+	// 		//NORTH
+	// 		{1.0f, 0.0f, 1.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f},
+	// 		{1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     0.0f, 0.0f, 1.0f, 1.0f},
 
-    //         //BOTTOM
-    //         {0.0f, 1.0f, 0.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f},
-    //         {0.0f, 1.0f, 0.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f,     1.0f, 1.0f, 0.0f, 1.0f},
+	// 		//WEST
+	// 		{0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     0.0f, 1.0f, 0.0f, 1.0f},
+	// 		{0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 0.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f},
 
-    //         //TOP
-    //         {1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f},
-    //         {1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f,     1.0f, 0.0f, 0.0f, 1.0f},
+	// 		//BOTTOM
+	// 		{0.0f, 1.0f, 0.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f},
+	// 		{0.0f, 1.0f, 0.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f,     1.0f, 1.0f, 0.0f, 1.0f},
 
-    // };
+	// 		//TOP
+	// 		{1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f},
+	// 		{1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f,     1.0f, 0.0f, 0.0f, 1.0f},
+
+	// };
 	return true;
 }
 
@@ -243,7 +244,74 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			//carry luminance
 			triProjected.luminance = triTranslated.luminance;
 
-			newTrianglesToProject.push_back(triProjected);
+			// Clip Viewed Triangle against near plane and screen edges. This could form additional triangles. 
+			triangle clipped[2];
+			std::list<triangle> listTriangles;
+			vec3d planeTop = { 0.0f, 0.0f, 0.0f };
+			vec3d planeTopNormal = { 0.0f, 1.0f, 0.0f };
+
+			vec3d planeBottom = { 0.0f, (float)height -1.0f, 0.0f};
+			vec3d planeBottomNormal = { 0.0f, -1.0f, 0.0f };
+
+			vec3d planeLeft = { 0.0f, 0.0f, 0.0f };
+			vec3d planeLeftNormal = { 1.0f, 0.0f, 0.0f };
+
+			vec3d planeRight = { (float)width - 1.0f, 0.0f, 0.0f };
+			vec3d planeRightNormal = { -1.0f, 0.0f, 0.0f };
+
+			vec3d nearPlane = { 0.0f, 0.0f, 0.1f };
+			vec3d nearPlaneNormal = { 0.0f, 0.0f, 1.0f };
+
+			listTriangles.push_back(triProjected);
+			int nNewTriangles = 1;
+			
+			for (int p = 0; p < 5; p++)
+			{
+				int nTrisToAdd = 0;
+				while (nNewTriangles > 0)
+				{
+					// Take triangle from front of queue
+					triangle test = listTriangles.front();
+					listTriangles.pop_front();
+					nNewTriangles--;
+
+					// Clip it against a plane. We only need to test each 
+					// subsequent plane, against subsequent new triangles
+					// as all triangles after a plane clip are guaranteed
+					// to lie on the inside of the plane. I like how this
+					// comment is almost completely and utterly justified
+					switch (p)
+					{
+					case 0:	nTrisToAdd = test.clipAgainstPlane(planeTop, planeTopNormal, clipped[0], clipped[1]); break;
+					//case 0: nTrisToAdd = 1; clipped[0] = test; break;
+					case 1:	nTrisToAdd = test.clipAgainstPlane(planeBottom, planeBottomNormal, clipped[0], clipped[1]); break;
+					//case 1: nTrisToAdd = 1; clipped[0] = test; break;
+					case 2:	nTrisToAdd = test.clipAgainstPlane(planeLeft, planeLeftNormal, clipped[0], clipped[1]); break;
+					//case 2: nTrisToAdd = 1; clipped[0] = test; break;
+					case 3:	nTrisToAdd = test.clipAgainstPlane(planeRight, planeRightNormal, clipped[0], clipped[1]); break;
+					//case 3: nTrisToAdd = 1; clipped[0] = test; break;
+					case 4: nTrisToAdd = test.clipAgainstPlane(nearPlane, nearPlaneNormal, clipped[0], clipped[1]);
+					//case 4: nTrisToAdd = 1; clipped[0] = test; break;
+					}
+
+					// Clipping may yield a variable number of triangles, so
+					// add these new ones to the back of the queue for subsequent
+					// clipping against next planes
+					for (int w = 0; w < nTrisToAdd; w++)
+						listTriangles.push_back(clipped[w]);
+				}
+				nNewTriangles = listTriangles.size();
+			}
+			
+			for (auto& triProjected : listTriangles)
+			{
+				//std::vector<texturePoint> texturePoints = textureTriangle(triProjected);
+				//triProjected.texturePoints = texturePoints;
+				//trianglesToProject.push_back(triProjected);
+				newTrianglesToProject.push_back(triProjected);
+			}
+
+			//newTrianglesToProject.push_back(triProjected);
 		}
 
 	}
@@ -258,8 +326,6 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 bool Engine3D::onUserDestroy()
 {
 	std::cout << "Destroying Engine3D..." << std::endl;
-	//delete depth buffer
-	delete[] depthBuffer;
 	isActive = false;
 	return true;
 }
