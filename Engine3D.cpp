@@ -1,7 +1,7 @@
 #include "Engine3D.h"
 
-Engine3D::Engine3D(std::string name, int width, int height, float near, float far, float fov, EventController* ec)
-			: name(name), width(width), height(height), near(near), far(far), fov(fov), eventController(ec)
+Engine3D::Engine3D(int width, int height, float near, float far, float fov, EventController* ec)
+				: width(width), height(height), near(near), far(far), fov(fov), eventController(ec)
 {
 	aspectRatio = (float)height / (float)width;
 	fovRad = 1.0f / tanf(fov * 0.5f / 180.0f * M_PI);
@@ -18,8 +18,8 @@ Engine3D::Engine3D(std::string name, int width, int height, float near, float fa
 	forward = { 0, 0, 1 };
 	light = { 0, 1, -1 };
 
-	matCameraRotY90CW = getRotMatrixY(-cfg.M_PI_HALF);
-	matCameraRotY90CCW = getRotMatrixY(cfg.M_PI_HALF);
+	matCameraRotY90CW = mat4x4::getRotMatrixY(-cfg.M_PI_HALF);
+	matCameraRotY90CCW = mat4x4::getRotMatrixY(cfg.M_PI_HALF);
 }
 
 std::thread Engine3D::startEngine()
@@ -78,49 +78,14 @@ bool Engine3D::onUserCreate()
 {
 	depthBuffer = new float[width * height];
 
-	//rectangle rect{0, 0, 0, 1,    1, 1};
-	// std::cout << rect.w << rect.h << std::endl;
 	std::vector<triangle> tris;
-	//rect.toTriangles(tris);
-	// std::cout << "tris size: " << tris.size() << std::endl;
-	// std::cout << tris.at(0).p->x << ", " << tris.at(0).p->y << ", " << tris.at(0).p->z << std::endl;
-	cuboid box1{0, 0, 0, 1,    1, 1, 1};
-	// cuboid box2{5, 0, 0, 1,    2, 2, 2};
-	// cuboid box3{10, 0, 7, 1,    8, 3, 3};
-	// cuboid box4{15, -3, 12, 1,    4, 8, 4};
+	//create a rectangle
+	rectangle rect{3, 3, 3, 1,    2, 2, 0.3, 0, 0.3};
+	rect.toTriangles(tris);
+	//create a cuboid
+	cuboid box1{0, 0, 0, 1,    1, 1, 1,    0.3, 0, 0.3};
 	box1.toTriangles(tris);
-	// box2.toTriangles(tris);
-	// box3.toTriangles(tris);
-	// box4.toTriangles(tris);
 	mdl.modelMesh.tris = tris;
-
-	// mdl.modelMesh.tris = {
-
-	// 		//SOUTH
-	// 		{0.0f, 0.0f, 0.0f, 1.0f,      0.0f, 1.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f},
-	// 		{0.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f,      1.0f, 0.0f, 0.0f, 1.0f},
-
-	// 		//EAST
-	// 		{1.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 0.0f, 1.0f,      1.0f, 1.0f, 1.0f, 1.0f},
-	// 		{1.0f, 0.0f, 0.0f, 1.0f,      1.0f, 1.0f, 1.0f, 1.0f,      1.0f, 0.0f, 1.0f, 1.0f},
-
-	// 		//NORTH
-	// 		{1.0f, 0.0f, 1.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f},
-	// 		{1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     0.0f, 0.0f, 1.0f, 1.0f},
-
-	// 		//WEST
-	// 		{0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     0.0f, 1.0f, 0.0f, 1.0f},
-	// 		{0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 1.0f, 0.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f},
-
-	// 		//BOTTOM
-	// 		{0.0f, 1.0f, 0.0f, 1.0f,     0.0f, 1.0f, 1.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f},
-	// 		{0.0f, 1.0f, 0.0f, 1.0f,     1.0f, 1.0f, 1.0f, 1.0f,     1.0f, 1.0f, 0.0f, 1.0f},
-
-	// 		//TOP
-	// 		{1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f},
-	// 		{1.0f, 0.0f, 1.0f, 1.0f,     0.0f, 0.0f, 0.0f, 1.0f,     1.0f, 0.0f, 0.0f, 1.0f},
-
-	// };
 	return true;
 }
 
@@ -179,7 +144,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	//mat4x4 matRotY = getRotMatrixY(theta);
 
 	//translate further along Z
-	mat4x4 matTrans = getTranslMatrix(0.0f, 0.0f, 5.0f);
+	mat4x4 matTrans = mat4x4::getTranslMatrix(0.0f, 0.0f, 5.0f);
 
 	mat4x4 matWorld = matTrans;
 	//matWorld = matRotZ * matWorld;
@@ -188,8 +153,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	up = { 0, 1, 0 };
 	target = { 0, 0, 1 };
 	forward = lookDir * 1.0f * elapsedTime;
-	mat4x4 matCameraRotY = getRotMatrixY(yaw);
-	mat4x4 matCameraRotX = getRotMatrixX(pitch);
+	mat4x4 matCameraRotY = mat4x4::getRotMatrixY(yaw);
+	mat4x4 matCameraRotX = mat4x4::getRotMatrixX(pitch);
 	lookDir = (target * matCameraRotX) * matCameraRotY;
 	target = camera + lookDir;
 
@@ -259,7 +224,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			vec3d planeRight = { (float)width - 1.0f, 0.0f, 0.0f };
 			vec3d planeRightNormal = { -1.0f, 0.0f, 0.0f };
 
-			vec3d nearPlane = { 0.0f, 0.0f, 0.1f };
+			vec3d nearPlane = { 0.0f, 0.0f, 0.3f };
 			vec3d nearPlaneNormal = { 0.0f, 0.0f, 1.0f };
 
 			listTriangles.push_back(triProjected);
@@ -344,65 +309,6 @@ void Engine3D::fillProjMatrix()
 mat4x4 Engine3D::getProjMatrix()
 {
 	return matProj;
-}
-
-mat4x4 Engine3D::getIdMatrix()
-{
-	mat4x4 matId;
-	matId.m[0][0] = 1.0f;
-	matId.m[1][1] = 1.0f;
-	matId.m[2][2] = 1.0f;
-	matId.m[3][3] = 1.0f;
-	return matId;
-}
-
-mat4x4 Engine3D::getTranslMatrix(float x, float y, float z)
-{
-	mat4x4 matTransl;
-	matTransl.m[0][0] = 1.0f;
-	matTransl.m[1][1] = 1.0f;
-	matTransl.m[2][2] = 1.0f;
-	matTransl.m[3][3] = 1.0f;
-	matTransl.m[3][0] = x;
-	matTransl.m[3][1] = y;
-	matTransl.m[3][2] = z;
-	return matTransl;
-}
-
-mat4x4 Engine3D::getRotMatrixX(float theta)
-{
-	mat4x4 matRotX;
-	matRotX.m[0][0] = 1;
-	matRotX.m[1][1] = cosf(theta * 0.5f);
-	matRotX.m[1][2] = sinf(theta * 0.5f);
-	matRotX.m[2][1] = -sinf(theta * 0.5f);
-	matRotX.m[2][2] = cosf(theta * 0.5f);;
-	matRotX.m[3][3] = 1;
-	return matRotX;
-}
-
-mat4x4 Engine3D::getRotMatrixY(float theta)
-{
-	mat4x4 matRotY;
-	matRotY.m[0][0] = cosf(theta);
-	matRotY.m[0][2] = sinf(theta);
-	matRotY.m[2][0] = -sinf(theta);
-	matRotY.m[1][1] = 1.0f;
-	matRotY.m[2][2] = cosf(theta);
-	matRotY.m[3][3] = 1.0f;
-	return matRotY;
-}
-
-mat4x4 Engine3D::getRotMatrixZ(float theta)
-{
-	mat4x4 matRotZ;
-	matRotZ.m[0][0] = cosf(theta);
-	matRotZ.m[0][1] = sinf(theta);
-	matRotZ.m[1][0] = -sinf(theta);
-	matRotZ.m[1][1] = cosf(theta);
-	matRotZ.m[2][2] = 1;
-	matRotZ.m[3][3] = 1;
-	return matRotZ;
 }
 
 void Engine3D::clearDepthBuffer()

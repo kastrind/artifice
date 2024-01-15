@@ -82,8 +82,7 @@ int main( int argc, char* args[] )
 	else
 	{
 		EventController eventController;
-		std::string engineName = cfg.NAME + " v." + cfg.VERSION + '\0';
-		artificeEngine = new Engine3D(engineName, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, cfg.NEAR, cfg.FAR, cfg.FOV, &eventController);
+		artificeEngine = new Engine3D(cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, cfg.NEAR, cfg.FAR, cfg.FOV, &eventController);
 		std::thread t = artificeEngine->startEngine();
 		std::thread t2 = std::thread(run);
 
