@@ -2,6 +2,7 @@
 
 #include "Configuration.h"
 #include "EventController.h"
+#include "Constructs3D.h"
 #include "Engine3D.h"
 #include "Player.h"
 #include "LTimer.h"
@@ -83,6 +84,23 @@ int main( int argc, char* args[] )
 	{
 		EventController eventController;
 		artificeEngine = new Engine3D(cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, cfg.NEAR, cfg.FAR, cfg.FOV, &eventController);
+
+		//create a few models to send them to the engine for rendering
+		//create a rectangle
+		rectangle rect{3, 3, 3, 1,    2, 2,    0.3, 0, 0.3};
+		std::vector<triangle> rect_tris;
+		rect.toTriangles(rect_tris);
+		model model_rect;
+		model_rect.modelMesh.tris = rect_tris;
+		artificeEngine->modelsToRaster.push_back(model_rect);
+		//create a cuboid
+		cuboid box{0, 0, 0, 1,    1, 1, 1,    0.3, 0, 0.3};
+		std::vector<triangle> box_tris;
+		box.toTriangles(box_tris);
+		model model_box;
+		model_box.modelMesh.tris = box_tris;
+		artificeEngine->modelsToRaster.push_back(model_box);
+
 		std::thread t = artificeEngine->startEngine();
 		std::thread t2 = std::thread(run);
 
