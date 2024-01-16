@@ -150,7 +150,6 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 				std::list<triangle>* listTriangles = clip(triProjected);
 
-				triangle tri;
 				for(auto &triProjected : *listTriangles) {
 					//std::vector<texturePoint> texturePoints = textureTriangle(triProjected);
 					//triProjected.texturePoints = texturePoints;
