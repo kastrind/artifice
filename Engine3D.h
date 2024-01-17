@@ -85,6 +85,22 @@ class Engine3D
 
 		vec3d light;
 
+		//planes to clip against and their normals
+		vec3d planeTop;
+		vec3d planeTopNormal;
+
+		vec3d planeBottom;
+		vec3d planeBottomNormal;
+
+		vec3d planeLeft;
+		vec3d planeLeftNormal;
+
+		vec3d planeRight;
+		vec3d planeRightNormal;
+
+		vec3d nearPlane;
+		vec3d nearPlaneNormal;
+
 		EventController* eventController;
 
 		void engineThread();
@@ -93,6 +109,6 @@ class Engine3D
 
 		void move();
 
-		std::list<triangle>* clip(triangle tri);
+		std::unique_ptr<std::list<triangle>> clip(triangle tri);
 
 };

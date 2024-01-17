@@ -20,6 +20,18 @@ Engine3D::Engine3D(int width, int height, float near, float far, float fov, Even
 
 	matCameraRotY90CW = mat4x4::getRotMatrixY(-cfg.M_PI_HALF);
 	matCameraRotY90CCW = mat4x4::getRotMatrixY(cfg.M_PI_HALF);
+
+	//planes to clip against and their normals
+	planeTop = { 0.0f, 0.0f, 0.0f };
+	planeTopNormal = { 0.0f, 1.0f, 0.0f };
+	planeBottom = { 0.0f, (float)height -1.0f, 0.0f};
+	planeBottomNormal = { 0.0f, -1.0f, 0.0f };
+ 	planeLeft = { 0.0f, 0.0f, 0.0f };
+	planeLeftNormal = { 1.0f, 0.0f, 0.0f };
+	planeRight = { (float)width - 1.0f, 0.0f, 0.0f };
+	planeRightNormal = { -1.0f, 0.0f, 0.0f };
+	nearPlane = { 0.0f, 0.0f, 0.3f };
+	nearPlaneNormal = { 0.0f, 0.0f, 1.0f };
 }
 
 std::thread Engine3D::startEngine()
@@ -148,7 +160,16 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 				//carry luminance
 				triProjected.luminance = triTranslated.luminance;
 
-				std::list<triangle>* listTriangles = clip(triProjected);
+				vec3d center{ width/2, height/2, 0 };
+				bool lookingAtTriangle = triProjected.contains(center);
+				if (lookingAtTriangle) {
+					std::cout << "lookingAtTriangle: " << lookingAtTriangle << std::endl;
+					triProjected.R = 255;
+					triProjected.G = 0;
+					triProjected.B = 255;
+				}
+
+				std::unique_ptr<std::list<triangle>> listTriangles = clip(triProjected);
 
 				for(auto &triProjected : *listTriangles) {
 					//std::vector<texturePoint> texturePoints = textureTriangle(triProjected);
@@ -158,7 +179,6 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 					
 				}
 
-				delete listTriangles;
 			}
 
 		}
@@ -172,25 +192,11 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	return true;
 }
 
-std::list<triangle>* Engine3D::clip(triangle tri)
+std::unique_ptr<std::list<triangle>> Engine3D::clip(triangle tri)
 {
-	std::list<triangle>* listTriangles = new std::list<triangle>;
+	auto listTriangles = std::make_unique<std::list<triangle>>();
 	//clip viewed triangle against near plane and screen edges. This could form additional triangles. 
 	triangle clipped[2];
-	vec3d planeTop = { 0.0f, 0.0f, 0.0f };
-	vec3d planeTopNormal = { 0.0f, 1.0f, 0.0f };
-
-	vec3d planeBottom = { 0.0f, (float)height -1.0f, 0.0f};
-	vec3d planeBottomNormal = { 0.0f, -1.0f, 0.0f };
-
-	vec3d planeLeft = { 0.0f, 0.0f, 0.0f };
-	vec3d planeLeftNormal = { 1.0f, 0.0f, 0.0f };
-
-	vec3d planeRight = { (float)width - 1.0f, 0.0f, 0.0f };
-	vec3d planeRightNormal = { -1.0f, 0.0f, 0.0f };
-
-	vec3d nearPlane = { 0.0f, 0.0f, 0.3f };
-	vec3d nearPlaneNormal = { 0.0f, 0.0f, 1.0f };
 
 	listTriangles->push_back(tri);
 	int nNewTriangles = 1;

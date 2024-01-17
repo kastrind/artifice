@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <vector>
+#include <iostream>
 
 typedef enum {
 	NORTH,
@@ -284,6 +285,37 @@ struct triangle
 		out.p[1] = p[1].w > 0 ? p[1].divByW(p[1].w) : p[1];
 		out.p[2] = p[2].w > 0 ? p[2].divByW(p[2].w) : p[2];
 		return out;
+	}
+
+	inline float area()
+	{
+		//area = [ x1(y2 – y3) + x2(y3 – y1) + x3(y1-y2)]/2
+		return std::abs( ( p[0].x * ( p[1].y - p[2].y ) + p[1].x * ( p[2].y - p[0].y ) + p[2].x * ( p[0].y - p[1].y ) ) / 2.0 );
+	}
+
+	bool contains(vec3d point)
+	{
+		//calculate area of triangle ABC
+		float ABC_area = area();
+
+		triangle PBC{ point, p[1], p[2] };
+		
+		//calculate area of triangle PBC 
+		float PBC_area = PBC.area();
+
+		triangle PAC{ p[0], point, p[2] };
+		
+		//calculate area of triangle PAC
+		float PAC_area = PAC.area();
+
+		triangle PAB{ p[0], p[1], point };
+		
+		//calculate area of triangle PAB
+		float PAB_area = PAB.area();
+
+		//check if sum of A1, A2 and A3 is same as A
+		//return (ABC_area == PBC_area + PAC_area + PAB_area);
+		return std::abs(ABC_area - PBC_area - PAC_area - PAB_area) < 0.01f;
 	}
 
 	inline int clipAgainstPlane(vec3d planePoint, vec3d planeNormal, triangle& outTriangle1, triangle& outTriangle2)
