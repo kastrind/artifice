@@ -1,11 +1,11 @@
 #OBJS specifies which files to compile as part of the project
-OBJS = artifice.cpp Player.cpp EventController.cpp LTimer.cpp Engine3D.cpp
+OBJS = opengl.cpp LShaderProgram.cpp LArtificeShaderProgram.cpp EventController.cpp Engine3D.cpp
 
 #CC specifies which compiler we're using
 CC = g++
 
 #INCLUDE_PATHS specifies the additional include paths we'll need
-INCLUDE_PATHS = -IC:\msys64\mingw64\include\SDL2
+INCLUDE_PATHS = -IC:\msys64\mingw64\include
 
 #LIBRARY_PATHS specifies the additional library paths we'll need
 LIBRARY_PATHS = -LC:\msys64\mingw64\lib
@@ -16,10 +16,10 @@ LIBRARY_PATHS = -LC:\msys64\mingw64\lib
 COMPILER_FLAGS = -w #-Wl,-subsystem,windows
 
 #LINKER_FLAGS specifies the libraries we're linking against
-LINKER_FLAGS = -lmingw32 -lSDL2main -lSDL2
+LINKER_FLAGS = -lmingw32 -lSDL2main -lSDL2 -lfreeglut -lglew32 -lopengl32
 
 #OBJ_NAME specifies the name of our exectuable
-OBJ_NAME = artifice
+OBJ_NAME = opengl
 
 #This is the target that compiles our executable
 all : $(OBJS)

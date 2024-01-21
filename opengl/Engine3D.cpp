@@ -154,16 +154,10 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 				//project triangles from 3D -> 2D
 				triProjected = triViewed * matProj;
 
-				std::cout << "trip0z: " << triProjected.p[0].z << std::endl;
-				std::cout << "trip0w: " << triProjected.p[0].w << std::endl;
-
-				std::cout << "trit0w: " << triProjected.t[0].w << std::endl;
-
 				//perspective correction for texture vertices
 				if (triProjected.p[0].w > 0) triProjected.t[0].u = triProjected.t[0].u / triProjected.p[0].w;
 				if (triProjected.p[1].w > 0) triProjected.t[1].u = triProjected.t[1].u / triProjected.p[1].w;
 				if (triProjected.p[2].w > 0) triProjected.t[2].u = triProjected.t[2].u / triProjected.p[2].w;
-
 
 				if (triProjected.p[0].w > 0) triProjected.t[0].v = triProjected.t[0].v / triProjected.p[0].w;
 				if (triProjected.p[1].w > 0) triProjected.t[1].v = triProjected.t[1].v / triProjected.p[1].w;
@@ -173,37 +167,12 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 				if (triProjected.p[1].w > 0) triProjected.t[1].w = 1.0f / triProjected.p[1].w;
 				if (triProjected.p[2].w > 0) triProjected.t[2].w = 1.0f / triProjected.p[2].w;
 
-				// if (triProjected.p[0].w > 0) triProjected.p[0] = triProjected.p[0] / triProjected.p[0].w;
-				// if (triProjected.p[1].w > 0) triProjected.p[1] = triProjected.p[1] / triProjected.p[1].w;
-				// if (triProjected.p[2].w > 0) triProjected.p[2] = triProjected.p[2] / triProjected.p[2].w;
-
 				triProjected = triProjected.divByW();
-
-				std::cout << "new trip0w: " << triProjected.p[0].w << std::endl;
-
-				//convert to screen coords: -1...+1 => 0...2 and adjust it with halved screen dimensions
-				triProjected = triProjected + vec3d{ 1, 1, 0, 0 };
-				triProjected = triProjected * vec3d{ 0.5f * (float)width, 0.5f * (float)height, 1, 1 };
 
 				//carry luminance
 				triProjected.luminance = triTranslated.luminance;
 
-				//WIP: determine whether triangle is in focus
-				vec3d center{ width/2, height/2, 0 };
-				bool lookingAtTriangle = triProjected.contains(center);
-				if (lookingAtTriangle) {
-					triProjected.R = 255;
-					triProjected.G = 0;
-					triProjected.B = 255;
-				}
-
-				std::unique_ptr<std::list<triangle>> listTriangles = clip(triProjected);
-
-				for(auto &triProjected : *listTriangles) {
-					//triProjected.texturePoints = textureTriangle(triProjected);
-					//textureTriangle(triProjected);
-					newTrianglesToProject.push_back(triProjected);
-				}
+				newTrianglesToProject.push_back(triProjected);
 
 			}
 

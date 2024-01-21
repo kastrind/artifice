@@ -1,0 +1,15 @@
+#version 330 core
+layout (location = 0) in vec4 aPos;
+layout (location = 1) in vec3 aColor;
+layout (location = 2) in vec3 aTexCoord;
+
+out vec3 ourColor;
+out vec3 TexCoord;
+
+void main()
+{
+	gl_Position = vec4(aPos);
+	ourColor = aColor;
+	TexCoord = vec3(aTexCoord);
+}
+

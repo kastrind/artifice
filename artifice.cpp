@@ -8,9 +8,11 @@
 #include "LTimer.h"
 //Using SDL and standard IO
 #include <SDL.h>
+#include <SDL_surface.h>
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <algorithm>
 #include <stdio.h>
 
 CFG cfg;
@@ -82,25 +84,68 @@ int main( int argc, char* args[] )
 	}
 	else
 	{
+
+		//load image at specified path
+		SDL_Surface* loadedSurface = SDL_LoadBMP( "brickwall.bmp" );
+		int imgWidth = loadedSurface->w;
+		int imgHeight = loadedSurface->h;
+		SDL_Texture* newTexture = SDL_CreateTextureFromSurface( gRenderer, loadedSurface );
+		SDL_FreeSurface(loadedSurface);
+
+		//instantiate the 3D engine
 		EventController eventController;
 		artificeEngine = new Engine3D(cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, cfg.NEAR, cfg.FAR, cfg.FOV, &eventController);
 
-		//create a few models to send them to the engine for rendering
-		//create a rectangle
-		rectangle rect{3, 3, 3, 1,    2, 2,    0.3, 0, 0.3};
-		std::vector<triangle> rect_tris;
-		rect.toTriangles(rect_tris);
-		model model_rect;
-		model_rect.modelMesh.tris = rect_tris;
-		artificeEngine->modelsToRaster.push_back(model_rect);
-		//create a cuboid
-		cuboid box{0, 0, 0, 1,    1, 1, 1,    0.3, 0, 0.3};
-		std::vector<triangle> box_tris;
-		box.toTriangles(box_tris);
-		model model_box;
-		model_box.modelMesh.tris = box_tris;
-		artificeEngine->modelsToRaster.push_back(model_box);
+		// //create a few models to send them to the engine for rendering
+		// //create a rectangle
+		// rectangle rect{3, 3, 3, 1,    2, 2,    0.3, 0, 0.3};
+		// std::vector<triangle> rect_tris;
+		// rect.toTriangles(rect_tris);
+		// model model_rect;
+		// model_rect.modelMesh.tris = rect_tris;
+		// artificeEngine->modelsToRaster.push_back(model_rect);
+		// //create a cuboid
+		// cuboid box{0, 0, 0, 1,    1, 1, 1,    0.3, 0, 0.3};
+		// std::vector<triangle> box_tris;
+		// box.toTriangles(box_tris);
+		// model model_box;
+		// model_box.modelMesh.tris = box_tris;
+		// artificeEngine->modelsToRaster.push_back(model_box);
+		
+		model box;
+		box.modelMesh.tris = {
 
+			// SOUTH
+			{ 0.0f, 0.0f, 0.0f, 1.0f,    0.0f, 1.0f, 0.0f, 1.0f,    1.0f, 1.0f, 0.0f, 1.0f,		0.0f, 1.0f, 1.0f,		0.0f, 0.0f, 1.0f,		1.0f, 0.0f, 1.0f,},
+			{ 0.0f, 0.0f, 0.0f, 1.0f,    1.0f, 1.0f, 0.0f, 1.0f,    1.0f, 0.0f, 0.0f, 1.0f,		0.0f, 1.0f, 1.0f,		1.0f, 0.0f, 1.0f,		1.0f, 1.0f, 1.0f,},
+
+			// EAST           																			   
+			{ 1.0f, 0.0f, 0.0f, 1.0f,    1.0f, 1.0f, 0.0f, 1.0f,    1.0f, 1.0f, 1.0f, 1.0f,		0.0f, 1.0f, 1.0f,		0.0f, 0.0f, 1.0f,		1.0f, 0.0f, 1.0f,},
+			{ 1.0f, 0.0f, 0.0f, 1.0f,    1.0f, 1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f, 1.0f,		0.0f, 1.0f, 1.0f,		1.0f, 0.0f, 1.0f,		1.0f, 1.0f, 1.0f,},
+
+			// NORTH           																			   
+			{ 1.0f, 0.0f, 1.0f, 1.0f,    1.0f, 1.0f, 1.0f, 1.0f,    0.0f, 1.0f, 1.0f, 1.0f,		0.0f, 1.0f, 1.0f,		0.0f, 0.0f, 1.0f,		1.0f, 0.0f, 1.0f,},
+			{ 1.0f, 0.0f, 1.0f, 1.0f,    0.0f, 1.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f, 1.0f,		0.0f, 1.0f, 1.0f,		1.0f, 0.0f, 1.0f,		1.0f, 1.0f, 1.0f,},
+
+			// WEST            																			   
+			{ 0.0f, 0.0f, 1.0f, 1.0f,    0.0f, 1.0f, 1.0f, 1.0f,    0.0f, 1.0f, 0.0f, 1.0f,		0.0f, 1.0f, 1.0f,		0.0f, 0.0f, 1.0f,		1.0f, 0.0f, 1.0f,},
+			{ 0.0f, 0.0f, 1.0f, 1.0f,    0.0f, 1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 0.0f, 1.0f,		0.0f, 1.0f, 1.0f,		1.0f, 0.0f, 1.0f,		1.0f, 1.0f, 1.0f,},
+
+			// TOP             																			   
+			{ 0.0f, 1.0f, 0.0f, 1.0f,    0.0f, 1.0f, 1.0f, 1.0f,    1.0f, 1.0f, 1.0f, 1.0f,		0.0f, 1.0f, 1.0f,		0.0f, 0.0f, 1.0f,		1.0f, 0.0f, 1.0f,},
+			{ 0.0f, 1.0f, 0.0f, 1.0f,    1.0f, 1.0f, 1.0f, 1.0f,    1.0f, 1.0f, 0.0f, 1.0f,		0.0f, 1.0f, 1.0f,		1.0f, 0.0f, 1.0f,		1.0f, 1.0f, 1.0f,},
+
+			// BOTTOM          																			  
+			{ 1.0f, 0.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f, 1.0f,    0.0f, 0.0f, 0.0f, 1.0f,		0.0f, 1.0f, 1.0f,		0.0f, 0.0f, 1.0f,		1.0f, 0.0f, 1.0f,},
+			{ 1.0f, 0.0f, 1.0f, 1.0f,    0.0f, 0.0f, 0.0f, 1.0f,    1.0f, 0.0f, 0.0f, 1.0f,		0.0f, 1.0f, 1.0f,		1.0f, 0.0f, 1.0f,		1.0f, 1.0f, 1.0f,}
+
+		};
+		artificeEngine->modelsToRaster.push_back(box);
+
+
+
+
+		//start the 3D engine
 		std::thread t = artificeEngine->startEngine();
 		std::thread t2 = std::thread(run);
 
@@ -169,24 +214,82 @@ int main( int argc, char* args[] )
 			SDL_RenderClear( gRenderer );
 
 			//move player
-			player.move();
+			//player.move();
 
 			//render player
-			player.render();
+			//player.render();
+
+			artificeEngine->mtx.lock();
+			std::vector<triangle> trianglesToRender = artificeEngine->trianglesToRaster;
+			artificeEngine->mtx.unlock();
 
 			unsigned char r, g, b;
 			std::vector<SDL_Vertex> verts;
-			for (auto tri : artificeEngine->trianglesToRaster)
+			for (auto tri : trianglesToRender)
 			{
 				r = (float)tri.R * tri.luminance; g = (float)tri.G * tri.luminance; b = (float)tri.B * tri.luminance;
-				verts.push_back({ SDL_FPoint {tri.p[0].x, tri.p[0].y}, SDL_Color{ r, g, b, 255 }, SDL_FPoint{ 0 } });
-				verts.push_back({ SDL_FPoint {tri.p[1].x, tri.p[1].y}, SDL_Color{ r, g, b, 255 }, SDL_FPoint{ 0 } });
-				verts.push_back({ SDL_FPoint {tri.p[2].x, tri.p[2].y}, SDL_Color{ r, g, b, 255 }, SDL_FPoint{ 0 } });
+				// verts.push_back({ SDL_FPoint {tri.p[0].x, tri.p[0].y}, SDL_Color{ r, g, b, 255 }, SDL_FPoint{ 0 } });
+				// verts.push_back({ SDL_FPoint {tri.p[1].x, tri.p[1].y}, SDL_Color{ r, g, b, 255 }, SDL_FPoint{ 0 } });
+				// verts.push_back({ SDL_FPoint {tri.p[2].x, tri.p[2].y}, SDL_Color{ r, g, b, 255 }, SDL_FPoint{ 0 } });
+				verts.push_back({ SDL_FPoint {tri.p[0].x, tri.p[0].y}, SDL_Color{ r, g, b, 255 }, SDL_FPoint{ tri.t[0].u/tri.t[0].w, tri.t[0].v/tri.t[0].w } });
+
+				/*
+				float slopeAB; float extraABx; float extraABy;
+				if (tri.p[1].x != tri.p[0].x) {
+					std::cout << "x0 " << tri.p[0].x << ", x1 " << tri.p[1].x << std::endl;
+					std::cout << "y0 " << tri.p[0].y << ", y1 " << tri.p[1].y << std::endl;
+					slopeAB = (float)(tri.p[1].y - tri.p[0].y) / (tri.p[1].x - tri.p[0].x);
+					extraABx = tri.p[0].x < tri.p[1].x ?  tri.p[0].x + (tri.p[1].x - tri.p[0].x)/2 : tri.p[1].x + (tri.p[0].x - tri.p[1].x)/2;
+					extraABy = slopeAB==0 ? tri.p[0].y : tri.p[0].y + slopeAB * (extraABx - tri.p[0].x);
+					std::cout << "slope " << slopeAB << ", x " << extraABx << ", y " << extraABy << std::endl;
+				}else {
+					extraABx = tri.p[0].x;
+					extraABy = tri.p[0].y < tri.p[1].y ?  tri.p[0].y + (tri.p[1].y - tri.p[0].y)/2 : tri.p[1].y + (tri.p[0].y - tri.p[1].y)/2;
+					std::cout << extraABx << ", " << extraABy << std::endl;
+				}
+				verts.push_back({ SDL_FPoint {extraABx, extraABy}, SDL_Color{ r, g, b, 255 }, SDL_FPoint{ tri.t[1].u, tri.t[1].v } });
+
+
+				float slopeAC; float extraACx; float extraACy;
+				if (tri.p[2].x != tri.p[0].x) {
+					std::cout << "x0 " << tri.p[0].x << ", x2 " << tri.p[2].x << std::endl;
+					std::cout << "y0 " << tri.p[0].y << ", y2 " << tri.p[2].y << std::endl;
+					slopeAC = (float)(tri.p[2].y - tri.p[0].y) / (tri.p[2].x - tri.p[0].x);
+					extraACx = tri.p[0].x < tri.p[2].x ?  tri.p[0].x + (tri.p[2].x - tri.p[0].x)/2 : tri.p[2].x + (tri.p[0].x - tri.p[2].x)/2;
+					extraACy = slopeAC==0 ? tri.p[0].y : tri.p[0].y + slopeAC * (extraACx - tri.p[0].x);
+					std::cout << "slope " << slopeAC << ", x " << extraACx << ", y " << extraACy << std::endl;
+				}else {
+					extraACx = tri.p[0].x;
+					extraACy = tri.p[0].y < tri.p[2].y ?  tri.p[0].y + (tri.p[2].y - tri.p[0].y)/2 : tri.p[2].y + (tri.p[0].y - tri.p[2].y)/2;
+					std::cout << extraACx << ", " << extraACy << std::endl;
+				}
+				verts.push_back({ SDL_FPoint {extraACx, extraACy}, SDL_Color{ r, g, b, 255 }, SDL_FPoint{ tri.t[1].u, tri.t[1].v } });
+				*/
+
+				verts.push_back({ SDL_FPoint {tri.p[1].x, tri.p[1].y}, SDL_Color{ r, g, b, 255 }, SDL_FPoint{ tri.t[1].u/tri.t[1].w, tri.t[1].v/tri.t[1].w } });
+				verts.push_back({ SDL_FPoint {tri.p[2].x, tri.p[2].y}, SDL_Color{ r, g, b, 255 }, SDL_FPoint{ tri.t[2].u/tri.t[2].w, tri.t[2].v/tri.t[2].w } });
+				/*
+					for (texturePoint& tp : tri.texturePoints)
+					{
+						// texture coordinates
+						int u = (tp.t.u / tp.t.w) * imgWidth;
+						int v = (tp.t.v / tp.t.w) * imgHeight;
+
+						// screen coordinates
+						int x = tp.p.u;
+						int y = tp.p.v;
+
+						SDL_Rect rectangleSrc{u, v, 1, 1};
+						SDL_Rect rectangleDst{x, y, 1, 1};
+						SDL_RenderCopy(gRenderer, newTexture, &rectangleSrc, &rectangleDst);
+					}
+				*/
+					
 			}
-			SDL_RenderGeometry(gRenderer, nullptr, verts.data(), verts.size(), nullptr, 0);
+			SDL_RenderGeometry(gRenderer, newTexture, verts.data(), verts.size(), nullptr, 0);
 
-
-			//std::cout << "triangles to raster: " << artificeEngine->trianglesToRaster.size() << std::endl;
+			/*
+			std::cout << "triangles to raster: " << artificeEngine->trianglesToRaster.size() << std::endl;
 			for (auto tri : artificeEngine->trianglesToRaster)
 			{
 				SDL_SetRenderDrawColor( gRenderer, 0xFF, 0x00, 0x00, 0xFF );
@@ -196,6 +299,7 @@ int main( int argc, char* args[] )
 				SDL_FPoint points[4] = {p1, p2, p3, p1};
 				SDL_RenderDrawLinesF(gRenderer, points, 4);
 			}
+			*/
 
 			//update screen
 			SDL_RenderPresent( gRenderer );
