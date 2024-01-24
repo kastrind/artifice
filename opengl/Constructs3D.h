@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/glm.hpp>
 #include <cmath>
 #include <vector>
 #include <iostream>
@@ -495,18 +496,17 @@ struct rectangle
 		mat4x4 matRotX = mat4x4::getRotMatrixX(thetaRotX);
 		mat4x4 matRotY = mat4x4::getRotMatrixY(thetaRotY);
 		mat4x4 matRotZ = mat4x4::getRotMatrixZ(thetaRotZ);
-		triangle tri1{ p.x, p.y, p.z, 1.0f,      p.x, p.y + h, p.z, 1.0f,          p.x + w, p.y + h, p.z, 1.0f };
+		triangle tri1{ p.x, p.y, p.z, 1.0f,      p.x, p.y + h, p.z, 1.0f,          p.x + w, p.y + h, p.z, 1.0f,    0.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f,    1.0f, 0.0f, 1.0f };
 		tri1 = tri1 * matRotX;
 		tri1 = tri1 * matRotY;
 		tri1 = tri1 * matRotZ;
-		triangle tri2{ p.x, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z, 1.0f,      p.x + w, p.y, p.z, 1.0f };
+		triangle tri2{ p.x, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z, 1.0f,      p.x + w, p.y, p.z, 1.0f,        0.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f,    1.0f, 1.0f, 1.0f };
 		tri2 = tri2 * matRotX;
 		tri2 = tri2 * matRotY;
 		tri2 = tri2 * matRotZ;
 		triangles.push_back(tri1);
 		triangles.push_back(tri2);
 	}
-
 
 };
 
@@ -523,43 +523,43 @@ struct cuboid
 		mat4x4 matRotY = mat4x4::getRotMatrixY(thetaRotY);
 		mat4x4 matRotZ = mat4x4::getRotMatrixZ(thetaRotZ);
 		//SOUTH
-		triangle south1{ p.x, p.y, p.z, 1.0f,      p.x, p.y + h, p.z, 1.0f,          p.x + w, p.y + h, p.z, 1.0f };
-		triangle south2{ p.x, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z, 1.0f,      p.x + w, p.y, p.z, 1.0f };
+		triangle south1{ p.x, p.y, p.z, 1.0f,      p.x, p.y + h, p.z, 1.0f,          p.x + w, p.y + h, p.z, 1.0f,    1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 1.0f };
+		triangle south2{ p.x, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z, 1.0f,      p.x + w, p.y, p.z, 1.0f,        1.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f,    0.0f, 1.0f, 1.0f };
 		south1 = south1 * matRotX; south1 = south1 * matRotY; south1 = south1 * matRotZ;
 		south2 = south2 * matRotX; south2 = south2 * matRotY; south2 = south2 * matRotZ;
 		triangles.push_back(south1);
 		triangles.push_back(south2);
 		//EAST
-		triangle east1{ p.x + w, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z, 1.0f,          p.x + w, p.y + h, p.z + d, 1.0f };
-		triangle east2{ p.x + w, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z + d, 1.0f,      p.x + w, p.y, p.z + d, 1.0f };
+		triangle east1{ p.x + w, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z, 1.0f,          p.x + w, p.y + h, p.z + d, 1.0f,    0.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f,    1.0f, 0.0f, 1.0f };
+		triangle east2{ p.x + w, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z + d, 1.0f,      p.x + w, p.y, p.z + d,    1.0f,     0.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f,    1.0f, 1.0f, 1.0f };
 		east1 = east1 * matRotX; east1 = east1 * matRotY; east1 = east1 * matRotZ;
 		east2 = east2 * matRotX; east2 = east2 * matRotY; east2 = east2 * matRotZ;
 		triangles.push_back(east1);
 		triangles.push_back(east2);
 		//NORTH
-		triangle north1{ p.x + w, p.y, p.z + d, 1.0f,      p.x + w, p.y + h, p.z + d, 1.0f,          p.x, p.y + h, p.z + d, 1.0f };
-		triangle north2{ p.x + w, p.y, p.z + d, 1.0f,      p.x, p.y + h, p.z + d, 1.0f,              p.x, p.y, p.z + d, 1.0f };
+		triangle north1{ p.x + w, p.y, p.z + d, 1.0f,      p.x + w, p.y + h, p.z + d, 1.0f,          p.x, p.y + h, p.z + d, 1.0f,    0.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f,    1.0f, 0.0f, 1.0f };
+		triangle north2{ p.x + w, p.y, p.z + d, 1.0f,      p.x, p.y + h, p.z + d, 1.0f,              p.x, p.y, p.z + d, 1.0f,        0.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f,    1.0f, 1.0f, 1.0f };
 		north1 = north1 * matRotX; north1 = north1 * matRotY; north1 = north1 * matRotZ;
 		north2 = north2 * matRotX; north2 = north2 * matRotY; north2 = north2 * matRotZ;
 		triangles.push_back(north1);
 		triangles.push_back(north2);
 		//WEST
-		triangle west1{ p.x, p.y, p.z + d, 1.0f,      p.x, p.y + h, p.z + d, 1.0f,          p.x, p.y + h, p.z, 1.0f };
-		triangle west2{ p.x, p.y, p.z + d, 1.0f,      p.x, p.y + h, p.z, 1.0f,              p.x, p.y, p.z, 1.0f };
+		triangle west1{ p.x, p.y, p.z + d, 1.0f,      p.x, p.y + h, p.z + d, 1.0f,          p.x, p.y + h, p.z, 1.0f,    0.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f,    1.0f, 0.0f, 1.0f };
+		triangle west2{ p.x, p.y, p.z + d, 1.0f,      p.x, p.y + h, p.z, 1.0f,              p.x, p.y, p.z, 1.0f,        0.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f,    1.0f, 1.0f, 1.0f };
 		west1 = west1 * matRotX; west1 = west1 * matRotY; west1 = west1 * matRotZ;
 		west2 = west2 * matRotX; west2 = west2 * matRotY; west2 = west2 * matRotZ;
 		triangles.push_back(west1);
 		triangles.push_back(west2);
 		//BOTTOM
-		triangle bottom1{ p.x, p.y + h, p.z, 1.0f,      p.x, p.y + h, p.z + d, 1.0f,          p.x + w, p.y + h, p.z + d, 1.0f };
-		triangle bottom2{ p.x, p.y + h, p.z, 1.0f,      p.x + w, p.y + h, p.z + d, 1.0f,      p.x + w, p.y + h, p.z, 1.0f };
+		triangle bottom1{ p.x, p.y + h, p.z, 1.0f,      p.x, p.y + h, p.z + d, 1.0f,          p.x + w, p.y + h, p.z + d, 1.0f,    0.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f,    1.0f, 0.0f, 1.0f };
+		triangle bottom2{ p.x, p.y + h, p.z, 1.0f,      p.x + w, p.y + h, p.z + d, 1.0f,      p.x + w, p.y + h, p.z, 1.0f,        0.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f,    1.0f, 1.0f, 1.0f };
 		bottom1 = bottom1 * matRotX; bottom1 = bottom1 * matRotY; bottom1 = bottom1 * matRotZ;
 		bottom2 = bottom2 * matRotX; bottom2 = bottom2 * matRotY; bottom2 = bottom2 * matRotZ;
 		triangles.push_back(bottom1);
 		triangles.push_back(bottom2);
 		//TOP
-		triangle top1{ p.x + w, p.y, p.z + d, 1.0f,      p.x, p.y, p.z + d, 1.0f,          p.x, p.y, p.z, 1.0f };
-		triangle top2{ p.x + w, p.y, p.z + d, 1.0f,      p.x, p.y, p.z, 1.0f,              p.x + w, p.y, p.z, 1.0f };
+		triangle top1{ p.x + w, p.y, p.z + d, 1.0f,      p.x, p.y, p.z + d, 1.0f,          p.x, p.y, p.z, 1.0f,        0.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f,    1.0f, 0.0f, 1.0f };
+		triangle top2{ p.x + w, p.y, p.z + d, 1.0f,      p.x, p.y, p.z, 1.0f,              p.x + w, p.y, p.z, 1.0f,    0.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f,    1.0f, 1.0f, 1.0f };
 		top1 = top1 * matRotX; top1 = top1 * matRotY; top1 = top1 * matRotZ;
 		top2 = top2 * matRotX; top2 = top2 * matRotY; top2 = top2 * matRotZ;
 		triangles.push_back(top1);
@@ -575,5 +575,6 @@ struct mesh
 
 struct model {
 	mesh modelMesh;
-	//SDL_Texture* modelTexture = NULL;
+	glm::vec3 position;
+	glm::mat4 modelMatrix;
 };

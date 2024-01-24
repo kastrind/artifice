@@ -1,13 +1,18 @@
-//Using SDL, SDL OpenGL, GLEW, standard IO, and strings
+//Using SDL, SDL OpenGL, GLEW, stb_image, GLM, standard IO, and strings
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
 #include <SDL2/SDL_opengl.h>
 #include <GL/gl.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <iostream>
 #include <stdio.h>
 #include <string>
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+
 #include "LArtificeShaderProgram.h"
 #include "Configuration.h"
 #include "EventController.h"
@@ -33,7 +38,7 @@ void handleKeys( unsigned char key, int x, int y );
 void update();
 
 //Renders to the screen
-void render(size_t vertexDataSize, GLfloat* vertexData, size_t indexDataSize, GLuint* indexData);
+void render();
 
 //Frees media and shuts down SDL
 void close();
@@ -60,7 +65,7 @@ LArtificeShaderProgram artificeShaderProgram;
 unsigned int texture1;
 
 //window mouse barrier
-SDL_Rect windowRect{0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT};
+SDL_Rect windowRect{cfg.SCREEN_WIDTH/4, cfg.SCREEN_HEIGHT/4, cfg.SCREEN_WIDTH/2, cfg.SCREEN_HEIGHT/2};
 
 //the graphics engine
 Engine3D* artificeEngine;
@@ -89,7 +94,11 @@ bool init()
 		SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 
 		//Create window
-		gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
+		gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
+		//confine mouse cursor to the window and hide it
+		SDL_SetWindowMouseGrab(gWindow, SDL_TRUE);
+		SDL_SetWindowMouseRect(gWindow, &windowRect);
+		SDL_SetRelativeMouseMode(SDL_TRUE);
 		if( gWindow == NULL )
 		{
 			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
@@ -120,46 +129,15 @@ bool init()
 					printf( "Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError() );
 				}
 
+				//instantiate the 3D engine
+				artificeEngine = new Engine3D(cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, cfg.NEAR, cfg.FAR, cfg.FOV, &eventController);
+
 				//Initialize OpenGL
 				if( !initGL() )
 				{
 					printf( "Unable to initialize OpenGL!\n" );
 					success = false;
 				}
-
-				//instantiate the 3D engine
-				artificeEngine = new Engine3D(cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, cfg.NEAR, cfg.FAR, cfg.FOV, &eventController);
-				model box;
-				box.modelMesh.tris = {
-
-					// SOUTH
-					{ 0.0f, 0.0f, 0.0f, 1.0f,    0.0f, 1.0f, 0.0f, 1.0f,    1.0f, 1.0f, 0.0f, 1.0f,		0.0f, 1.0f, 1.0f,		0.0f, 0.0f, 1.0f,		1.0f, 0.0f, 1.0f,},
-					{ 0.0f, 0.0f, 0.0f, 1.0f,    1.0f, 1.0f, 0.0f, 1.0f,    1.0f, 0.0f, 0.0f, 1.0f,		0.0f, 1.0f, 1.0f,		1.0f, 0.0f, 1.0f,		1.0f, 1.0f, 1.0f,},
-
-					// EAST           																			   
-					{ 1.0f, 0.0f, 0.0f, 1.0f,    1.0f, 1.0f, 0.0f, 1.0f,    1.0f, 1.0f, 1.0f, 1.0f,		0.0f, 1.0f, 1.0f,		0.0f, 0.0f, 1.0f,		1.0f, 0.0f, 1.0f,},
-					{ 1.0f, 0.0f, 0.0f, 1.0f,    1.0f, 1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f, 1.0f,		0.0f, 1.0f, 1.0f,		1.0f, 0.0f, 1.0f,		1.0f, 1.0f, 1.0f,},
-
-					// NORTH           																			   
-					{ 1.0f, 0.0f, 1.0f, 1.0f,    1.0f, 1.0f, 1.0f, 1.0f,    0.0f, 1.0f, 1.0f, 1.0f,		0.0f, 1.0f, 1.0f,		0.0f, 0.0f, 1.0f,		1.0f, 0.0f, 1.0f,},
-					{ 1.0f, 0.0f, 1.0f, 1.0f,    0.0f, 1.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f, 1.0f,		0.0f, 1.0f, 1.0f,		1.0f, 0.0f, 1.0f,		1.0f, 1.0f, 1.0f,},
-
-					// WEST            																			   
-					{ 0.0f, 0.0f, 1.0f, 1.0f,    0.0f, 1.0f, 1.0f, 1.0f,    0.0f, 1.0f, 0.0f, 1.0f,		0.0f, 1.0f, 1.0f,		0.0f, 0.0f, 1.0f,		1.0f, 0.0f, 1.0f,},
-					{ 0.0f, 0.0f, 1.0f, 1.0f,    0.0f, 1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 0.0f, 1.0f,		0.0f, 1.0f, 1.0f,		1.0f, 0.0f, 1.0f,		1.0f, 1.0f, 1.0f,},
-
-					// TOP             																			   
-					{ 0.0f, 1.0f, 0.0f, 1.0f,    0.0f, 1.0f, 1.0f, 1.0f,    1.0f, 1.0f, 1.0f, 1.0f,		0.0f, 1.0f, 1.0f,		0.0f, 0.0f, 1.0f,		1.0f, 0.0f, 1.0f,},
-					{ 0.0f, 1.0f, 0.0f, 1.0f,    1.0f, 1.0f, 1.0f, 1.0f,    1.0f, 1.0f, 0.0f, 1.0f,		0.0f, 1.0f, 1.0f,		1.0f, 0.0f, 1.0f,		1.0f, 1.0f, 1.0f,},
-
-					// BOTTOM          																			  
-					{ 1.0f, 0.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f, 1.0f,    0.0f, 0.0f, 0.0f, 1.0f,		0.0f, 1.0f, 1.0f,		0.0f, 0.0f, 1.0f,		1.0f, 0.0f, 1.0f,},
-					{ 1.0f, 0.0f, 1.0f, 1.0f,    0.0f, 0.0f, 0.0f, 1.0f,    1.0f, 0.0f, 0.0f, 1.0f,		0.0f, 1.0f, 1.0f,		1.0f, 0.0f, 1.0f,		1.0f, 1.0f, 1.0f,}
-
-				};
-
-				artificeEngine->modelsToRaster.push_back(box);
-
 			}
 		}
 	}
@@ -179,51 +157,146 @@ bool initGL()
 	}
 	else
 	{
+		glEnable(GL_DEPTH_TEST);
+
 		gProgramID = artificeShaderProgram.getProgramID();
 
-		// //Get vertex attribute location
-		// gVertexPos2DLocation = glGetAttribLocation( gProgramID, "LVertexPos2D" );
-		// if( gVertexPos2DLocation == -1 )
-		// {
-		// 	printf( "LVertexPos2D is not a valid glsl program variable!\n" );
-		// 	success = false;
-		// }
-		// else
-		// {
-			//Initialize clear color
-			glClearColor( 0.f, 0.f, 0.f, 1.f );
+		model mdl;
+		mdl.position = glm::vec3( 0.0f,  0.0f,  0.0f);
+		//create a rectangle
+		//rectangle rect{0, 0, 0, 1,    0.2, 0.2,    0.0, 0.0, 0.0};
+		//create a cuboid
+		cuboid box{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
+		box.toTriangles(mdl.modelMesh.tris);
 
-			//TODO: relocate the below
-			//declare texture
-			glGenTextures(1, &texture1); 
-			//bind texture
-			glBindTexture(GL_TEXTURE_2D, texture1);
-			//set the texture wrapping/filtering options (on the currently bound texture object)
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			//load image
-			int width, height, nrChannels;
-			unsigned char *data = stbi_load("brickwall.bmp", &width, &height, &nrChannels, 0);
-			if (data)
-			{
-				std::cout << width << ", " << height << ", " << nrChannels << std::endl;
-				//generate texture
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-				glGenerateMipmap(GL_TEXTURE_2D);
-			}
-			else
-			{
-				std::cout << "Failed to load texture" << std::endl;
-			}
-			//free image memory
-			stbi_image_free(data);
-			//activate shader
-			artificeShaderProgram.bind();
-			glUniform1i(glGetUniformLocation(artificeShaderProgram.getProgramID(), "texture1"), 0);
+		artificeEngine->modelsToRaster.push_back(mdl);
 
-		// }
+		std::vector<GLfloat> vertexData;
+		std::vector<GLuint> indexData;
+		GLuint indexCounter = 0;
+
+		for (auto &model : artificeEngine->modelsToRaster)
+		{
+			for (auto &tri : mdl.modelMesh.tris)
+			{
+				for (int i = 0; i < 3; i++)
+				{
+					vertexData.push_back(tri.p[i].x);
+					vertexData.push_back(tri.p[i].y);
+					vertexData.push_back(tri.p[i].z);
+					vertexData.push_back(tri.t[i].u);
+					vertexData.push_back(tri.t[i].v);
+				}
+			}
+		}
+
+/*
+		for (auto &model : modelsToRaster)
+		{
+			for (auto &tri : model.modelMesh.tris)
+			{
+				//VBO data
+				vertexData.push_back(tri.p[0].x);
+				vertexData.push_back(tri.p[0].y);
+				vertexData.push_back(tri.p[0].z);
+				//vertexData.push_back(tri.p[0].w);
+				// vertexData.push_back((float)tri.R/255);
+				// vertexData.push_back((float)tri.G/255);
+				// vertexData.push_back((float)tri.B/255);
+				vertexData.push_back(tri.t[0].u);
+				vertexData.push_back(tri.t[0].v);
+				//vertexData.push_back(tri.t[0].w);
+
+				indexData.push_back(indexCounter++);
+
+				vertexData.push_back(tri.p[1].x);
+				vertexData.push_back(tri.p[1].y);
+				vertexData.push_back(tri.p[1].z);
+				//vertexData.push_back(tri.p[1].w);
+				// vertexData.push_back((float)tri.R/255);
+				// vertexData.push_back((float)tri.G/255);
+				// vertexData.push_back((float)tri.B/255);
+				vertexData.push_back(tri.t[1].u);
+				vertexData.push_back(tri.t[1].v);
+				//vertexData.push_back(tri.t[1].w);
+
+				indexData.push_back(indexCounter++);
+
+				vertexData.push_back(tri.p[2].x);
+				vertexData.push_back(tri.p[2].y);
+				vertexData.push_back(tri.p[2].z);
+				//vertexData.push_back(tri.p[2].w);
+				// vertexData.push_back((float)tri.R/255);
+				// vertexData.push_back((float)tri.G/255);
+				// vertexData.push_back((float)tri.B/255);
+				vertexData.push_back(tri.t[2].u);
+				vertexData.push_back(tri.t[2].v);
+				//vertexData.push_back(tri.t[2].w);
+
+				indexData.push_back(indexCounter++);
+			}
+		}
+		*/
+
+		glGenVertexArrays(1, &gVAO);
+		glBindVertexArray(gVAO);
+
+		std::cout << "vertex data size: " << vertexData.size() << std::endl;
+		std::cout << "index data size: " << indexData.size() << std::endl;
+
+		//Create VBO
+		glGenBuffers( 1, &gVBO );
+		glBindBuffer( GL_ARRAY_BUFFER, gVBO );
+		//glBufferData( GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW );
+		glBufferData( GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), vertexData.data(), GL_STATIC_DRAW );
+
+		// //Create IBO
+		// glGenBuffers( 1, &gIBO );
+		// glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gIBO );
+		// glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), &indexData, GL_STATIC_DRAW );
+
+		//position attribute
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+		// //color attribute
+		// glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		// glEnableVertexAttribArray(1);
+		//texture coord attribute
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+
+		//Initialize clear color
+		glClearColor( 0.f, 0.f, 0.f, 1.f );
+
+		//TODO: relocate the below
+		//declare texture
+		glGenTextures(1, &texture1); 
+		//bind texture
+		glBindTexture(GL_TEXTURE_2D, texture1);
+		//set the texture wrapping/filtering options (on the currently bound texture object)
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		//load image
+		int width, height, nrChannels;
+		unsigned char *data = stbi_load("brickwall.bmp", &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			std::cout << width << ", " << height << ", " << nrChannels << std::endl;
+			//generate texture
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			glGenerateMipmap(GL_TEXTURE_2D);
+		}
+		else
+		{
+			std::cout << "Failed to load texture" << std::endl;
+		}
+		//free image memory
+		stbi_image_free(data);
+		//activate shader
+		artificeShaderProgram.bind();
+		glUniform1i(glGetUniformLocation(artificeShaderProgram.getProgramID(), "texture1"), 0);
 	}
 	return success;
 }
@@ -242,7 +315,7 @@ void update()
 	//No per frame update needed
 }
 
-void render(size_t vertexDataSize, GLfloat* vertexData, size_t indexDataSize, GLuint* indexData)
+void render()
 {
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	//Clear color buffer
@@ -250,61 +323,38 @@ void render(size_t vertexDataSize, GLfloat* vertexData, size_t indexDataSize, GL
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture1);
-	
-	//Render quad
-	if( gRenderQuad )
+
+	//bind program - activate shader
+	artificeShaderProgram.bind();
+
+	//artificeEngine->mtx.lock();
+	glm::mat4 projectionMatrix = glm::perspective(glm::radians((float)cfg.FOV), (float)cfg.SCREEN_WIDTH / (float)cfg.SCREEN_HEIGHT, cfg.NEAR, cfg.FAR);
+	artificeShaderProgram.setMat4("projection", projectionMatrix);
+	//artificeShaderProgram.setMat4("projection", artificeEngine->getProjectionMatrix());
+
+	//camera/view transformation
+	glm::mat4 viewMatrix = glm::lookAt(artificeEngine->getCameraPos(), artificeEngine->getCameraPos() + artificeEngine->getCameraFront(), artificeEngine->getCameraUp());
+	artificeShaderProgram.setMat4("view", viewMatrix);
+	//artificeShaderProgram.setMat4("view", artificeEngine->getViewMatrix());
+
+	std::vector<model> modelsToRaster = artificeEngine->modelsToRaster;
+	//artificeEngine->mtx.unlock();
+
+	glBindVertexArray(gVAO);
+
+	for (auto &model : modelsToRaster)
 	{
-
-		//VBO data
-		// GLfloat vertexData[] =
-		// {
-		// 	//positions          //colors            //texture coords
-		// 	0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   //top right
-		// 	0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   //bottom right
-		// 	-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   //bottom left
-		// 	-0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 0.0f,   0.0f, 1.0f    //top left 
-		// };
-
-		// GLuint indexData[] = {
-		// 	0, 1, 2, //first triangle
-		// 	3, 4, 5  //second triangle
-		// };
-
-		//std::cout << "index data size: " << indexDataSize << std::endl;
-
-		glGenVertexArrays(1, &gVAO);
-		glBindVertexArray(gVAO);
-
-		//Create VBO
-		glGenBuffers( 1, &gVBO );
-		glBindBuffer( GL_ARRAY_BUFFER, gVBO );
-		glBufferData( GL_ARRAY_BUFFER, vertexDataSize * sizeof(GLfloat), vertexData, GL_STATIC_DRAW );
-		//glBufferData( GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW );
-
-		//Create IBO
-		glGenBuffers( 1, &gIBO );
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gIBO );
-		glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexDataSize * sizeof(GLuint), indexData, GL_STATIC_DRAW );
-
-		//position attribute
-		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-		//color attribute
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(4 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-		//texture coord attribute
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(7 * sizeof(float)));
-		glEnableVertexAttribArray(2);
-
-		//bind program - activate shader
-		artificeShaderProgram.bind();
-		glBindVertexArray(gVAO);
-
-		glDrawElements( GL_TRIANGLES, indexDataSize, GL_UNSIGNED_INT, NULL );
-
-		//unbind program - deactivate shader
-		artificeShaderProgram.unbind();
+		glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
+		modelMatrix = glm::translate(modelMatrix, model.position);
+		model.modelMatrix = modelMatrix;
+		artificeShaderProgram.setMat4("model", model.modelMatrix);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
+
+	//glDrawElements( GL_TRIANGLES, indexDataSize, GL_UNSIGNED_INT, NULL );
+
+	//unbind program - deactivate shader
+	//artificeShaderProgram.unbind();
 }
 
 void close()
@@ -359,13 +409,13 @@ int main( int argc, char* args[] )
 				}else if (e.key.keysym.sym == SDLK_ESCAPE && SDL_GetWindowMouseGrab(gWindow) == SDL_TRUE) {
 					//free mouse cursor from the window and reveal it
 					SDL_SetWindowMouseGrab(gWindow, SDL_FALSE);
-					SDL_SetRelativeMouseMode(SDL_FALSE);
 					SDL_SetWindowMouseRect(gWindow, NULL);
+					SDL_SetRelativeMouseMode(SDL_FALSE);
 				}else if (e.type == SDL_MOUSEBUTTONDOWN && SDL_GetWindowMouseGrab(gWindow) == SDL_FALSE) {
 					//confine mouse cursor to the window and hide it
 					SDL_SetWindowMouseGrab(gWindow, SDL_TRUE);
-					SDL_SetRelativeMouseMode(SDL_TRUE);
 					SDL_SetWindowMouseRect(gWindow, &windowRect);
+					SDL_SetRelativeMouseMode(SDL_TRUE);
 				}
 				//user presses or releases a key
 				else if( e.type == SDL_KEYDOWN || e.type == SDL_KEYUP || e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP )
@@ -374,7 +424,10 @@ int main( int argc, char* args[] )
 				}
 			}
 
+			//Render
+			render();
 
+			/*
 			artificeEngine->mtx.lock();
 			std::vector<triangle> trianglesToRaster = artificeEngine->trianglesToRaster;
 			artificeEngine->mtx.unlock();
@@ -427,12 +480,7 @@ int main( int argc, char* args[] )
 
 				indexData.push_back(indexCounter++);
 			}
-
-			if (vertexData.size()>0)
-			{
-				//Render
-				render(vertexData.size(), vertexData.data(), indexData.size(), indexData.data());
-			}
+			*/
 			
 			//Update screen
 			SDL_GL_SwapWindow( gWindow );

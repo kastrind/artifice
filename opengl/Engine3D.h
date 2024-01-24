@@ -1,10 +1,16 @@
 #pragma once
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "Configuration.h"
 #include "Constructs3D.h"
 #include "EventController.h"
-#define _USE_MATH_DEFINES
-#include <cmath>
+
 #include <vector>
 #include <list>
 #include <thread>
@@ -33,6 +39,16 @@ class Engine3D
 
 		void clearDepthBuffer();
 
+		glm::mat4 getProjectionMatrix() const;
+
+		glm::vec3 getCameraPos() const;
+
+		glm::vec3 getCameraFront() const;
+
+		glm::vec3 getCameraUp() const;
+
+		glm::mat4 getViewMatrix() const;
+
 		std::atomic<bool> isActive;
 
 		std::atomic<bool> blockRaster;
@@ -57,11 +73,13 @@ class Engine3D
 
 		mat4x4 matProj;
 
+		glm::mat4 projectionMatrix;
+
 		float* depthBuffer = nullptr;
 
 		float theta = 0;
 
-		float yaw = 0;
+		float yaw = -90.0f;
 
 		float pitch = 0;
 
@@ -85,6 +103,15 @@ class Engine3D
 
 		vec3d light;
 
+		//camera
+		glm::vec3 cameraPos;
+
+		glm::vec3 cameraFront;
+
+		glm::vec3 cameraUp;
+
+		glm::mat4 viewMatrix;
+
 		//planes to clip against and their normals
 		vec3d planeTop;
 		vec3d planeTopNormal;
@@ -107,7 +134,7 @@ class Engine3D
 
 		void fillProjMatrix();
 
-		void move();
+		void move(float elapsedTime);
 
 		std::unique_ptr<std::list<triangle>> clip(triangle& tri);
 

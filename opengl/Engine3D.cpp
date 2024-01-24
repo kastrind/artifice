@@ -9,6 +9,15 @@ Engine3D::Engine3D(int width, int height, float near, float far, float fov, Even
 
 	fillProjMatrix();
 
+	projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
+
+	//camera
+	cameraPos   = glm::vec3(0.0f, 0.0f, 3.0f);
+	cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+	cameraUp    = glm::vec3(0.0f, 1.0f, 0.0f);
+
+	viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
 	camera = { 0, 0, 0 };
 	lookDir = { 0, 0, 1 };
 	up = { 0, 1, 0 };
@@ -88,8 +97,9 @@ bool Engine3D::onUserCreate()
 bool Engine3D::onUserUpdate(float elapsedTime)
 {
 	//theta += 1.0f * elapsedTime;
-	move();
-
+	mtx.lock();
+	move(elapsedTime);
+	/*
 	//std::cout<< "theta:" << theta << std::endl;
 	std::vector<triangle> newTrianglesToProject;
 
@@ -115,10 +125,20 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	vec3d normal, line1, line2, camLine, lightLine;
 
 	clearDepthBuffer();
+	*/
+
+	// projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
+	// viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
 	//for each model to raster
 	for (auto &model : modelsToRaster)
 	{
+
+		// glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
+		// modelMatrix = glm::translate(modelMatrix, model.position);
+		// model.modelMatrix = modelMatrix;
+
+		/*
 		//project its triangles into camera view
 		for (auto &tri : model.modelMesh.tris)
 		{
@@ -178,11 +198,14 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 		}
 
-	}
+		*/
 
-	mtx.lock();
-	trianglesToRaster = newTrianglesToProject;
+	}
 	mtx.unlock();
+
+	// mtx.lock();
+	// trianglesToRaster = newTrianglesToProject;
+	// mtx.unlock();
 
 	return true;
 }
@@ -230,35 +253,41 @@ std::unique_ptr<std::list<triangle>> Engine3D::clip(triangle& tri)
 	return listTriangles;
 }
 
-void Engine3D::move()
+void Engine3D::move(float elapsedTime)
 {
+	float cameraSpeed = static_cast<float>(1.5 * elapsedTime);
+
 	if (eventController != nullptr)
 	{
 		bool* keysPressed = eventController->getKeysPressed();
 		int mouseDistanceX = eventController->getMouseDistanceX();
 		int mouseDistanceY = eventController->getMouseDistanceY();
-		float multiplierX = std::max((float)mouseDistanceX/5, 1.0f);
-		float multiplierY = std::max((float)mouseDistanceY/5, 1.0f);
+		float multiplierX = (float)mouseDistanceX * 5;
+		float multiplierY = (float)mouseDistanceY * 5;
 
 		if (keysPressed[SupportedKeys::W]) {
 			camera = camera + forward;
+			cameraPos += cameraSpeed * cameraFront;
 		} else if (keysPressed[SupportedKeys::S]) {
 			camera = camera - forward;
+			cameraPos -= cameraSpeed * cameraFront;
 		}
 
 		if (keysPressed[SupportedKeys::A]) {
 			right = forward * matCameraRotY90CCW;
 			camera = camera + right;
+			cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 
 		} else if (keysPressed[SupportedKeys::D]) {
 			left = forward * matCameraRotY90CW;
 			camera = camera + left;
+			cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 		}
 
 		if (keysPressed[SupportedKeys::LEFT_ARROW] || keysPressed[SupportedKeys::MOUSE_LEFT]) {
-			yaw += (multiplierX * elapsedTime) > 0.000001f ? multiplierX * elapsedTime : 0;
+			yaw -= (multiplierX * elapsedTime) > 0.0f ? multiplierX * elapsedTime : 0;
 		} else if (keysPressed[SupportedKeys::RIGHT_ARROW] || keysPressed[SupportedKeys::MOUSE_RIGHT]) {
-			yaw -= (multiplierX * elapsedTime) > 0.000001f ? multiplierX * elapsedTime : 0;
+			yaw += (multiplierX * elapsedTime) > 0.0f ? multiplierX * elapsedTime : 0;
 		}
 
 		if (keysPressed[SupportedKeys::UP_ARROW] || keysPressed[SupportedKeys::MOUSE_UP]) {
@@ -266,6 +295,18 @@ void Engine3D::move()
 		} else if (keysPressed[SupportedKeys::DOWN_ARROW] || keysPressed[SupportedKeys::MOUSE_DOWN]) {
 			pitch -= (multiplierY * elapsedTime) > 0.000001f ? multiplierY * elapsedTime : 0;
 		}
+
+		// make sure that when pitch is out of bounds, screen doesn't get flipped
+		if (pitch > 89.0f)
+			pitch = 89.0f;
+		if (pitch < -89.0f)
+			pitch = -89.0f;
+
+		glm::vec3 front;
+		front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+		front.y = sin(glm::radians(pitch));
+		front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+		cameraFront = glm::normalize(front);
 	}
 }
 
@@ -499,6 +540,31 @@ void Engine3D::fillProjMatrix()
 mat4x4 Engine3D::getProjMatrix()
 {
 	return matProj;
+}
+
+glm::mat4 Engine3D::getProjectionMatrix() const
+{
+	return projectionMatrix;
+}
+
+glm::vec3 Engine3D::getCameraPos() const
+{
+	return cameraPos;
+}
+
+glm::vec3 Engine3D::getCameraFront() const
+{
+	return cameraFront;
+}
+
+glm::vec3 Engine3D::getCameraUp() const
+{
+	return cameraUp;
+}
+
+glm::mat4 Engine3D::getViewMatrix() const
+{
+	return viewMatrix;
 }
 
 void Engine3D::clearDepthBuffer()

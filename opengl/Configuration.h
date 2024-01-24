@@ -18,9 +18,9 @@ typedef struct Configuration
 
 	const float NEAR = 0.1f;
 
-	const float FAR = 1000.0f;
+	const float FAR = 100.0f;
 
-	const int FOV = 90; //field of view in degrees
+	const int FOV = 45; //field of view in degrees
 
 	const float DOF = 100.0f; //depth of field
 
