@@ -31,9 +31,6 @@ bool init();
 //Initializes rendering program and clear color
 bool initGL();
 
-//Input handler
-void handleKeys( unsigned char key, int x, int y );
-
 //Per frame update
 void update();
 
@@ -184,59 +181,15 @@ bool initGL()
 					vertexData.push_back(tri.p[i].x);
 					vertexData.push_back(tri.p[i].y);
 					vertexData.push_back(tri.p[i].z);
+					vertexData.push_back((float)tri.R/255);
+					vertexData.push_back((float)tri.G/255);
+					vertexData.push_back((float)tri.B/255);
 					vertexData.push_back(tri.t[i].u);
 					vertexData.push_back(tri.t[i].v);
+					indexData.push_back(indexCounter++);
 				}
 			}
 		}
-
-/*
-		for (auto &model : modelsToRaster)
-		{
-			for (auto &tri : model.modelMesh.tris)
-			{
-				//VBO data
-				vertexData.push_back(tri.p[0].x);
-				vertexData.push_back(tri.p[0].y);
-				vertexData.push_back(tri.p[0].z);
-				//vertexData.push_back(tri.p[0].w);
-				// vertexData.push_back((float)tri.R/255);
-				// vertexData.push_back((float)tri.G/255);
-				// vertexData.push_back((float)tri.B/255);
-				vertexData.push_back(tri.t[0].u);
-				vertexData.push_back(tri.t[0].v);
-				//vertexData.push_back(tri.t[0].w);
-
-				indexData.push_back(indexCounter++);
-
-				vertexData.push_back(tri.p[1].x);
-				vertexData.push_back(tri.p[1].y);
-				vertexData.push_back(tri.p[1].z);
-				//vertexData.push_back(tri.p[1].w);
-				// vertexData.push_back((float)tri.R/255);
-				// vertexData.push_back((float)tri.G/255);
-				// vertexData.push_back((float)tri.B/255);
-				vertexData.push_back(tri.t[1].u);
-				vertexData.push_back(tri.t[1].v);
-				//vertexData.push_back(tri.t[1].w);
-
-				indexData.push_back(indexCounter++);
-
-				vertexData.push_back(tri.p[2].x);
-				vertexData.push_back(tri.p[2].y);
-				vertexData.push_back(tri.p[2].z);
-				//vertexData.push_back(tri.p[2].w);
-				// vertexData.push_back((float)tri.R/255);
-				// vertexData.push_back((float)tri.G/255);
-				// vertexData.push_back((float)tri.B/255);
-				vertexData.push_back(tri.t[2].u);
-				vertexData.push_back(tri.t[2].v);
-				//vertexData.push_back(tri.t[2].w);
-
-				indexData.push_back(indexCounter++);
-			}
-		}
-		*/
 
 		glGenVertexArrays(1, &gVAO);
 		glBindVertexArray(gVAO);
@@ -250,20 +203,20 @@ bool initGL()
 		//glBufferData( GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW );
 		glBufferData( GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), vertexData.data(), GL_STATIC_DRAW );
 
-		// //Create IBO
-		// glGenBuffers( 1, &gIBO );
-		// glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gIBO );
-		// glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), &indexData, GL_STATIC_DRAW );
+		//Create IBO
+		glGenBuffers( 1, &gIBO );
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gIBO );
+		glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), &indexData, GL_STATIC_DRAW );
 
 		//position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(0);
-		// //color attribute
-		// glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-		// glEnableVertexAttribArray(1);
-		//texture coord attribute
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+		//color attribute
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 		glEnableVertexAttribArray(1);
+		//texture coord attribute
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glEnableVertexAttribArray(2);
 
 		//Initialize clear color
 		glClearColor( 0.f, 0.f, 0.f, 1.f );
@@ -299,15 +252,6 @@ bool initGL()
 		glUniform1i(glGetUniformLocation(artificeShaderProgram.getProgramID(), "texture1"), 0);
 	}
 	return success;
-}
-
-void handleKeys( unsigned char key, int x, int y )
-{
-	//Toggle quad
-	if( key == 'q' )
-	{
-		gRenderQuad = !gRenderQuad;
-	}
 }
 
 void update()
@@ -427,65 +371,10 @@ int main( int argc, char* args[] )
 			//Render
 			render();
 
-			/*
-			artificeEngine->mtx.lock();
-			std::vector<triangle> trianglesToRaster = artificeEngine->trianglesToRaster;
-			artificeEngine->mtx.unlock();
-
-			std::vector<GLfloat> vertexData;
-			std::vector<GLuint> indexData;
-			GLuint indexCounter = 0;
-
-			for (auto tri : trianglesToRaster)
-			{
-				//std::cout << "tri p0: " << tri.p[0].x << ", " << tri.p[0].y << ", " << tri.p[0].z << std::endl;
-
-				//VBO data
-				vertexData.push_back(tri.p[0].x);
-				vertexData.push_back(tri.p[0].y);
-				vertexData.push_back(tri.p[0].z);
-				vertexData.push_back(tri.p[0].w);
-				vertexData.push_back((float)tri.R/255);
-				vertexData.push_back((float)tri.G/255);
-				vertexData.push_back((float)tri.B/255);
-				vertexData.push_back(tri.t[0].u);
-				vertexData.push_back(tri.t[0].v);
-				vertexData.push_back(tri.t[0].w);
-
-				indexData.push_back(indexCounter++);
-
-				vertexData.push_back(tri.p[1].x);
-				vertexData.push_back(tri.p[1].y);
-				vertexData.push_back(tri.p[1].z);
-				vertexData.push_back(tri.p[1].w);
-				vertexData.push_back((float)tri.R/255);
-				vertexData.push_back((float)tri.G/255);
-				vertexData.push_back((float)tri.B/255);
-				vertexData.push_back(tri.t[1].u);
-				vertexData.push_back(tri.t[1].v);
-				vertexData.push_back(tri.t[1].w);
-
-				indexData.push_back(indexCounter++);
-
-				vertexData.push_back(tri.p[2].x);
-				vertexData.push_back(tri.p[2].y);
-				vertexData.push_back(tri.p[2].z);
-				vertexData.push_back(tri.p[2].w);
-				vertexData.push_back((float)tri.R/255);
-				vertexData.push_back((float)tri.G/255);
-				vertexData.push_back((float)tri.B/255);
-				vertexData.push_back(tri.t[2].u);
-				vertexData.push_back(tri.t[2].v);
-				vertexData.push_back(tri.t[2].w);
-
-				indexData.push_back(indexCounter++);
-			}
-			*/
-			
 			//Update screen
 			SDL_GL_SwapWindow( gWindow );
 		}
-		
+
 		//Disable text input
 		SDL_StopTextInput();
 	}
