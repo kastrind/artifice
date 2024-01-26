@@ -31,6 +31,8 @@ bool init();
 //Initializes rendering program and clear color
 bool initGL();
 
+void generateTextures();
+
 //Per frame update
 void update();
 
@@ -60,6 +62,10 @@ LArtificeShaderProgram artificeShaderProgram;
 
 //declare texture
 unsigned int texture1;
+
+std::vector<GLuint> textureIds;
+
+std::vector<std::string> texturePaths;
 
 //window mouse barrier
 SDL_Rect windowRect{cfg.SCREEN_WIDTH/4, cfg.SCREEN_HEIGHT/4, cfg.SCREEN_WIDTH/2, cfg.SCREEN_HEIGHT/2};
@@ -221,11 +227,24 @@ bool initGL()
 		//Initialize clear color
 		glClearColor( 0.f, 0.f, 0.f, 1.f );
 
-		//TODO: relocate the below
+		generateTextures();
+	}
+	return success;
+}
+
+void generateTextures()
+{
+	texturePaths.push_back("brickwall.bmp");
+	texturePaths.push_back("brickwallPainted.bmp");
+	for (std::string texturePath : texturePaths)
+	{
+		textureIds.push_back(0);
 		//declare texture
-		glGenTextures(1, &texture1); 
+		//glGenTextures(1, &texture1);
+		glGenTextures(1, &textureIds.back());
 		//bind texture
-		glBindTexture(GL_TEXTURE_2D, texture1);
+		//glBindTexture(GL_TEXTURE_2D, texture1);
+		glBindTexture(GL_TEXTURE_2D, textureIds.back());
 		//set the texture wrapping/filtering options (on the currently bound texture object)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -233,25 +252,29 @@ bool initGL()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		//load image
 		int width, height, nrChannels;
-		unsigned char *data = stbi_load("brickwall.bmp", &width, &height, &nrChannels, 0);
+		unsigned char *data = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
 		if (data)
 		{
-			std::cout << width << ", " << height << ", " << nrChannels << std::endl;
 			//generate texture
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 			glGenerateMipmap(GL_TEXTURE_2D);
 		}
 		else
 		{
-			std::cout << "Failed to load texture" << std::endl;
+			std::cout << "Failed to load texture " << texturePath << std::endl;
 		}
 		//free image memory
 		stbi_image_free(data);
-		//activate shader
-		artificeShaderProgram.bind();
-		glUniform1i(glGetUniformLocation(artificeShaderProgram.getProgramID(), "texture1"), 0);
 	}
-	return success;
+	//activate shader
+	artificeShaderProgram.bind();
+	//set the uniforms
+	int cnt=0;
+	for (GLuint& textureId : textureIds)
+	{
+		glUniform1i(glGetUniformLocation(artificeShaderProgram.getProgramID(), std::string("texture" + std::to_string(textureId)).c_str()), cnt++);
+	}
+
 }
 
 void update()
@@ -266,7 +289,11 @@ void render()
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture1);
+	//glBindTexture(GL_TEXTURE_2D, texture1);
+	glBindTexture(GL_TEXTURE_2D, textureIds.front());
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, textureIds.back());
 
 	//bind program - activate shader
 	artificeShaderProgram.bind();
