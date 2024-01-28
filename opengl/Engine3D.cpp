@@ -127,16 +127,16 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	clearDepthBuffer();
 	*/
 
-	// projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
-	// viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+	projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
+	viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
 	//for each model to raster
 	for (auto &model : modelsToRaster)
 	{
 
-		// glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
-		// modelMatrix = glm::translate(modelMatrix, model.position);
-		// model.modelMatrix = modelMatrix;
+		glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
+		modelMatrix = glm::translate(modelMatrix, model.position);
+		model.modelMatrix = modelMatrix;
 
 		/*
 		//project its triangles into camera view

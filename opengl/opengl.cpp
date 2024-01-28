@@ -298,26 +298,28 @@ void render()
 	//bind program - activate shader
 	artificeShaderProgram.bind();
 
-	//artificeEngine->mtx.lock();
-	glm::mat4 projectionMatrix = glm::perspective(glm::radians((float)cfg.FOV), (float)cfg.SCREEN_WIDTH / (float)cfg.SCREEN_HEIGHT, cfg.NEAR, cfg.FAR);
-	artificeShaderProgram.setMat4("projection", projectionMatrix);
-	//artificeShaderProgram.setMat4("projection", artificeEngine->getProjectionMatrix());
+	artificeEngine->mtx.lock();
+	// glm::mat4 projectionMatrix = glm::perspective(glm::radians((float)cfg.FOV), (float)cfg.SCREEN_WIDTH / (float)cfg.SCREEN_HEIGHT, cfg.NEAR, cfg.FAR);
+	// artificeShaderProgram.setMat4("projection", projectionMatrix);
+	
+	artificeShaderProgram.setMat4("projection", artificeEngine->getProjectionMatrix());
 
 	//camera/view transformation
-	glm::mat4 viewMatrix = glm::lookAt(artificeEngine->getCameraPos(), artificeEngine->getCameraPos() + artificeEngine->getCameraFront(), artificeEngine->getCameraUp());
-	artificeShaderProgram.setMat4("view", viewMatrix);
-	//artificeShaderProgram.setMat4("view", artificeEngine->getViewMatrix());
+	// glm::mat4 viewMatrix = glm::lookAt(artificeEngine->getCameraPos(), artificeEngine->getCameraPos() + artificeEngine->getCameraFront(), artificeEngine->getCameraUp());
+	// artificeShaderProgram.setMat4("view", viewMatrix);
+	
+	artificeShaderProgram.setMat4("view", artificeEngine->getViewMatrix());
 
 	std::vector<model> modelsToRaster = artificeEngine->modelsToRaster;
-	//artificeEngine->mtx.unlock();
+	artificeEngine->mtx.unlock();
 
 	glBindVertexArray(gVAO);
 
 	for (auto &model : modelsToRaster)
 	{
-		glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
-		modelMatrix = glm::translate(modelMatrix, model.position);
-		model.modelMatrix = modelMatrix;
+		// glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
+		// modelMatrix = glm::translate(modelMatrix, model.position);
+		// model.modelMatrix = modelMatrix;
 		artificeShaderProgram.setMat4("model", model.modelMatrix);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
