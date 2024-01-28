@@ -135,6 +135,16 @@ struct vec3d
 		return (x * v.x + y * v.y + z * v.z);
 	}
 
+	inline vec3d& operator=(const glm::vec4& in) {
+		x = in.x; y = in.y; z = in.z; w = in.w;
+		return *(this);
+	}
+
+	inline vec3d& operator=(const glm::vec3& in) {
+		x = in.x; y = in.y; z = in.z;
+		return *(this);
+	}
+
 	inline vec3d operator+(const vec3d& in) {
 		vec3d out;
 		out.x = x + in.x; out.y = y + in.y; out.z = z + in.z; out.w = w + in.w;
@@ -246,7 +256,7 @@ struct texturePoint
 struct triangle
 {
 	vec3d p[3] = { 0, 0, 0 }; //points
-	vec2d t[3] = { 0, 0, 0 };    //texture points
+	vec2d t[3] = { 0, 0, 0 }; //texture points
 
 	unsigned char R = 255; unsigned char G = 255; unsigned char B = 255;
 
@@ -306,7 +316,7 @@ struct triangle
 	inline float area()
 	{
 		//area = [ x1(y2 – y3) + x2(y3 – y1) + x3(y1-y2)]/2
-		return std::abs( ( p[0].x * ( p[1].y - p[2].y ) + p[1].x * ( p[2].y - p[0].y ) + p[2].x * ( p[0].y - p[1].y ) ) / 2.0 );
+		return std::abs( ( p[0].x * ( p[1].y - p[2].y ) + p[1].x * ( p[2].y - p[0].y ) + p[2].x * ( p[0].y - p[1].y ) ) / 2.0f );
 	}
 
 	bool contains(vec3d point)
@@ -315,7 +325,7 @@ struct triangle
 		float ABC_area = area();
 
 		triangle PBC{ point, p[1], p[2] };
-		
+
 		//calculate area of triangle PBC 
 		float PBC_area = PBC.area();
 
@@ -577,4 +587,5 @@ struct model {
 	mesh modelMesh;
 	glm::vec3 position;
 	glm::mat4 modelMatrix;
+	bool inFocus = false;
 };

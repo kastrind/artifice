@@ -18,29 +18,29 @@ Engine3D::Engine3D(int width, int height, float near, float far, float fov, Even
 
 	viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
-	camera = { 0, 0, 0 };
-	lookDir = { 0, 0, 1 };
-	up = { 0, 1, 0 };
-	target = { 0, 0, 1 };
-	right = { 1, 0, 0 };
-	left = {-1, 0, 0 };
-	forward = { 0, 0, 1 };
-	light = { 0, 1, -1 };
+	camera = vec3d{ 0, 0, 0 };
+	lookDir = vec3d{ 0, 0, 1 };
+	up = vec3d{ 0, 1, 0 };
+	target = vec3d{ 0, 0, 1 };
+	right = vec3d{ 1, 0, 0 };
+	left = vec3d{-1, 0, 0 };
+	forward = vec3d{ 0, 0, 1 };
+	light = vec3d{ 0, 1, -1 };
 
 	matCameraRotY90CW = mat4x4::getRotMatrixY(-cfg.M_PI_HALF);
 	matCameraRotY90CCW = mat4x4::getRotMatrixY(cfg.M_PI_HALF);
 
 	//planes to clip against and their normals
-	planeTop = { 0.0f, 0.0f, 0.0f };
-	planeTopNormal = { 0.0f, 1.0f, 0.0f };
-	planeBottom = { 0.0f, (float)height -1.0f, 0.0f};
-	planeBottomNormal = { 0.0f, -1.0f, 0.0f };
- 	planeLeft = { 0.0f, 0.0f, 0.0f };
-	planeLeftNormal = { 1.0f, 0.0f, 0.0f };
-	planeRight = { (float)width - 1.0f, 0.0f, 0.0f };
-	planeRightNormal = { -1.0f, 0.0f, 0.0f };
-	nearPlane = { 0.0f, 0.0f, 0.3f };
-	nearPlaneNormal = { 0.0f, 0.0f, 1.0f };
+	planeTop = vec3d{ 0.0f, 0.0f, 0.0f };
+	planeTopNormal = vec3d{ 0.0f, 1.0f, 0.0f };
+	planeBottom = vec3d{ 0.0f, (float)height -1.0f, 0.0f};
+	planeBottomNormal = vec3d{ 0.0f, -1.0f, 0.0f };
+ 	planeLeft = vec3d{ 0.0f, 0.0f, 0.0f };
+	planeLeftNormal = vec3d{ 1.0f, 0.0f, 0.0f };
+	planeRight = vec3d{ (float)width - 1.0f, 0.0f, 0.0f };
+	planeRightNormal = vec3d{ -1.0f, 0.0f, 0.0f };
+	nearPlane = vec3d{ 0.0f, 0.0f, 0.3f };
+	nearPlaneNormal = vec3d{ 0.0f, 0.0f, 1.0f };
 }
 
 std::thread Engine3D::startEngine()
@@ -129,14 +129,77 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 	projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
 	viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+	mtx.unlock();
 
 	//for each model to raster
 	for (auto &model : modelsToRaster)
 	{
 
+		mtx.lock();
 		glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
 		modelMatrix = glm::translate(modelMatrix, model.position);
 		model.modelMatrix = modelMatrix;
+		mtx.unlock();
+
+		for (auto tri : model.modelMesh.tris)
+		{
+			// glm::vec4 test[2] = { {0, 1, 2, 3}, {4, 5, 6, 7} };
+			// std::cout << "test!0: " << test[0].w << "test!1: " << test[1].w << std::endl;
+			glm::vec4 pt[3];
+			pt[0] = { tri.p[0].x, tri.p[0].y, tri.p[0].z, tri.p[0].w };
+			pt[1] = { tri.p[1].x, tri.p[1].y, tri.p[1].z, tri.p[1].w };
+			pt[2] = { tri.p[2].x, tri.p[2].y, tri.p[2].z, tri.p[2].w };
+
+			pt[0] = projectionMatrix * viewMatrix * modelMatrix * pt[0];
+			pt[1] = projectionMatrix * viewMatrix * modelMatrix * pt[1];
+			pt[2] = projectionMatrix * viewMatrix * modelMatrix * pt[2];
+
+			tri.p[0] = pt[0];
+			tri.p[1] = pt[1];
+			tri.p[2] = pt[2];
+/*
+			tri.p[0].x = pt[0].x;
+			tri.p[0].y = pt[0].y;
+			tri.p[0].z = pt[0].z;
+			tri.p[0].w = pt[0].w;
+
+			tri.p[1].x = pt[1].x;
+			tri.p[1].y = pt[1].y;
+			tri.p[1].z = pt[1].z;
+			tri.p[1].w = pt[1].w;
+
+			tri.p[2].x = pt[2].x;
+			tri.p[2].y = pt[2].y;
+			tri.p[2].z = pt[2].z;
+			tri.p[2].w = pt[2].w;
+*/
+
+/*
+			float area = std::abs( ( tri.pt[0].x * ( tri.pt[1].y - tri.pt[2].y ) + tri.pt[1].x * ( tri.pt[2].y - tri.pt[0].y ) + tri.pt[2].x * ( tri.pt[0].y - tri.pt[1].y ) ) / 2.0f );
+			std::cout << "area: " << area << std::endl;
+
+			 std::cout << "x: " << tri.pt[0].x << std::endl;
+			 std::cout << "0y: " << tri.pt[0].y << std::endl;
+			 std::cout << "1y: " << tri.pt[1].y << std::endl;
+			 std::cout << "2y: " << tri.pt[2].y << std::endl;
+*/
+			vec3d center{ 0, 0, 0 };
+			bool lookingAtTriangle = tri.contains(center);
+			if (lookingAtTriangle)
+			{
+				model.inFocus = true;
+			}else{
+				model.inFocus = false;
+			}
+			// if (model.inFocus) {
+			// 	std::cout << "in focus!" << std::endl;
+			// 	break;
+			// }else {
+			// 	std::cout << "not in focus!" << std::endl;
+			// }
+
+		}
+		mtx.unlock();
 
 		/*
 		//project its triangles into camera view
@@ -201,7 +264,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		*/
 
 	}
-	mtx.unlock();
+	//mtx.unlock();
 
 	// mtx.lock();
 	// trianglesToRaster = newTrianglesToProject;

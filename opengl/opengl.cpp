@@ -187,9 +187,9 @@ bool initGL()
 					vertexData.push_back(tri.p[i].x);
 					vertexData.push_back(tri.p[i].y);
 					vertexData.push_back(tri.p[i].z);
-					vertexData.push_back((float)tri.R/255);
-					vertexData.push_back((float)tri.G/255);
-					vertexData.push_back((float)tri.B/255);
+					vertexData.push_back((float)tri.R/255.0f);
+					vertexData.push_back((float)tri.G/255.0f);
+					vertexData.push_back((float)tri.B/255.0f);
 					vertexData.push_back(tri.t[i].u);
 					vertexData.push_back(tri.t[i].v);
 					indexData.push_back(indexCounter++);
@@ -322,6 +322,10 @@ void render()
 		// model.modelMatrix = modelMatrix;
 		artificeShaderProgram.setMat4("model", model.modelMatrix);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+		if (model.inFocus)
+		{
+			std::cout << "in focus!" << std::endl;
+		}
 	}
 
 	//glDrawElements( GL_TRIANGLES, indexDataSize, GL_UNSIGNED_INT, NULL );
