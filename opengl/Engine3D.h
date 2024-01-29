@@ -35,10 +35,6 @@ class Engine3D
 
 		virtual bool onUserDestroy();
 
-		mat4x4 getProjMatrix();
-
-		void clearDepthBuffer();
-
 		glm::mat4 getProjectionMatrix() const;
 
 		glm::vec3 getCameraPos() const;
@@ -51,13 +47,9 @@ class Engine3D
 
 		std::atomic<bool> isActive;
 
-		std::atomic<bool> blockRaster;
-
 		float elapsedTime;
 
 		std::mutex mtx;
-
-		std::vector<triangle> trianglesToRaster;
 
 		std::vector<model> modelsToRaster;
 
@@ -68,16 +60,8 @@ class Engine3D
 		float near;
 		float far;
 		float fov;
-		float aspectRatio;
-		float fovRad;
-
-		mat4x4 matProj;
 
 		glm::mat4 projectionMatrix;
-
-		float* depthBuffer = nullptr;
-
-		float theta = 0;
 
 		float yaw = -90.0f;
 
@@ -86,22 +70,6 @@ class Engine3D
 		mat4x4 matCameraRotY90CW;
 
 		mat4x4 matCameraRotY90CCW;
-
-		vec3d lookDir;
-
-		vec3d up;
-
-		vec3d camera;
-
-		vec3d target;
-
-		vec3d forward;
-
-		vec3d right;
-
-		vec3d left;
-
-		vec3d light;
 
 		//camera
 		glm::vec3 cameraPos;
@@ -112,31 +80,9 @@ class Engine3D
 
 		glm::mat4 viewMatrix;
 
-		//planes to clip against and their normals
-		vec3d planeTop;
-		vec3d planeTopNormal;
-
-		vec3d planeBottom;
-		vec3d planeBottomNormal;
-
-		vec3d planeLeft;
-		vec3d planeLeftNormal;
-
-		vec3d planeRight;
-		vec3d planeRightNormal;
-
-		vec3d nearPlane;
-		vec3d nearPlaneNormal;
-
 		EventController* eventController;
 
 		void engineThread();
 
-		void fillProjMatrix();
-
 		void move(float elapsedTime);
-
-		std::unique_ptr<std::list<triangle>> clip(triangle& tri);
-
-		void textureTriangle(triangle& tri);
 };
