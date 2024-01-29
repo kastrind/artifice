@@ -1,5 +1,5 @@
 #OBJS specifies which files to compile as part of the project
-OBJS = opengl.cpp LShaderProgram.cpp LArtificeShaderProgram.cpp EventController.cpp Engine3D.cpp
+OBJS = opengl.cpp ShaderProgram.cpp ArtificeShaderProgram.cpp EventController.cpp Engine3D.cpp
 
 #CC specifies which compiler we're using
 CC = g++

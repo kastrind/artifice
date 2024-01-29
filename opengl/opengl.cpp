@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <string>
 
-#include "LArtificeShaderProgram.h"
+#include "ArtificeShaderProgram.h"
 #include "Configuration.h"
 #include "EventController.h"
 #include "Constructs3D.h"
@@ -58,7 +58,7 @@ GLuint gVBO = 0;
 GLuint gIBO = 0;
 GLuint gVAO = 0;
 
-LArtificeShaderProgram artificeShaderProgram;
+ArtificeShaderProgram artificeShaderProgram;
 
 //declare texture
 unsigned int texture1;
@@ -72,6 +72,9 @@ SDL_Rect windowRect{cfg.SCREEN_WIDTH/4, cfg.SCREEN_HEIGHT/4, cfg.SCREEN_WIDTH/2,
 
 //the graphics engine
 Engine3D* artificeEngine;
+
+//the engine thread
+std::thread engineThread;
 
 //input event controller
 EventController eventController;
@@ -343,6 +346,8 @@ void close()
 	SDL_DestroyWindow( gWindow );
 	gWindow = NULL;
 
+	engineThread.join();
+
 	//Quit SDL subsystems
 	SDL_Quit();
 }
@@ -357,24 +362,24 @@ int main( int argc, char* args[] )
 	else
 	{
 		//start the 3D engine
-		std::thread t = artificeEngine->startEngine();
+		engineThread = artificeEngine->startEngine();
 
-		//Main loop flag
+		//main loop flag
 		bool quit = false;
 
-		//Event handler
+		//event handler
 		SDL_Event e;
 		
-		//Enable text input
+		//enable text input
 		SDL_StartTextInput();
 
-		//While application is running
+		//while application is running
 		while( !quit )
 		{
 
 			eventController.clearMouseMotionState();
 
-			//Handle events on queue
+			//handle events on queue
 			while( SDL_PollEvent( &e ) != 0 )
 			{
 				//user requests quit
@@ -401,14 +406,14 @@ int main( int argc, char* args[] )
 				}
 			}
 
-			//Render
+			//render
 			render();
 
-			//Update screen
+			//update screen
 			SDL_GL_SwapWindow( gWindow );
 		}
 
-		//Disable text input
+		//disable text input
 		SDL_StopTextInput();
 	}
 

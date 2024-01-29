@@ -2,8 +2,8 @@
 and may not be redistributed without written permission.*/
 //Version: 002
 
-#ifndef LSHADER_PROGRAM_H
-#define LSHADER_PROGRAM_H
+#ifndef SHADER_PROGRAM_H
+#define SHADER_PROGRAM_H
 
 #include <glm/glm.hpp>
 #include <GL/glew.h>
@@ -12,10 +12,10 @@ and may not be redistributed without written permission.*/
 #include <stdio.h>
 #include <string>
 
-class LShaderProgram
+class ShaderProgram
 {
 public:
-	LShaderProgram();
+	ShaderProgram();
 	/*
 	Pre Condition:
 		-None
@@ -25,7 +25,7 @@ public:
 		-None
 	*/
 
-	virtual ~LShaderProgram();
+	virtual ~ShaderProgram();
 	/*
 	Pre Condition:
 		-None
@@ -86,7 +86,7 @@ public:
 		-None
 	*/
 
-	// utility uniform functions
+	// Utility uniform functions
 	// ------------------------------------------------------------------------
 	void setBool(const std::string &name, bool value) const
 	{         

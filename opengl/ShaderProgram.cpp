@@ -2,32 +2,32 @@
 and may not be redestributed without written permission.*/
 //Version: 002
 
-#include "LShaderProgram.h"
+#include "ShaderProgram.h"
 #include <fstream>
 
-LShaderProgram::LShaderProgram()
+ShaderProgram::ShaderProgram()
 {
 mProgramID = NULL;
 }
 
-LShaderProgram::~LShaderProgram()
+ShaderProgram::~ShaderProgram()
 {
-//Free program if it exists
+//free program if it exists
 freeProgram();
 }
 
-void LShaderProgram::freeProgram()
+void ShaderProgram::freeProgram()
 {
-//Delete program
+//delete program
 glDeleteProgram( mProgramID );
 }
 
-bool LShaderProgram::bind()
+bool ShaderProgram::bind()
 {
-//Use shader
+//use shader
 glUseProgram( mProgramID );
 
-//Check for error
+//check for error
 GLenum error = glGetError();
 if( error != GL_NO_ERROR )
 {
@@ -39,41 +39,41 @@ if( error != GL_NO_ERROR )
 return true;
 }
 
-void LShaderProgram::unbind()
+void ShaderProgram::unbind()
 {
-//Use default program
+//use default program
 glUseProgram( NULL );
 }
 
-GLuint LShaderProgram::getProgramID()
+GLuint ShaderProgram::getProgramID()
 {
 return mProgramID;
 }
 
-void LShaderProgram::printProgramLog( GLuint program )
+void ShaderProgram::printProgramLog( GLuint program )
 {
-//Make sure name is shader
+//make sure name is shader
 if( glIsProgram( program ) )
 {
-	//Program log length
+	//program log length
 	int infoLogLength = 0;
 	int maxLength = infoLogLength;
 
 	//Get info string length
 	glGetProgramiv( program, GL_INFO_LOG_LENGTH, &maxLength );
 
-	//Allocate string
+	//allocate string
 	char* infoLog = new char[ maxLength ];
 
-	//Get info log
+	//get info log
 	glGetProgramInfoLog( program, maxLength, &infoLogLength, infoLog );
 	if( infoLogLength > 0 )
 	{
-		//Print Log
+		//print Log
 		printf( "%s\n", infoLog );
 	}
 
-	//Deallocate string
+	//deallocate string
 	delete[] infoLog;
 }
 else
@@ -82,30 +82,30 @@ else
 }
 }
 
-void LShaderProgram::printShaderLog( GLuint shader )
+void ShaderProgram::printShaderLog( GLuint shader )
 {
-//Make sure name is shader
+//make sure name is shader
 if( glIsShader( shader ) )
 {
-	//Shader log length
+	//shader log length
 	int infoLogLength = 0;
 	int maxLength = infoLogLength;
 
-	//Get info string length
+	//get info string length
 	glGetShaderiv( shader, GL_INFO_LOG_LENGTH, &maxLength );
 
-	//Allocate string
+	//allocate string
 	char* infoLog = new char[ maxLength ];
 
-	//Get info log
+	//get info log
 	glGetShaderInfoLog( shader, maxLength, &infoLogLength, infoLog );
 	if( infoLogLength > 0 )
 	{
-		//Print Log
+		//print Log
 		printf( "%s\n", infoLog );
 	}
 
-	//Deallocate string
+	//deallocate string
 	delete[] infoLog;
 }
 else
@@ -114,30 +114,30 @@ else
 }
 }
 
-GLuint LShaderProgram::loadShaderFromFile( std::string path, GLenum shaderType )
+GLuint ShaderProgram::loadShaderFromFile( std::string path, GLenum shaderType )
 {
-//Open file
+//open file
 GLuint shaderID = 0;
 std::string shaderString;
 std::ifstream sourceFile( path.c_str() );
 
-//Source file loaded
+//source file loaded
 if( sourceFile )
 {
-	//Get shader source
+	//get shader source
 	shaderString.assign( ( std::istreambuf_iterator< char >( sourceFile ) ), std::istreambuf_iterator< char >() );
 
-	//Create shader ID
+	//create shader ID
 	shaderID = glCreateShader( shaderType );
 
-	//Set shader source
+	//set shader source
 	const GLchar* shaderSource = shaderString.c_str();
 	glShaderSource( shaderID, 1, (const GLchar**)&shaderSource, NULL );
 
-	//Compile shader source
+	//compile shader source
 	glCompileShader( shaderID );
 
-	//Check shader for errors
+	//check shader for errors
 	GLint shaderCompiled = GL_FALSE;
 	glGetShaderiv( shaderID, GL_COMPILE_STATUS, &shaderCompiled );
 	if( shaderCompiled != GL_TRUE )
