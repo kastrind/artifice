@@ -5,6 +5,8 @@ Engine3D::Engine3D(int width, int height, float near, float far, float fov, Even
 {
 	isActive = false;
 
+	isTouched = false;
+
 	projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
 
 	//camera
@@ -130,6 +132,7 @@ void Engine3D::move(float elapsedTime)
 
 		if (keysPressed[SupportedKeys::W]) {
 			cameraPos += cameraSpeed * cameraFront;
+
 		} else if (keysPressed[SupportedKeys::S]) {
 			cameraPos -= cameraSpeed * cameraFront;
 		}

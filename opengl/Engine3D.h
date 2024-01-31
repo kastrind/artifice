@@ -47,6 +47,8 @@ class Engine3D
 
 		std::atomic<bool> isActive;
 
+		std::atomic<bool> isTouched;
+
 		float elapsedTime;
 
 		std::mutex mtx;

@@ -21,48 +21,45 @@
 
 CFG cfg;
 
-//Screen dimension constants
+//screen dimension constants
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
-//Starts up SDL, creates window, and initializes OpenGL
+//starts up SDL, creates window, and initializes OpenGL
 bool init();
 
-//Initializes rendering program and clear color
+//initializes rendering program and clear color
 bool initGL();
 
-void generateTextures();
+//generates and binds textures
+void loadTextures();
 
-//Per frame update
-void update();
+//per frame update
+void updateVertices();
 
-//Renders to the screen
+//renders to the screen
 void render();
 
-//Frees media and shuts down SDL
+//frees media and shuts down SDL
 void close();
 
-//The window we'll be rendering to
+//the window we'll be rendering to
 SDL_Window* gWindow = NULL;
 
 //OpenGL context
 SDL_GLContext gContext;
 
-//Render flag
-bool gRenderQuad = true;
-
-//Graphics program
+//graphics program
 GLuint gProgramID = 0;
 GLint gVertexPos2DLocation = -1;
 GLuint gVBO = 0;
 GLuint gIBO = 0;
 GLuint gVAO = 0;
 
+//shader program
 ArtificeShaderProgram artificeShaderProgram;
 
-//declare texture
-unsigned int texture1;
-
+//declare textures
 std::vector<GLuint> textureIds;
 
 std::vector<std::string> texturePaths;
@@ -79,14 +76,12 @@ std::thread engineThread;
 //input event controller
 EventController eventController;
 
-bool isActive=true;
-
 bool init()
 {
-	//Initialization flag
+	//initialization flag
 	bool success = true;
 
-	//Initialize SDL
+	//initialize SDL
 	if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
 	{
 		printf( "SDL could not initialize! SDL Error: %s\n", SDL_GetError() );
@@ -94,13 +89,13 @@ bool init()
 	}
 	else
 	{
-		//Use OpenGL 3.1 core
+		//use OpenGL 3.1 core
 		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
 		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 1 );
 		SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 
-		//Create window
-		gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
+		//create window
+		gWindow = SDL_CreateWindow( "Artifice Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
 		//confine mouse cursor to the window and hide it
 		SDL_SetWindowMouseGrab(gWindow, SDL_TRUE);
 		SDL_SetWindowMouseRect(gWindow, &windowRect);
@@ -112,7 +107,7 @@ bool init()
 		}
 		else
 		{
-			//Create context
+			//create context
 			gContext = SDL_GL_CreateContext( gWindow );
 			if( gContext == NULL )
 			{
@@ -121,7 +116,7 @@ bool init()
 			}
 			else
 			{
-				//Initialize GLEW
+				//initialize GLEW
 				glewExperimental = GL_TRUE; 
 				GLenum glewError = glewInit();
 				if( glewError != GLEW_OK )
@@ -129,7 +124,7 @@ bool init()
 					printf( "Error initializing GLEW! %s\n", glewGetErrorString( glewError ) );
 				}
 
-				//Use Vsync
+				//use Vsync
 				if( SDL_GL_SetSwapInterval( 1 ) < 0 )
 				{
 					printf( "Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError() );
@@ -138,7 +133,7 @@ bool init()
 				//instantiate the 3D engine
 				artificeEngine = new Engine3D(cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, cfg.NEAR, cfg.FAR, cfg.FOV, &eventController);
 
-				//Initialize OpenGL
+				//initialize OpenGL
 				if( !initGL() )
 				{
 					printf( "Unable to initialize OpenGL!\n" );
@@ -153,7 +148,7 @@ bool init()
 
 bool initGL()
 {
-	//Success flag
+	//success flag
 	bool success = true;
 
 	if (!artificeShaderProgram.loadProgram())
@@ -177,65 +172,38 @@ bool initGL()
 
 		artificeEngine->modelsToRaster.push_back(mdl);
 
-		std::vector<GLfloat> vertexData;
-		std::vector<GLuint> indexData;
-		GLuint indexCounter = 0;
+		model mdl2;
+		mdl2.position = glm::vec3( 0.3f,  0.0f,  0.0f);
+		cuboid box2{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
+		box2.toTriangles(mdl2.modelMesh.tris);
 
-		for (auto &model : artificeEngine->modelsToRaster)
-		{
-			for (auto &tri : mdl.modelMesh.tris)
-			{
-				for (int i = 0; i < 3; i++)
-				{
-					vertexData.push_back(tri.p[i].x);
-					vertexData.push_back(tri.p[i].y);
-					vertexData.push_back(tri.p[i].z);
-					vertexData.push_back((float)tri.R/255.0f);
-					vertexData.push_back((float)tri.G/255.0f);
-					vertexData.push_back((float)tri.B/255.0f);
-					vertexData.push_back(tri.t[i].u);
-					vertexData.push_back(tri.t[i].v);
-					indexData.push_back(indexCounter++);
-				}
-			}
-		}
-
+		artificeEngine->modelsToRaster.push_back(mdl2);
+		
+		//create VAO
 		glGenVertexArrays(1, &gVAO);
 		glBindVertexArray(gVAO);
 
-		std::cout << "vertex data size: " << vertexData.size() << std::endl;
-		std::cout << "index data size: " << indexData.size() << std::endl;
-
-		//Create VBO
+		//create VBO
 		glGenBuffers( 1, &gVBO );
 		glBindBuffer( GL_ARRAY_BUFFER, gVBO );
-		//glBufferData( GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW );
-		glBufferData( GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), vertexData.data(), GL_STATIC_DRAW );
 
-		//Create IBO
+		//create IBO
 		glGenBuffers( 1, &gIBO );
 		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gIBO );
-		glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), &indexData, GL_STATIC_DRAW );
 
-		//position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-		//color attribute
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-		//texture coord attribute
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-		glEnableVertexAttribArray(2);
+		//update buffers with the new vertices
+		updateVertices();
 
-		//Initialize clear color
+		//initialize clear color
 		glClearColor( 0.f, 0.f, 0.f, 1.f );
 
-		generateTextures();
+		//generates and binds textures
+		loadTextures();
 	}
 	return success;
 }
 
-void generateTextures()
+void loadTextures()
 {
 	texturePaths.push_back("brickwall.bmp");
 	texturePaths.push_back("brickwallPainted.bmp");
@@ -243,11 +211,10 @@ void generateTextures()
 	{
 		textureIds.push_back(0);
 		//declare texture
-		//glGenTextures(1, &texture1);
 		glGenTextures(1, &textureIds.back());
 		//bind texture
-		//glBindTexture(GL_TEXTURE_2D, texture1);
 		glBindTexture(GL_TEXTURE_2D, textureIds.back());
+
 		//set the texture wrapping/filtering options (on the currently bound texture object)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -280,81 +247,102 @@ void generateTextures()
 
 }
 
-void update()
+void updateVertices()
 {
-	//No per frame update needed
+		std::vector<GLfloat> vertexData;
+		std::vector<GLuint> indexData;
+		GLuint indexCounter = 0;
+
+		//populate vertex vectors with triangle vertex information for each model
+		for (auto &model : artificeEngine->modelsToRaster)
+		{
+			for (auto &tri : model.modelMesh.tris)
+			{
+				for (int i = 0; i < 3; i++)
+				{
+					vertexData.push_back(tri.p[i].x);
+					vertexData.push_back(tri.p[i].y);
+					vertexData.push_back(tri.p[i].z);
+					vertexData.push_back((float)tri.R/255.0f);
+					vertexData.push_back((float)tri.G/255.0f);
+					vertexData.push_back((float)tri.B/255.0f);
+					vertexData.push_back(tri.t[i].u);
+					vertexData.push_back(tri.t[i].v);
+					indexData.push_back(indexCounter++);
+				}
+			}
+		}
+
+		std::cout << "vertex data size: " << vertexData.size() << std::endl;
+		std::cout << "index data size: " << indexData.size() << std::endl;
+
+		//update VBO
+		glBufferData( GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), vertexData.data(), GL_STATIC_DRAW );
+
+		//update IBO
+		glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), &indexData, GL_STATIC_DRAW );
+
+		//position attribute
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+		//color attribute
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+		//texture coord attribute
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glEnableVertexAttribArray(2);
 }
 
 void render()
 {
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	//Clear color buffer
+	//clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, texture1);
 	glBindTexture(GL_TEXTURE_2D, textureIds.front());
 
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, textureIds.back());
 
-	//bind program - activate shader
-	artificeShaderProgram.bind();
-
 	artificeEngine->mtx.lock();
-	// glm::mat4 projectionMatrix = glm::perspective(glm::radians((float)cfg.FOV), (float)cfg.SCREEN_WIDTH / (float)cfg.SCREEN_HEIGHT, cfg.NEAR, cfg.FAR);
-	// artificeShaderProgram.setMat4("projection", projectionMatrix);
-	
-	artificeShaderProgram.setMat4("projection", artificeEngine->getProjectionMatrix());
-
-	//camera/view transformation
-	// glm::mat4 viewMatrix = glm::lookAt(artificeEngine->getCameraPos(), artificeEngine->getCameraPos() + artificeEngine->getCameraFront(), artificeEngine->getCameraUp());
-	// artificeShaderProgram.setMat4("view", viewMatrix);
-	
+	artificeShaderProgram.setMat4("projection", artificeEngine->getProjectionMatrix());	
 	artificeShaderProgram.setMat4("view", artificeEngine->getViewMatrix());
-
 	std::vector<model> modelsToRaster = artificeEngine->modelsToRaster;
 	artificeEngine->mtx.unlock();
 
-	glBindVertexArray(gVAO);
-
 	for (auto &model : modelsToRaster)
 	{
-		// glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
-		// modelMatrix = glm::translate(modelMatrix, model.position);
-		// model.modelMatrix = modelMatrix;
 		artificeShaderProgram.setMat4("model", model.modelMatrix);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDrawArrays(GL_TRIANGLES, 0, model.modelMesh.tris.size() * 3);
 		if (model.inFocus)
 		{
 			std::cout << "in focus!" << std::endl;
 		}
 	}
-
-	//glDrawElements( GL_TRIANGLES, indexDataSize, GL_UNSIGNED_INT, NULL );
-
-	//unbind program - deactivate shader
-	//artificeShaderProgram.unbind();
 }
 
 void close()
 {
-	//Deallocate program
+	//unbind program - deactivate shader
+	artificeShaderProgram.unbind();
+
+	//deallocate program
 	glDeleteProgram( gProgramID );
 
-	//Destroy window	
+	//destroy window	
 	SDL_DestroyWindow( gWindow );
 	gWindow = NULL;
 
 	engineThread.join();
 
-	//Quit SDL subsystems
+	//quit SDL subsystems
 	SDL_Quit();
 }
 
 int main( int argc, char* args[] )
 {
-	//Start up SDL and create window
+	//start up SDL and create window
 	if( !init() )
 	{
 		printf( "Failed to initialize!\n" );
@@ -387,7 +375,6 @@ int main( int argc, char* args[] )
 				{
 					quit = true;
 					artificeEngine->isActive = false;
-					isActive = false;
 				}else if (e.key.keysym.sym == SDLK_ESCAPE && SDL_GetWindowMouseGrab(gWindow) == SDL_TRUE) {
 					//free mouse cursor from the window and reveal it
 					SDL_SetWindowMouseGrab(gWindow, SDL_FALSE);
@@ -404,6 +391,21 @@ int main( int argc, char* args[] )
 				{
 					eventController.processEvent(&e);
 				}
+				//just a temporary proof-of-concept to modify world on user input
+				if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_0) {
+					for (auto &model : artificeEngine->modelsToRaster) {
+						std::cout << "removing triangle! ! !" << std::endl;
+						if (model.modelMesh.tris.size()) model.modelMesh.tris.pop_back();
+						artificeEngine->isTouched = true;
+					}
+				}
+			}
+
+			//just a temporary proof-of-concept to update vertices when world is modified
+			if (artificeEngine->isTouched)
+			{
+				updateVertices();
+				artificeEngine->isTouched = false;
 			}
 
 			//render
@@ -417,7 +419,7 @@ int main( int argc, char* args[] )
 		SDL_StopTextInput();
 	}
 
-	//Free resources and close SDL
+	//free resources and close SDL
 	close();
 
 	return 0;
