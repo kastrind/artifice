@@ -73,11 +73,22 @@ bool Engine3D::onUserCreate()
 bool Engine3D::onUserUpdate(float elapsedTime)
 {
 	mtx.lock();
+
+	std::cout << "collides: " << collides << std::endl;
+	std::cout << "can slide: " << canSlide << std::endl;
+	std::cout << "desiredMotion: " << desiredMotion.x << ", " << desiredMotion.y << ", " << desiredMotion.z << ", " << std::endl;
 	move(elapsedTime);
 
 	projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
 	viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 	mtx.unlock();
+
+	dist = 100.0f;
+	collides = false;
+	canSlide = false;
+
+	float modelDistance;
+	glm::vec4 collidingTriPts[3];
 
 	//for each model to raster
 	for (auto &model : modelsToRaster)
@@ -89,6 +100,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		model.modelMatrix = modelMatrix;
 		mtx.unlock();
 
+		modelDistance = 100.0f;
+
 		for (auto tri : model.modelMesh.tris)
 		{
 			glm::vec4 pt[3];
@@ -96,13 +109,36 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			pt[1] = { tri.p[1].x, tri.p[1].y, tri.p[1].z, tri.p[1].w };
 			pt[2] = { tri.p[2].x, tri.p[2].y, tri.p[2].z, tri.p[2].w };
 
-			pt[0] = projectionMatrix * viewMatrix * modelMatrix * pt[0];
-			pt[1] = projectionMatrix * viewMatrix * modelMatrix * pt[1];
-			pt[2] = projectionMatrix * viewMatrix * modelMatrix * pt[2];
+			pt[0] = modelMatrix * pt[0];
+			pt[1] = modelMatrix * pt[1];
+			pt[2] = modelMatrix * pt[2];
 
+			glm::vec4 tmpAvgP = ( (pt[0]) + (pt[1]) + (pt[2]) ) / 3.0f;
+			//std::cout << "cameraPos " << cameraPos.x << ", " << cameraPos.y << std::endl;
+			glm::vec3 avgP(tmpAvgP.x, tmpAvgP.y, tmpAvgP.z);
+			//std::cout << "avgPos " << tmpAvgP.x << ", " << tmpAvgP.y << std::endl;
+			//dist = glm::distance(cameraPos, avgP);
+			float dist1 = glm::distance(cameraPos, glm::vec3(pt[0].x, pt[0].y, pt[0].z));
+			float dist2 = glm::distance(cameraPos, glm::vec3(pt[1].x, pt[1].y, pt[1].z));
+			float dist3 = glm::distance(cameraPos, glm::vec3(pt[2].x, pt[2].y, pt[2].z));
+			float avgDist = (dist1 + dist2 + dist3) / 3;
+			if (avgDist < modelDistance) {
+				modelDistance =  avgDist;
+				collidingTriPts[0] = pt[0];
+				collidingTriPts[1] = pt[1];
+				collidingTriPts[2] = pt[2];
+			}
+			std::cout << "modelDistance: " << modelDistance << std::endl;
+
+			pt[0] = projectionMatrix * viewMatrix * pt[0];
+			pt[1] = projectionMatrix * viewMatrix * pt[1];
+			pt[2] = projectionMatrix * viewMatrix * pt[2];
+
+			mtx.lock();
 			tri.p[0] = pt[0];
 			tri.p[1] = pt[1];
 			tri.p[2] = pt[2];
+			mtx.unlock();
 
 			vec3d center{ 0, 0, 0 };
 			bool lookingAtTriangle = tri.contains(center);
@@ -113,7 +149,36 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 				model.inFocus = false;
 			}
 		}
-		mtx.unlock();
+
+		if (modelDistance <= 0.2f) {
+			collides = true;
+
+			//get the triangle normal
+			glm::vec4 line1 = collidingTriPts[1] - collidingTriPts[0];
+			glm::vec3 line1b(line1.x, line1.y, line1.z);
+			glm::vec4 line2 = collidingTriPts[2] - collidingTriPts[0];
+			glm::vec3 line2b(line2.x, line2.y, line2.z);
+			glm::vec3 normal = glm::normalize(glm::cross(line1b, line2b));
+			//std::cout << "normal: " << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
+
+			//glm::vec3 camLine = glm::normalize(glm::vec3(collidingTriPts[0].x, collidingTriPts[0].y, collidingTriPts[0].z) - cameraPos);
+
+			dp = glm::dot(cameraFront, normal);
+			std::cout << "dp: " << dp << std::endl;
+			absDP = std::abs(dp);
+			canSlide = absDP < 0.8f && absDP > 0.2f;
+			glm::vec3 undesiredMotion = normal * dp;
+			desiredMotion = cameraFront - undesiredMotion;
+			desiredMotion = glm::normalize(desiredMotion);
+			float absDesiredMotionX = std::abs(desiredMotion.x);
+			float absDesiredMotionZ = std::abs(desiredMotion.z);
+			if (canSlide && absDesiredMotionX > 0.85f && absDesiredMotionX / absDesiredMotionZ > 1.2f ) {
+				desiredMotion.z = 0;
+			}else if (canSlide && absDesiredMotionZ > 0.85f && absDesiredMotionZ / absDesiredMotionX > 1.2f) {
+				desiredMotion.x = 0;
+			}
+		}
+
 	}
 	return true;
 }
@@ -130,8 +195,10 @@ void Engine3D::move(float elapsedTime)
 		float multiplierX = (float)mouseDistanceX * 5;
 		float multiplierY = (float)mouseDistanceY * 5;
 
-		if (keysPressed[SupportedKeys::W]) {
+		if (keysPressed[SupportedKeys::W] && !collides) {
 			cameraPos += cameraSpeed * cameraFront;
+		}else if (keysPressed[SupportedKeys::W] && collides && canSlide) {
+			cameraPos += cameraSpeed * desiredMotion;
 
 		} else if (keysPressed[SupportedKeys::S]) {
 			cameraPos -= cameraSpeed * cameraFront;

@@ -57,7 +57,7 @@ void EventController::processEvent(SDL_Event* e)
 		prevMousePosY = mousePosY;
 	}
 
-	//User presses a key
+	//user presses a key
 	if( e->type == SDL_KEYDOWN )
 	{
 		if (e->key.keysym.sym == SDLK_UP)
@@ -93,7 +93,7 @@ void EventController::processEvent(SDL_Event* e)
 			keysPressed[SupportedKeys::D] = true;
 		}
 	}
-	//User releases a key
+	//user releases a key
 	else if( e->type == SDL_KEYUP )
 	{
 		if (e->key.keysym.sym == SDLK_UP)

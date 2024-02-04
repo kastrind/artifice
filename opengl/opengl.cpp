@@ -162,22 +162,27 @@ bool initGL()
 
 		gProgramID = artificeShaderProgram.getProgramID();
 
-		model mdl;
-		mdl.position = glm::vec3( 0.0f,  0.0f,  0.0f);
 		//create a rectangle
 		//rectangle rect{0, 0, 0, 1,    0.2, 0.2,    0.0, 0.0, 0.0};
+
+		model mdl;
+		mdl.position = glm::vec3( 0.0f,  0.0f,  0.0f);
 		//create a cuboid
 		cuboid box{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
 		box.toTriangles(mdl.modelMesh.tris);
-
 		artificeEngine->modelsToRaster.push_back(mdl);
 
 		model mdl2;
-		mdl2.position = glm::vec3( 0.3f,  0.0f,  0.0f);
+		mdl2.position = glm::vec3( 0.2f,  0.0f,  0.0f);
 		cuboid box2{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
 		box2.toTriangles(mdl2.modelMesh.tris);
-
 		artificeEngine->modelsToRaster.push_back(mdl2);
+
+		model mdl3;
+		mdl3.position = glm::vec3( 0.4f,  0.0f,  0.0f);
+		cuboid box3{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
+		box3.toTriangles(mdl3.modelMesh.tris);
+		artificeEngine->modelsToRaster.push_back(mdl3);
 		
 		//create VAO
 		glGenVertexArrays(1, &gVAO);
@@ -305,13 +310,10 @@ void render()
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, textureIds.back());
 
-	artificeEngine->mtx.lock();
 	artificeShaderProgram.setMat4("projection", artificeEngine->getProjectionMatrix());	
 	artificeShaderProgram.setMat4("view", artificeEngine->getViewMatrix());
-	std::vector<model> modelsToRaster = artificeEngine->modelsToRaster;
-	artificeEngine->mtx.unlock();
 
-	for (auto &model : modelsToRaster)
+	for (auto &model : artificeEngine->modelsToRaster)
 	{
 		artificeShaderProgram.setMat4("model", model.modelMatrix);
 		glDrawArrays(GL_TRIANGLES, 0, model.modelMesh.tris.size() * 3);
