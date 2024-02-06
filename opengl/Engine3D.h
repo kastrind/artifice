@@ -62,10 +62,9 @@ class Engine3D
 		float near;
 		float far;
 		float fov;
-		float dp = 0.0f; //TODO: remove/refactor
-		float absDP = 0.0f; //TODO: remove/refactor
-		float canSlide = false; //TODO: remove/refactor
-		float dist = 100.0f; //TODO: remove/refactor
+
+		//for collide-and-slide
+		float canSlide = false;
 		bool collides = false;
 		glm::vec3 desiredMotion;
 

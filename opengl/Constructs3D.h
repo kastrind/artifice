@@ -225,8 +225,6 @@ struct triangle
 
 	float luminance = 0.0f;
 
-	std::vector<texturePoint> texturePoints;
-
 	inline triangle operator+(const vec3d& in) {
 		triangle out;
 		out.luminance = luminance; out.R = R; out.G = G; out.B = B;
