@@ -66,6 +66,7 @@ class Engine3D
 		//for collide-and-slide
 		float canSlide = false;
 		bool collides = false;
+		float collidingDistance = 100.0f;
 		glm::vec3 desiredMotion;
 
 		glm::mat4 projectionMatrix;

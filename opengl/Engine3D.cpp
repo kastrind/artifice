@@ -78,18 +78,19 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	//std::cout << "can slide: " << canSlide << std::endl;
 	//std::cout << "desiredMotion: " << desiredMotion.x << ", " << desiredMotion.y << ", " << desiredMotion.z << ", " << std::endl;
 
-	glm::vec3 prevCameraPos = cameraPos;
-	move(elapsedTime);
+	glm::vec3 prevCameraPos;
+	float modelDistance = 100.0f;
+	float prevCollidingDistance = 100.0f;
+	glm::vec4 collidingTriPts[3];
 
-	projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
-	viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-	mtx.unlock();
+	move(elapsedTime);
 
 	collides = false;
 	canSlide = false;
 
-	float modelDistance;
-	glm::vec4 collidingTriPts[3];
+	projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
+	viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+	mtx.unlock();
 
 	//for each model to raster
 	for (auto &model : modelsToRaster)
@@ -143,6 +144,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 		//detect if colliding with the model
 		if (modelDistance <= 0.2f) {
+			prevCollidingDistance = collidingDistance;
+			collidingDistance = modelDistance;
 			//std::cout << "modelDistance: " << modelDistance << std::endl;
 			collides = true;
 
@@ -161,9 +164,16 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		}
 
 	}
-	if (collides && !canSlide)
+
+	std::cout << "prevCollidingDistance: " << prevCollidingDistance << std::endl;
+	std::cout << "collidingDistance: " << collidingDistance << std::endl;
+	if (collides && !canSlide && prevCollidingDistance > collidingDistance)
 	{
 		cameraPos = prevCameraPos;
+		prevCollidingDistance = collidingDistance;
+	}else if (!collides || canSlide)
+	{
+		prevCameraPos = cameraPos;
 	}
 
 	return true;
@@ -185,7 +195,6 @@ void Engine3D::move(float elapsedTime)
 			cameraPos += cameraSpeed * desiredMotion;
 		} else if (keysPressed[SupportedKeys::W]) {
 			cameraPos += cameraSpeed * cameraFront;
-
 		} else if (keysPressed[SupportedKeys::S]) {
 			cameraPos -= cameraSpeed * cameraFront;
 		}

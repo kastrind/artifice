@@ -173,16 +173,22 @@ bool initGL()
 		artificeEngine->modelsToRaster.push_back(mdl);
 
 		model mdl2;
-		mdl2.position = glm::vec3( 0.2f,  0.0f,  0.0f);
+		mdl2.position = glm::vec3( 0.0f,  0.0f,  0.2f);
 		cuboid box2{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
 		box2.toTriangles(mdl2.modelMesh.tris);
 		artificeEngine->modelsToRaster.push_back(mdl2);
 
 		model mdl3;
-		mdl3.position = glm::vec3( 0.4f,  0.0f,  0.0f);
+		mdl3.position = glm::vec3( 0.0f,  0.0f,  0.4f);
 		cuboid box3{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
 		box3.toTriangles(mdl3.modelMesh.tris);
 		artificeEngine->modelsToRaster.push_back(mdl3);
+
+		model mdl4;
+		mdl4.position = glm::vec3( 0.0f,  0.0f, -0.2f);
+		cuboid box4{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
+		box4.toTriangles(mdl4.modelMesh.tris);
+		artificeEngine->modelsToRaster.push_back(mdl4);
 		
 		//create VAO
 		glGenVertexArrays(1, &gVAO);
