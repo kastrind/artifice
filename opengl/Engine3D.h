@@ -64,8 +64,11 @@ class Engine3D
 		float fov;
 
 		//for collide-and-slide
-		float canSlide = false;
+		bool canSlide = false;
 		bool collides = false;
+		bool canWalk = false;
+		bool hasLanded = false;
+
 		float collidingDistance = 100.0f;
 		glm::vec3 desiredMotion;
 

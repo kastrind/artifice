@@ -87,6 +87,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 	collides = false;
 	canSlide = false;
+	canWalk = false;
+	hasLanded = false;
 
 	projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
 	viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
@@ -144,20 +146,29 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 		//detect if colliding with the model
 		if (modelDistance <= 0.2f) {
-			prevCollidingDistance = collidingDistance;
-			collidingDistance = modelDistance;
 			//std::cout << "modelDistance: " << modelDistance << std::endl;
-			collides = true;
 
 			//get the triangle normal
 			glm::vec4 line1 = collidingTriPts[1] - collidingTriPts[0];
 			glm::vec4 line2 = collidingTriPts[2] - collidingTriPts[0];
 			glm::vec3 normal = glm::normalize(glm::cross(glm::vec3(line1.x, line1.y, line1.z), glm::vec3(line2.x, line2.y, line2.z)));
 
+			//std::cout << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
+
 			//based on dp and normal, determine if able to slide and the desired motion
 			float dp = glm::dot(cameraFront, normal);
 			float absDP = std::abs(dp);
-			canSlide = absDP < 0.8f && absDP > 0.2f;
+
+			if (normal.y > normal.z && normal.y > normal.x) {
+				canWalk = absDP < 0.95f && absDP > 0.0f;
+				hasLanded = true;
+			}else {
+				canSlide = absDP < 0.8f && absDP > 0.2f;
+				prevCollidingDistance = collidingDistance;
+				collidingDistance = modelDistance;
+				canWalk = false;
+				collides = true;
+			}
 			glm::vec3 undesiredMotion = normal * dp;
 			desiredMotion = cameraFront - undesiredMotion;
 			desiredMotion = glm::normalize(desiredMotion);
@@ -165,13 +176,14 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 	}
 
-	std::cout << "prevCollidingDistance: " << prevCollidingDistance << std::endl;
-	std::cout << "collidingDistance: " << collidingDistance << std::endl;
-	if (collides && !canSlide && prevCollidingDistance > collidingDistance)
+	std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << ", canWalk? " << canWalk << std::endl;
+	//std::cout << "prevCollidingDistance: " << prevCollidingDistance << std::endl;
+	//std::cout << "collidingDistance: " << collidingDistance << std::endl;
+	if ( ( (collides && !canSlide) || (hasLanded && !canWalk) ) && prevCollidingDistance > collidingDistance)
 	{
 		cameraPos = prevCameraPos;
 		prevCollidingDistance = collidingDistance;
-	}else if (!collides || canSlide)
+	}else if (!collides || canSlide || canWalk)
 	{
 		prevCameraPos = cameraPos;
 	}
@@ -183,6 +195,8 @@ void Engine3D::move(float elapsedTime)
 {
 	float cameraSpeed = static_cast<float>(1.5 * elapsedTime);
 
+	cameraPos += !hasLanded ? 0.6f * cameraSpeed * glm::vec3(0, -1, 0) : glm::vec3(0, 0, 0);
+
 	if (eventController != nullptr)
 	{
 		bool* keysPressed = eventController->getKeysPressed();
@@ -192,20 +206,27 @@ void Engine3D::move(float elapsedTime)
 		float multiplierY = (float)mouseDistanceY * 5;
 
 		if (keysPressed[SupportedKeys::W] && collides && canSlide) {
-			cameraPos += cameraSpeed * desiredMotion;
-		} else if (keysPressed[SupportedKeys::W]) {
+			desiredMotion.y = 0;
+			cameraPos += 0.5f * cameraSpeed * desiredMotion;
+		} else if (keysPressed[SupportedKeys::W] && hasLanded) {
+			cameraFront.y = 0;
 			cameraPos += cameraSpeed * cameraFront;
-		} else if (keysPressed[SupportedKeys::S]) {
+		} else if (keysPressed[SupportedKeys::W] && !hasLanded) {
+			cameraPos += cameraSpeed * cameraFront;
+		} else if (keysPressed[SupportedKeys::S] && hasLanded) {
+			cameraFront.y = 0;
 			cameraPos -= cameraSpeed * cameraFront;
 		}
 
 		if (keysPressed[SupportedKeys::A] && collides && canSlide) {
-			cameraPos -= cameraSpeed * desiredMotion;
-		}else if (keysPressed[SupportedKeys::A]) {
+			desiredMotion.y = 0;
+			cameraPos -= 0.5f * cameraSpeed * desiredMotion;
+		}else if (keysPressed[SupportedKeys::A] && hasLanded) {
 			cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 		} else if (keysPressed[SupportedKeys::D] && collides && canSlide) {
-			cameraPos -= cameraSpeed * desiredMotion;
-		} else if (keysPressed[SupportedKeys::D]) {
+			desiredMotion.y = 0;
+			cameraPos -= 0.5f * cameraSpeed * desiredMotion;
+		} else if (keysPressed[SupportedKeys::D] && hasLanded) {
 			cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 		}
 
