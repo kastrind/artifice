@@ -113,6 +113,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			pt[1] = { tri.p[1].x, tri.p[1].y, tri.p[1].z, tri.p[1].w };
 			pt[2] = { tri.p[2].x, tri.p[2].y, tri.p[2].z, tri.p[2].w };
 
+			//std::cout << "model id: " << model.id << ", " << pt[0].x << std::endl;
+
 			//model transformation
 			pt[0] = modelMatrix * pt[0];
 			pt[1] = modelMatrix * pt[1];
@@ -127,6 +129,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 				collidingTriPts[1] = pt[1];
 				collidingTriPts[2] = pt[2];
 			}
+			std::cout << "modelDistance: " << modelDistance << std::endl;
 
 			//camera/view transformation
 			pt[0] = projectionMatrix * viewMatrix * pt[0];
@@ -176,7 +179,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 	}
 
-	std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << ", canWalk? " << canWalk << std::endl;
+	//std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << ", canWalk? " << canWalk << std::endl;
 	//std::cout << "prevCollidingDistance: " << prevCollidingDistance << std::endl;
 	//std::cout << "collidingDistance: " << collidingDistance << std::endl;
 	if ( ( (collides && !canSlide) || (hasLanded && !canWalk) ) && prevCollidingDistance > collidingDistance)
@@ -195,7 +198,7 @@ void Engine3D::move(float elapsedTime)
 {
 	float cameraSpeed = static_cast<float>(1.5 * elapsedTime);
 
-	cameraPos += !hasLanded ? 0.6f * cameraSpeed * glm::vec3(0, -1, 0) : glm::vec3(0, 0, 0);
+	cameraPos += !hasLanded ? 0.1f * cameraSpeed * glm::vec3(0, -1, 0) : glm::vec3(0, 0, 0);
 
 	if (eventController != nullptr)
 	{

@@ -396,6 +396,7 @@ struct mesh
 };
 
 struct model {
+	int id;
 	mesh modelMesh;
 	glm::vec3 position;
 	glm::mat4 modelMatrix;

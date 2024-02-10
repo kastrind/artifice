@@ -162,19 +162,34 @@ bool initGL()
 
 		gProgramID = artificeShaderProgram.getProgramID();
 
-		//create a rectangle
-		//rectangle rect{0, 0, 0, 1,    0.2, 0.2,    0.0, 0.0, 0.0};
+		// //create a rectangle
+		// rectangle rect0{0, 0, 0, 1,    0.2, 0.5,    0.0, 0.0, 0.0};
+		// model mdl0;
+		// mdl0.id = -1;
+		// mdl0.position = glm::vec3( 0.0f,  0.0f,  0.0f);
+		// rect0.toTriangles(mdl0.modelMesh.tris);
+		// artificeEngine->modelsToRaster.push_back(mdl0);
+
+		// //create a rectangle
+		// rectangle rect0b{0, 0, 0, 1,    0.4, 0.1,    0.0, 0.0, 0.0};
+		// model mdl0b;
+		// mdl0b.id = -2;
+		// mdl0b.position = glm::vec3( 0.8f,  0.0f,  0.0f);
+		// rect0b.toTriangles(mdl0b.modelMesh.tris);
+		// artificeEngine->modelsToRaster.push_back(mdl0b);
 
 		model mdl;
+		mdl.id = 0;
 		mdl.position = glm::vec3( 0.0f,  0.0f,  0.0f);
 		//create a cuboid
-		cuboid box{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
+		cuboid box{0, 0, 0, 1,    0.2, 0.6, 0.2,    0.0, 0.0, 0.0};
 		box.toTriangles(mdl.modelMesh.tris);
 		artificeEngine->modelsToRaster.push_back(mdl);
 
 		model mdl2;
-		mdl2.position = glm::vec3( 0.0f,  0.0f,  0.2f);
-		cuboid box2{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
+		mdl2.id = 1;
+		mdl2.position = glm::vec3( 0.0f,  0.0f,  0.6f);
+		cuboid box2{0, 0, 0, 1,    0.5, 0.4, 0.2,    0.0, 0.0, 0.0};
 		box2.toTriangles(mdl2.modelMesh.tris);
 		artificeEngine->modelsToRaster.push_back(mdl2);
 
@@ -297,7 +312,7 @@ void updateVertices()
 		glBufferData( GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), vertexData.data(), GL_STATIC_DRAW );
 
 		//update IBO
-		glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), &indexData, GL_STATIC_DRAW );
+		glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), indexData.data(), GL_STATIC_DRAW );
 
 		//position attribute
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -325,13 +340,22 @@ void render()
 	artificeShaderProgram.setMat4("projection", artificeEngine->getProjectionMatrix());	
 	artificeShaderProgram.setMat4("view", artificeEngine->getViewMatrix());
 
+	glBindVertexArray(gVAO);
+	unsigned int modelCnt = 0;
+	unsigned int prevModelTrisSize = 0;
+	std::vector<triangle> allTris;
 	for (auto &model : artificeEngine->modelsToRaster)
 	{
 		artificeShaderProgram.setMat4("model", model.modelMatrix);
-		glDrawArrays(GL_TRIANGLES, 0, model.modelMesh.tris.size() * 3);
+		glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(((modelCnt++) * (prevModelTrisSize * 3) ) * sizeof(float)));
+		prevModelTrisSize = model.modelMesh.tris.size();
 		if (model.inFocus)
 		{
 			std::cout << "in focus!" << std::endl;
+		}
+		for (triangle& tri : model.modelMesh.tris)
+		{
+			allTris.push_back(tri);
 		}
 	}
 }
