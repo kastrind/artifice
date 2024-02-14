@@ -16,13 +16,15 @@ typedef struct Configuration
 
 	const int SCREEN_HEIGHT = 600;
 
-	const float NEAR = 0.1f;
+	const float NEAR = 0.01f;
 
 	const float FAR = 100.0f;
 
 	const int FOV = 45; //field of view in degrees
 
 	const float DOF = 100.0f; //depth of field
+
+	const float COLLIDING_DISTANCE = 0.2f;
 
 	const int PIXEL_SIZE = 8;
 

@@ -68,6 +68,15 @@ class Engine3D
 		bool collides = false;
 		bool canWalk = false;
 		bool hasLanded = false;
+		float dpFront;
+		float dpBack;
+		float dpRight;
+		float dpLeft;
+		bool collidesFront = false;
+		bool collidesBack = false;
+		bool collidesRight = false;
+		bool collidesLeft = false;
+
 
 		float collidingDistance = 100.0f;
 		glm::vec3 desiredMotion;
@@ -84,10 +93,13 @@ class Engine3D
 
 		//camera
 		glm::vec3 cameraPos;
+		glm::vec3 prevCameraPos;
 
 		glm::vec3 cameraFront;
 
 		glm::vec3 cameraUp;
+
+		glm::vec3 cameraRight;
 
 		glm::mat4 viewMatrix;
 

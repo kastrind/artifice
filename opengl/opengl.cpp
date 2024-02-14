@@ -165,7 +165,7 @@ bool initGL()
 		// //create a rectangle
 		// rectangle rect0{0, 0, 0, 1,    0.2, 0.5,    0.0, 0.0, 0.0};
 		// model mdl0;
-		// mdl0.id = -1;
+		// mdl0.id = 2;
 		// mdl0.position = glm::vec3( 0.0f,  0.0f,  0.0f);
 		// rect0.toTriangles(mdl0.modelMesh.tris);
 		// artificeEngine->modelsToRaster.push_back(mdl0);
@@ -173,7 +173,7 @@ bool initGL()
 		// //create a rectangle
 		// rectangle rect0b{0, 0, 0, 1,    0.4, 0.1,    0.0, 0.0, 0.0};
 		// model mdl0b;
-		// mdl0b.id = -2;
+		// mdl0b.id = 3;
 		// mdl0b.position = glm::vec3( 0.8f,  0.0f,  0.0f);
 		// rect0b.toTriangles(mdl0b.modelMesh.tris);
 		// artificeEngine->modelsToRaster.push_back(mdl0b);
@@ -182,34 +182,46 @@ bool initGL()
 		mdl.id = 0;
 		mdl.position = glm::vec3( 0.0f,  0.0f,  0.0f);
 		//create a cuboid
-		cuboid box{0, 0, 0, 1,    0.2, 0.6, 0.2,    0.0, 0.0, 0.0};
+		cuboid box{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
 		box.toTriangles(mdl.modelMesh.tris);
 		artificeEngine->modelsToRaster.push_back(mdl);
 
 		model mdl2;
 		mdl2.id = 1;
-		mdl2.position = glm::vec3( 0.0f,  0.0f,  0.6f);
-		cuboid box2{0, 0, 0, 1,    0.5, 0.4, 0.2,    0.0, 0.0, 0.0};
+		mdl2.position = glm::vec3( 0.0f,  0.0f,  0.2f);
+		cuboid box2{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
 		box2.toTriangles(mdl2.modelMesh.tris);
 		artificeEngine->modelsToRaster.push_back(mdl2);
 
 		model mdl3;
-		mdl3.position = glm::vec3( 0.0f,  0.0f,  0.4f);
+		mdl3.position = glm::vec3( -0.2f,  0.2f,  0.0f);
 		cuboid box3{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
 		box3.toTriangles(mdl3.modelMesh.tris);
 		artificeEngine->modelsToRaster.push_back(mdl3);
 
 		model mdl4;
-		mdl4.position = glm::vec3( 0.0f,  0.0f, -0.2f);
+		mdl4.position = glm::vec3( -0.2f,  0.2f, 0.2f);
 		cuboid box4{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
 		box4.toTriangles(mdl4.modelMesh.tris);
 		artificeEngine->modelsToRaster.push_back(mdl4);
 
 		model mdl5;
-		mdl5.position = glm::vec3( 0.0f,  0.2f, 0.4f);
+		mdl5.position = glm::vec3( 0.0f,  0.0f, 0.4f);
 		cuboid box5{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
 		box5.toTriangles(mdl5.modelMesh.tris);
 		artificeEngine->modelsToRaster.push_back(mdl5);
+
+		model mdl6;
+		mdl6.position = glm::vec3( 0.2f,  0.2f, 0.0f);
+		cuboid box6{0, 0, 0, 1,    0.2, 0.4, 0.2,    0.0, 0.0, 0.0};
+		box6.toTriangles(mdl6.modelMesh.tris);
+		artificeEngine->modelsToRaster.push_back(mdl6);
+
+		model mdl7;
+		mdl7.position = glm::vec3( 0.2f,  0.2f, 0.2f);
+		cuboid box7{0, 0, 0, 1,    0.2, 0.4, 0.2,    0.0, 0.0, 0.0};
+		box7.toTriangles(mdl7.modelMesh.tris);
+		artificeEngine->modelsToRaster.push_back(mdl7);
 		
 		//create VAO
 		glGenVertexArrays(1, &gVAO);
@@ -343,7 +355,6 @@ void render()
 	glBindVertexArray(gVAO);
 	unsigned int modelCnt = 0;
 	unsigned int prevModelTrisSize = 0;
-	std::vector<triangle> allTris;
 	for (auto &model : artificeEngine->modelsToRaster)
 	{
 		artificeShaderProgram.setMat4("model", model.modelMatrix);
@@ -352,10 +363,6 @@ void render()
 		if (model.inFocus)
 		{
 			std::cout << "in focus!" << std::endl;
-		}
-		for (triangle& tri : model.modelMesh.tris)
-		{
-			allTris.push_back(tri);
 		}
 	}
 }

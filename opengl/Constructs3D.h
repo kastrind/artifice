@@ -345,8 +345,8 @@ struct cuboid
 		mat4x4 matRotY = mat4x4::getRotMatrixY(thetaRotY);
 		mat4x4 matRotZ = mat4x4::getRotMatrixZ(thetaRotZ);
 		//SOUTH
-		triangle south1{ p.x, p.y, p.z, 1.0f,      p.x, p.y + h, p.z, 1.0f,          p.x + w, p.y + h, p.z, 1.0f,    1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 1.0f };
-		triangle south2{ p.x, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z, 1.0f,      p.x + w, p.y, p.z, 1.0f,        1.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f,    0.0f, 1.0f, 1.0f };
+		triangle south1{ p.x + w, p.y, p.z + d, 1.0f,      p.x + w, p.y + h, p.z + d, 1.0f,          p.x, p.y + h, p.z + d, 1.0f,    1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 1.0f };
+		triangle south2{ p.x + w, p.y, p.z + d, 1.0f,      p.x, p.y + h, p.z + d, 1.0f,              p.x, p.y, p.z + d, 1.0f,        1.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f,    0.0f, 1.0f, 1.0f };
 		south1 = south1 * matRotX; south1 = south1 * matRotY; south1 = south1 * matRotZ;
 		south2 = south2 * matRotX; south2 = south2 * matRotY; south2 = south2 * matRotZ;
 		triangles.push_back(south1);
@@ -359,8 +359,8 @@ struct cuboid
 		triangles.push_back(east1);
 		triangles.push_back(east2);
 		//NORTH
-		triangle north1{ p.x + w, p.y, p.z + d, 1.0f,      p.x + w, p.y + h, p.z + d, 1.0f,          p.x, p.y + h, p.z + d, 1.0f,    1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 1.0f };
-		triangle north2{ p.x + w, p.y, p.z + d, 1.0f,      p.x, p.y + h, p.z + d, 1.0f,              p.x, p.y, p.z + d, 1.0f,        1.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f,    0.0f, 1.0f, 1.0f };
+		triangle north1{ p.x, p.y, p.z, 1.0f,      p.x, p.y + h, p.z, 1.0f,          p.x + w, p.y + h, p.z, 1.0f,    1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 1.0f };
+		triangle north2{ p.x, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z, 1.0f,      p.x + w, p.y, p.z, 1.0f,        1.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f,    0.0f, 1.0f, 1.0f };
 		north1 = north1 * matRotX; north1 = north1 * matRotY; north1 = north1 * matRotZ;
 		north2 = north2 * matRotX; north2 = north2 * matRotY; north2 = north2 * matRotZ;
 		triangles.push_back(north1);
@@ -396,9 +396,10 @@ struct mesh
 };
 
 struct model {
-	int id;
+	unsigned int id;
+	bool isSolid = true;
+	bool inFocus = false;
 	mesh modelMesh;
 	glm::vec3 position;
 	glm::mat4 modelMatrix;
-	bool inFocus = false;
 };
