@@ -26,7 +26,7 @@ typedef struct Configuration
 
 	const float COLLIDING_DISTANCE = 0.2f;
 
-	const int PIXEL_SIZE = 8;
+	const float GRAVITATIONAL_PULL = 0.1f;
 
 	//precomputed constants follow
 

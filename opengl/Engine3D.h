@@ -66,19 +66,12 @@ class Engine3D
 		//for collide-and-slide
 		bool canSlide = false;
 		bool collides = false;
-		bool canWalk = false;
-		bool hasLanded = false;
-		float dpFront;
-		float dpBack;
-		float dpRight;
-		float dpLeft;
 		bool collidesFront = false;
 		bool collidesBack = false;
 		bool collidesRight = false;
 		bool collidesLeft = false;
+		bool hasLanded = false;
 
-
-		float collidingDistance = 100.0f;
 		glm::vec3 desiredMotion;
 
 		glm::mat4 projectionMatrix;
@@ -87,13 +80,8 @@ class Engine3D
 
 		float pitch = 0;
 
-		mat4x4 matCameraRotY90CW;
-
-		mat4x4 matCameraRotY90CCW;
-
 		//camera
 		glm::vec3 cameraPos;
-		glm::vec3 prevCameraPos;
 
 		glm::vec3 cameraFront;
 

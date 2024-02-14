@@ -213,13 +213,13 @@ bool initGL()
 
 		model mdl6;
 		mdl6.position = glm::vec3( 0.2f,  0.2f, 0.0f);
-		cuboid box6{0, 0, 0, 1,    0.2, 0.4, 0.2,    0.0, 0.0, 0.0};
+		cuboid box6{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
 		box6.toTriangles(mdl6.modelMesh.tris);
 		artificeEngine->modelsToRaster.push_back(mdl6);
 
 		model mdl7;
 		mdl7.position = glm::vec3( 0.2f,  0.2f, 0.2f);
-		cuboid box7{0, 0, 0, 1,    0.2, 0.4, 0.2,    0.0, 0.0, 0.0};
+		cuboid box7{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
 		box7.toTriangles(mdl7.modelMesh.tris);
 		artificeEngine->modelsToRaster.push_back(mdl7);
 		
