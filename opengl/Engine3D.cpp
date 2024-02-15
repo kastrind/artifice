@@ -176,7 +176,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 				canSlide = absDP < 0.8f && absDP > 0.0f;
 				//std::cout << "dpFront: " << dpFront << std::endl;
 				//std::cout << "maxModelDist: " << maxModelDist << std::endl;
-				std::cout << "modelDistance: " << modelDistance << std::endl;
+				//std::cout << "modelDistance: " << modelDistance << std::endl;
 				collides = true;
 				if (!collidesFront) collidesFront = dpFront < dpRight && dpFront < dpLeft && dpFront < dpBack;
 				if (!collidesBack)  collidesBack  = dpBack < dpRight && dpBack < dpLeft && dpBack < dpFront;

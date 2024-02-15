@@ -159,22 +159,25 @@ bool initGL()
 	else
 	{
 		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS); 
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
 
 		gProgramID = artificeShaderProgram.getProgramID();
 
 		// //create a rectangle
-		// rectangle rect0{0, 0, 0, 1,    0.2, 0.5,    0.0, 0.0, 0.0};
+		// rectangle rect0{0, 0, 0, 1,    0.2, 0.5,    0.0, 2.0, 3.0};
 		// model mdl0;
 		// mdl0.id = 2;
-		// mdl0.position = glm::vec3( 0.0f,  0.0f,  0.0f);
+		// mdl0.position = glm::vec3( 0.0f,  0.2f,  0.2f);
 		// rect0.toTriangles(mdl0.modelMesh.tris);
 		// artificeEngine->modelsToRaster.push_back(mdl0);
 
 		// //create a rectangle
-		// rectangle rect0b{0, 0, 0, 1,    0.4, 0.1,    0.0, 0.0, 0.0};
+		// rectangle rect0b{0, 0, 0, 1,    0.5, 0.2,    0.0, 2.0, 0.0};
 		// model mdl0b;
 		// mdl0b.id = 3;
-		// mdl0b.position = glm::vec3( 0.8f,  0.0f,  0.0f);
+		// mdl0b.position = glm::vec3( 0.2f,  0.7f,  0.5f);
 		// rect0b.toTriangles(mdl0b.modelMesh.tris);
 		// artificeEngine->modelsToRaster.push_back(mdl0b);
 
@@ -335,6 +338,9 @@ void updateVertices()
 		//texture coord attribute
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 		glEnableVertexAttribArray(2);
+		// //texture id attribute
+		// glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(8 * sizeof(float)));
+		// glEnableVertexAttribArray(3);
 }
 
 void render()
