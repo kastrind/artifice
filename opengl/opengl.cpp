@@ -34,6 +34,9 @@ bool initGL();
 //generates and binds textures
 void loadTextures();
 
+//generates and binds cubemaps
+unsigned int loadCubemap(); 
+
 //per frame update
 void updateVertices();
 
@@ -61,6 +64,8 @@ ArtificeShaderProgram artificeShaderProgram;
 
 //declare textures
 std::vector<GLuint> textureIds;
+
+GLuint cubemapTexture;
 
 std::vector<std::string> texturePaths;
 
@@ -159,9 +164,9 @@ bool initGL()
 	else
 	{
 		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS); 
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
+		// glDepthFunc(GL_LESS); 
+		// glEnable(GL_CULL_FACE);
+		// glCullFace(GL_BACK);
 
 		gProgramID = artificeShaderProgram.getProgramID();
 
@@ -245,15 +250,15 @@ bool initGL()
 		glClearColor( 0.f, 0.f, 0.f, 1.f );
 
 		//generates and binds textures
-		loadTextures();
+		//loadTextures();
+
+		cubemapTexture = loadCubemap();
 	}
 	return success;
 }
 
 void loadTextures()
 {
-	texturePaths.push_back("brickwall.bmp");
-	texturePaths.push_back("brickwallPainted.bmp");
 	for (std::string texturePath : texturePaths)
 	{
 		textureIds.push_back(0);
@@ -292,6 +297,38 @@ void loadTextures()
 		glUniform1i(glGetUniformLocation(artificeShaderProgram.getProgramID(), std::string("texture" + std::to_string(textureId)).c_str()), cnt++);
 	}
 
+}
+
+unsigned int loadCubemap()
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < texturePaths.size(); i++)
+	{
+		unsigned char *data = stbi_load(texturePaths[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
+							0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+			);
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Cubemap tex failed to load at path: " << texturePaths[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glUniform1i(glGetUniformLocation(artificeShaderProgram.getProgramID(), std::string("cubemap" + std::to_string(textureID)).c_str()), 0);
+	return textureID;
 }
 
 void updateVertices()
@@ -349,16 +386,20 @@ void render()
 	//clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	// glActiveTexture(GL_TEXTURE0);
+	// glBindTexture(GL_TEXTURE_2D, textureIds.front());
+
+	// glActiveTexture(GL_TEXTURE1);
+	// glBindTexture(GL_TEXTURE_2D, textureIds.back());
+
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, textureIds.front());
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, textureIds.back());
+	artificeShaderProgram.bind();
 
-	artificeShaderProgram.setMat4("projection", artificeEngine->getProjectionMatrix());	
+	artificeShaderProgram.setMat4("projection", artificeEngine->getProjectionMatrix());
 	artificeShaderProgram.setMat4("view", artificeEngine->getViewMatrix());
-
-	glBindVertexArray(gVAO);
+	
 	unsigned int modelCnt = 0;
 	unsigned int prevModelTrisSize = 0;
 	for (auto &model : artificeEngine->modelsToRaster)
@@ -366,11 +407,12 @@ void render()
 		artificeShaderProgram.setMat4("model", model.modelMatrix);
 		glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(((modelCnt++) * (prevModelTrisSize * 3) ) * sizeof(float)));
 		prevModelTrisSize = model.modelMesh.tris.size();
-		if (model.inFocus)
-		{
-			std::cout << "in focus!" << std::endl;
-		}
+		// if (model.inFocus)
+		// {
+		// 	std::cout << "in focus!" << std::endl;
+		// }
 	}
+	glBindVertexArray(gVAO);
 }
 
 void close()
@@ -393,6 +435,14 @@ void close()
 
 int main( int argc, char* args[] )
 {
+	//TODO: relocate
+	texturePaths.push_back("brickwallPainted.bmp"); //right
+	texturePaths.push_back("brickwall.bmp"); //left
+	texturePaths.push_back("brickwallPainted.bmp"); //top
+	texturePaths.push_back("brickwall.bmp"); //bottom
+	texturePaths.push_back("brickwallPainted.bmp"); //back
+	texturePaths.push_back("brickwall.bmp"); //front
+
 	//start up SDL and create window
 	if( !init() )
 	{
