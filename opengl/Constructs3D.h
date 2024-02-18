@@ -341,50 +341,106 @@ struct cuboid
 	float thetaRotZ = 0.0f;
 
 	inline void toTriangles(std::vector<triangle>& triangles) {
-		w /= 2.0f;
-		h /= 2.0f;
-		d /= 2.0f;
 		mat4x4 matRotX = mat4x4::getRotMatrixX(thetaRotX);
 		mat4x4 matRotY = mat4x4::getRotMatrixY(thetaRotY);
 		mat4x4 matRotZ = mat4x4::getRotMatrixZ(thetaRotZ);
-		//RIGHT
-		triangle east1{ p.x + w, p.y + h, p.z - d, 1.0f,    p.x + w, p.y + h, p.z + d, 1.0f,    p.x + w, p.y - h, p.z - d, 1.0f };
-		triangle east2{ p.x + w, p.y + h, p.z + d, 1.0f,    p.x + w, p.y - h, p.z + d, 1.0f,    p.x + w, p.y - h, p.z - d, 1.0f };
+		//SOUTH
+		triangle south1{ p.x + w, p.y, p.z + d, 1.0f,      p.x + w, p.y + h, p.z + d, 1.0f,          p.x, p.y + h, p.z + d, 1.0f,    1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 1.0f };
+		triangle south2{ p.x + w, p.y, p.z + d, 1.0f,      p.x, p.y + h, p.z + d, 1.0f,              p.x, p.y, p.z + d, 1.0f,        1.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f,    0.0f, 1.0f, 1.0f };
+		south1 = south1 * matRotX; south1 = south1 * matRotY; south1 = south1 * matRotZ;
+		south2 = south2 * matRotX; south2 = south2 * matRotY; south2 = south2 * matRotZ;
+		triangles.push_back(south1);
+		triangles.push_back(south2);
+		//EAST
+		triangle east1{ p.x + w, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z, 1.0f,          p.x + w, p.y + h, p.z + d, 1.0f,    1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 1.0f };
+		triangle east2{ p.x + w, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z + d, 1.0f,      p.x + w, p.y, p.z + d,    1.0f,     1.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f,    0.0f, 1.0f, 1.0f };
 		east1 = east1 * matRotX; east1 = east1 * matRotY; east1 = east1 * matRotZ;
 		east2 = east2 * matRotX; east2 = east2 * matRotY; east2 = east2 * matRotZ;
 		triangles.push_back(east1);
 		triangles.push_back(east2);
-		//LEFT
-		triangle west1{ p.x - w, p.y - h, p.z - d, 1.0f,    p.x - w, p.y + h, p.z - d, 1.0f,    p.x - w, p.y + h, p.z + d, 1.0f };
-		triangle west2{ p.x - w, p.y - h, p.z - d, 1.0f,    p.x - w, p.y + h, p.z + d, 1.0f,    p.x - w, p.y - h, p.z + d, 1.0f };
+		//NORTH
+		triangle north1{ p.x, p.y, p.z, 1.0f,      p.x, p.y + h, p.z, 1.0f,          p.x + w, p.y + h, p.z, 1.0f,    1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 1.0f };
+		triangle north2{ p.x, p.y, p.z, 1.0f,      p.x + w, p.y + h, p.z, 1.0f,      p.x + w, p.y, p.z, 1.0f,        1.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f,    0.0f, 1.0f, 1.0f };
+		north1 = north1 * matRotX; north1 = north1 * matRotY; north1 = north1 * matRotZ;
+		north2 = north2 * matRotX; north2 = north2 * matRotY; north2 = north2 * matRotZ;
+		triangles.push_back(north1);
+		triangles.push_back(north2);
+		//WEST
+		triangle west1{ p.x, p.y, p.z + d, 1.0f,      p.x, p.y + h, p.z + d, 1.0f,          p.x, p.y + h, p.z, 1.0f,    1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 1.0f };
+		triangle west2{ p.x, p.y, p.z + d, 1.0f,      p.x, p.y + h, p.z, 1.0f,              p.x, p.y, p.z, 1.0f,        1.0f, 1.0f, 1.0f,    0.0f, 0.0f, 1.0f,    0.0f, 1.0f, 1.0f };
 		west1 = west1 * matRotX; west1 = west1 * matRotY; west1 = west1 * matRotZ;
 		west2 = west2 * matRotX; west2 = west2 * matRotY; west2 = west2 * matRotZ;
 		triangles.push_back(west1);
 		triangles.push_back(west2);
 		//TOP
-		triangle top1{ p.x - w, p.y + h, p.z - d, 1.0f,    p.x - w, p.y + h, p.z + d, 1.0f,    p.x + w, p.y + h, p.z + d, 1.0f };
-		triangle top2{ p.x - w, p.y + h, p.z - d, 1.0f,    p.x + w, p.y + h, p.z + d, 1.0f,    p.x + w, p.y + h, p.z - d, 1.0f };
+		triangle top1{ p.x, p.y + h, p.z, 1.0f,      p.x, p.y + h, p.z + d, 1.0f,          p.x + w, p.y + h, p.z + d, 1.0f,    0.0f, 0.0f, 1.0f,    0.0f, 1.0f, 1.0f,    1.0f, 1.0f, 1.0f };
+		triangle top2{ p.x, p.y + h, p.z, 1.0f,      p.x + w, p.y + h, p.z + d, 1.0f,      p.x + w, p.y + h, p.z, 1.0f,        0.0f, 0.0f, 1.0f,    1.0f, 1.0f, 1.0f,    1.0f, 0.0f, 1.0f };
 		top1 = top1 * matRotX; top1 = top1 * matRotY; top1 = top1 * matRotZ;
 		top2 = top2 * matRotX; top2 = top2 * matRotY; top2 = top2 * matRotZ;
 		triangles.push_back(top1);
 		triangles.push_back(top2);
 		//BOTTOM
-		triangle bottom1{ p.x - w, p.y - h, p.z - d, 1.0f,    p.x - w, p.y - h, p.z + d, 1.0f,    p.x + w, p.y - h, p.z + d, 1.0f };
-		triangle bottom2{ p.x - w, p.y - h, p.z - d, 1.0f,    p.x + w, p.y - h, p.z + d, 1.0f,    p.x + w, p.y - h, p.z - d, 1.0f };
+		triangle bottom1{ p.x + w, p.y, p.z + d, 1.0f,      p.x, p.y, p.z + d, 1.0f,          p.x, p.y, p.z, 1.0f,        1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 1.0f,    0.0f, 1.0f, 1.0f };
+		triangle bottom2{ p.x + w, p.y, p.z + d, 1.0f,      p.x, p.y, p.z, 1.0f,              p.x + w, p.y, p.z, 1.0f,    1.0f, 0.0f, 1.0f,    0.0f, 1.0f, 1.0f,    1.0f, 1.0f, 1.0f };
+		bottom1 = bottom1 * matRotX; bottom1 = bottom1 * matRotY; bottom1 = bottom1 * matRotZ;
+		bottom2 = bottom2 * matRotX; bottom2 = bottom2 * matRotY; bottom2 = bottom2 * matRotZ;
+		triangles.push_back(bottom1);
+		triangles.push_back(bottom2);
+	}
+
+};
+
+struct cube
+{
+	float size; //width along x, height along y, depth along z
+	vec3d p;
+	float thetaRotX = 0.0f;
+	float thetaRotY = 0.0f;
+	float thetaRotZ = 0.0f;
+
+	inline void toTriangles(std::vector<triangle>& triangles) {
+		float s = size / 2.0f;
+		mat4x4 matRotX = mat4x4::getRotMatrixX(thetaRotX);
+		mat4x4 matRotY = mat4x4::getRotMatrixY(thetaRotY);
+		mat4x4 matRotZ = mat4x4::getRotMatrixZ(thetaRotZ);
+		//RIGHT
+		triangle east1{ p.x + s, p.y + s, p.z - s, 1.0f,    p.x + s, p.y + s, p.z + s, 1.0f,    p.x + s, p.y - s, p.z - s, 1.0f };
+		triangle east2{ p.x + s, p.y + s, p.z + s, 1.0f,    p.x + s, p.y - s, p.z + s, 1.0f,    p.x + s, p.y - s, p.z - s, 1.0f };
+		east1 = east1 * matRotX; east1 = east1 * matRotY; east1 = east1 * matRotZ;
+		east2 = east2 * matRotX; east2 = east2 * matRotY; east2 = east2 * matRotZ;
+		triangles.push_back(east1);
+		triangles.push_back(east2);
+		//LEFT
+		triangle west1{ p.x - s, p.y - s, p.z - s, 1.0f,    p.x - s, p.y + s, p.z - s, 1.0f,    p.x - s, p.y + s, p.z + s, 1.0f };
+		triangle west2{ p.x - s, p.y - s, p.z - s, 1.0f,    p.x - s, p.y + s, p.z + s, 1.0f,    p.x - s, p.y - s, p.z + s, 1.0f };
+		west1 = west1 * matRotX; west1 = west1 * matRotY; west1 = west1 * matRotZ;
+		west2 = west2 * matRotX; west2 = west2 * matRotY; west2 = west2 * matRotZ;
+		triangles.push_back(west1);
+		triangles.push_back(west2);
+		//TOP
+		triangle top1{ p.x - s, p.y + s, p.z - s, 1.0f,    p.x - s, p.y + s, p.z + s, 1.0f,    p.x + s, p.y + s, p.z + s, 1.0f };
+		triangle top2{ p.x - s, p.y + s, p.z - s, 1.0f,    p.x + s, p.y + s, p.z + s, 1.0f,    p.x + s, p.y + s, p.z - s, 1.0f };
+		top1 = top1 * matRotX; top1 = top1 * matRotY; top1 = top1 * matRotZ;
+		top2 = top2 * matRotX; top2 = top2 * matRotY; top2 = top2 * matRotZ;
+		triangles.push_back(top1);
+		triangles.push_back(top2);
+		//BOTTOM
+		triangle bottom1{ p.x - s, p.y - s, p.z - s, 1.0f,    p.x - s, p.y - s, p.z + s, 1.0f,    p.x + s, p.y - s, p.z + s, 1.0f };
+		triangle bottom2{ p.x - s, p.y - s, p.z - s, 1.0f,    p.x + s, p.y - s, p.z + s, 1.0f,    p.x + s, p.y - s, p.z - s, 1.0f };
 		bottom1 = bottom1 * matRotX; bottom1 = bottom1 * matRotY; bottom1 = bottom1 * matRotZ;
 		bottom2 = bottom2 * matRotX; bottom2 = bottom2 * matRotY; bottom2 = bottom2 * matRotZ;
 		triangles.push_back(bottom1);
 		triangles.push_back(bottom2);
 		//BACK
-		triangle back1{ p.x + w, p.y - h, p.z - d, 1.0f,    p.x + w, p.y + h, p.z - d, 1.0f,    p.x - w, p.y + h, p.z - d, 1.0f };
-		triangle back2{ p.x + w, p.y - h, p.z - d, 1.0f,    p.x - w, p.y + h, p.z - d, 1.0f,    p.x - w, p.y - h, p.z - d, 1.0f };
+		triangle back1{ p.x + s, p.y - s, p.z - s, 1.0f,    p.x + s, p.y + s, p.z - s, 1.0f,    p.x - s, p.y + s, p.z - s, 1.0f };
+		triangle back2{ p.x + s, p.y - s, p.z - s, 1.0f,    p.x - s, p.y + s, p.z - s, 1.0f,    p.x - s, p.y - s, p.z - s, 1.0f };
 		back1 = back1 * matRotX; back1 = back1 * matRotY; back1 = back1 * matRotZ;
 		back2 = back2 * matRotX; back2 = back2 * matRotY; back2 = back2 * matRotZ;
 		triangles.push_back(back1);
 		triangles.push_back(back2);
 		//FRONT
-		triangle front1{ p.x + w, p.y + h, p.z + d, 1.0f,    p.x - w, p.y + h, p.z + d, 1.0f,    p.x + w, p.y - h, p.z + d, 1.0f };
-		triangle front2{ p.x - w, p.y + h, p.z + d, 1.0f,    p.x - w, p.y - h, p.z + d, 1.0f,    p.x + w, p.y - h, p.z + d, 1.0f };
+		triangle front1{ p.x + s, p.y + s, p.z + s, 1.0f,    p.x - s, p.y + s, p.z + s, 1.0f,    p.x + s, p.y - s, p.z + s, 1.0f };
+		triangle front2{ p.x - s, p.y + s, p.z + s, 1.0f,    p.x - s, p.y - s, p.z + s, 1.0f,    p.x + s, p.y - s, p.z + s, 1.0f };
 		front1 = front1 * matRotX; front1 = front1 * matRotY; front1 = front1 * matRotZ;
 		front2 = front2 * matRotX; front2 = front2 * matRotY; front2 = front2 * matRotZ;
 		triangles.push_back(front1);
@@ -393,8 +449,16 @@ struct cuboid
 
 };
 
+typedef enum {
+	TRIANGLE,
+	RECTANGLE,
+	CUBOID,
+	CUBE
+} Shape;
+
 struct mesh
 {
+	Shape shape;
 	std::vector<triangle> tris;
 };
 

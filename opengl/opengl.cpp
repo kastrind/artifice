@@ -53,14 +53,18 @@ SDL_Window* gWindow = NULL;
 SDL_GLContext gContext;
 
 //graphics program
-GLuint gProgramID = 0;
-GLint gVertexPos2DLocation = -1;
+GLuint gCubeMapProgramID = 0;
+GLuint gTextureProgramID = 0;
 GLuint gVBO = 0;
 GLuint gIBO = 0;
 GLuint gVAO = 0;
+GLuint gCubeVBO = 0;
+GLuint gCubeIBO = 0;
+GLuint gCubeVAO = 0;
 
-//shader program
-ArtificeShaderProgram artificeShaderProgram;
+//shader programs
+ArtificeShaderProgram textureShader;
+ArtificeShaderProgram cubeMapShader;
 
 //declare textures
 std::vector<GLuint> textureIds;
@@ -72,7 +76,7 @@ std::vector<std::string> texturePaths;
 //window mouse barrier
 SDL_Rect windowRect{cfg.SCREEN_WIDTH/4, cfg.SCREEN_HEIGHT/4, cfg.SCREEN_WIDTH/2, cfg.SCREEN_HEIGHT/2};
 
-//the graphics engine
+//the game engine
 Engine3D* artificeEngine;
 
 //the engine thread
@@ -87,6 +91,7 @@ bool init()
 	bool success = true;
 
 	//initialize SDL
+	printf( "Initializing SDL...\n" );
 	if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
 	{
 		printf( "SDL could not initialize! SDL Error: %s\n", SDL_GetError() );
@@ -100,6 +105,7 @@ bool init()
 		SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 
 		//create window
+		printf( "Creating window...\n" );
 		gWindow = SDL_CreateWindow( "Artifice Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
 		//confine mouse cursor to the window and hide it
 		SDL_SetWindowMouseGrab(gWindow, SDL_TRUE);
@@ -113,6 +119,7 @@ bool init()
 		else
 		{
 			//create context
+			printf( "Creating OpenGL context...\n" );
 			gContext = SDL_GL_CreateContext( gWindow );
 			if( gContext == NULL )
 			{
@@ -122,6 +129,7 @@ bool init()
 			else
 			{
 				//initialize GLEW
+				printf( "Initializing GLEW...\n" );
 				glewExperimental = GL_TRUE; 
 				GLenum glewError = glewInit();
 				if( glewError != GLEW_OK )
@@ -130,15 +138,17 @@ bool init()
 				}
 
 				//use Vsync
+				printf( "Setting VSync...\n" );
 				if( SDL_GL_SetSwapInterval( 1 ) < 0 )
 				{
 					printf( "Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError() );
 				}
 
-				//instantiate the 3D engine
+				//instantiate the game engine
 				artificeEngine = new Engine3D(cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, cfg.NEAR, cfg.FAR, cfg.FOV, &eventController);
 
 				//initialize OpenGL
+				printf( "Initializing OpenGL...\n" );
 				if( !initGL() )
 				{
 					printf( "Unable to initialize OpenGL!\n" );
@@ -153,12 +163,17 @@ bool init()
 
 bool initGL()
 {
-	//success flag
 	bool success = true;
 
-	if (!artificeShaderProgram.loadProgram())
+	printf( "Loading shader programs...\n" );
+	if (!cubeMapShader.loadProgram("shaders/cubemap.glvs", "shaders/cubemap.glfs"))
 	{
-		printf( "Unable to load basic shader!\n" );
+		printf( "Unable to load cubemap shader!\n" );
+		success = false;
+	}
+	else if(!textureShader.loadProgram("shaders/texture.glvs", "shaders/texture.glfs"))
+	{
+		printf( "Unable to load cubemap shader!\n" );
 		success = false;
 	}
 	else
@@ -168,80 +183,83 @@ bool initGL()
 		// glEnable(GL_CULL_FACE);
 		// glCullFace(GL_BACK);
 
-		gProgramID = artificeShaderProgram.getProgramID();
+		gCubeMapProgramID = cubeMapShader.getProgramID();
+		gTextureProgramID = textureShader.getProgramID();
 
-		// //create a rectangle
-		// rectangle rect0{0, 0, 0, 1,    0.2, 0.5,    0.0, 2.0, 3.0};
-		// model mdl0;
-		// mdl0.id = 2;
-		// mdl0.position = glm::vec3( 0.0f,  0.2f,  0.2f);
-		// rect0.toTriangles(mdl0.modelMesh.tris);
-		// artificeEngine->modelsToRaster.push_back(mdl0);
+		//create a rectangle
+		rectangle rect0{0, 0, 0, 1,    0.2, 0.4,    0.0, 2.0, 3.0};
+		model mdl0;
+		mdl0.position = glm::vec3( -0.7f,  0.5f,  0.2f);
+		rect0.toTriangles(mdl0.modelMesh.tris);
+		mdl0.modelMesh.shape = Shape::RECTANGLE;
+		artificeEngine->modelsToRaster.push_back(mdl0);
 
-		// //create a rectangle
-		// rectangle rect0b{0, 0, 0, 1,    0.5, 0.2,    0.0, 2.0, 0.0};
-		// model mdl0b;
-		// mdl0b.id = 3;
-		// mdl0b.position = glm::vec3( 0.2f,  0.7f,  0.5f);
-		// rect0b.toTriangles(mdl0b.modelMesh.tris);
-		// artificeEngine->modelsToRaster.push_back(mdl0b);
+		//create a rectangle
+		rectangle rect0b{0, 0, 0, 1,    0.5, 0.2,    0.0, 2.0, 0.0};
+		model mdl0b;
+		mdl0b.position = glm::vec3( 0.2f,  0.7f,  0.5f);
+		rect0b.toTriangles(mdl0b.modelMesh.tris);
+		artificeEngine->modelsToRaster.push_back(mdl0b);
 
+		//create a cube
+		cube cube0{0.2f};
+		std::vector<triangle> cube0Triangles;
+		cube0.toTriangles(cube0Triangles);
+
+		//create models
 		model mdl;
-		mdl.id = 0;
 		mdl.position = glm::vec3( 0.0f,  0.0f,  0.0f);
-		//create a cuboid
-		cuboid box{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
-		box.toTriangles(mdl.modelMesh.tris);
+		mdl.modelMesh.tris = cube0Triangles;
+		mdl.modelMesh.shape = Shape::CUBE;
 		artificeEngine->modelsToRaster.push_back(mdl);
 
-		model mdl2;
-		mdl2.id = 1;
-		mdl2.position = glm::vec3( 0.0f,  0.0f,  0.2f);
-		cuboid box2{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
-		box2.toTriangles(mdl2.modelMesh.tris);
-		artificeEngine->modelsToRaster.push_back(mdl2);
+		// model mdl2;
+		// mdl2.position = glm::vec3( 0.0f,  0.0f,  0.2f);
+		// mdl2.modelMesh.tris = cube0Triangles;
+		// mdl2.modelMesh.shape = Shape::CUBE;
+		// artificeEngine->modelsToRaster.push_back(mdl2);
 
-		model mdl3;
-		mdl3.position = glm::vec3( -0.2f,  0.2f,  0.0f);
-		cuboid box3{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
-		box3.toTriangles(mdl3.modelMesh.tris);
-		artificeEngine->modelsToRaster.push_back(mdl3);
+		// model mdl3;
+		// mdl3.position = glm::vec3( -0.2f,  0.2f,  0.0f);
+		// mdl3.modelMesh.tris = cube0Triangles;
+		// mdl3.modelMesh.shape = Shape::CUBE;
+		// artificeEngine->modelsToRaster.push_back(mdl3);
 
-		model mdl4;
-		mdl4.position = glm::vec3( -0.2f,  0.2f, 0.2f);
-		cuboid box4{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
-		box4.toTriangles(mdl4.modelMesh.tris);
-		artificeEngine->modelsToRaster.push_back(mdl4);
+		// model mdl4;
+		// mdl4.position = glm::vec3( -0.2f,  0.2f, 0.2f);
+		// mdl4.modelMesh.tris = cube0Triangles;
+		// mdl4.modelMesh.shape = Shape::CUBE;
+		// artificeEngine->modelsToRaster.push_back(mdl4);
 
-		model mdl5;
-		mdl5.position = glm::vec3( 0.0f,  0.0f, 0.4f);
-		cuboid box5{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
-		box5.toTriangles(mdl5.modelMesh.tris);
-		artificeEngine->modelsToRaster.push_back(mdl5);
+		// model mdl5;
+		// mdl5.position = glm::vec3( 0.0f,  0.0f, 0.4f);
+		// mdl5.modelMesh.tris = cube0Triangles;
+		// mdl5.modelMesh.shape = Shape::CUBE;
+		// artificeEngine->modelsToRaster.push_back(mdl5);
 
-		model mdl6;
-		mdl6.position = glm::vec3( 0.2f,  0.2f, 0.0f);
-		cuboid box6{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
-		box6.toTriangles(mdl6.modelMesh.tris);
-		artificeEngine->modelsToRaster.push_back(mdl6);
+		// model mdl6;
+		// mdl6.position = glm::vec3( 0.2f,  0.2f, 0.0f);
+		// mdl6.modelMesh.tris = cube0Triangles;
+		// mdl6.modelMesh.shape = Shape::CUBE;
+		// artificeEngine->modelsToRaster.push_back(mdl6);
 
-		model mdl7;
-		mdl7.position = glm::vec3( 0.2f,  0.2f, 0.2f);
-		cuboid box7{0, 0, 0, 1,    0.2, 0.2, 0.2,    0.0, 0.0, 0.0};
-		box7.toTriangles(mdl7.modelMesh.tris);
-		artificeEngine->modelsToRaster.push_back(mdl7);
+		// model mdl7;
+		// mdl7.position = glm::vec3( 0.2f,  0.2f, 0.2f);
+		// mdl7.modelMesh.tris = cube0Triangles;
+		// mdl7.modelMesh.shape = Shape::CUBE;
+		// artificeEngine->modelsToRaster.push_back(mdl7);
 		
-		//create VAO
+		//create VAOs
 		glGenVertexArrays(1, &gVAO);
-		glBindVertexArray(gVAO);
+		glGenVertexArrays(1, &gCubeVAO);
 
-		//create VBO
+		//create VBOs
 		glGenBuffers( 1, &gVBO );
-		glBindBuffer( GL_ARRAY_BUFFER, gVBO );
+		glGenBuffers( 1, &gCubeVBO );
 
 		//create IBO
 		glGenBuffers( 1, &gIBO );
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gIBO );
+		glGenBuffers( 1, &gCubeIBO );
 
 		//update buffers with the new vertices
 		updateVertices();
@@ -250,7 +268,7 @@ bool initGL()
 		glClearColor( 0.f, 0.f, 0.f, 1.f );
 
 		//generates and binds textures
-		//loadTextures();
+		loadTextures();
 
 		cubemapTexture = loadCubemap();
 	}
@@ -289,12 +307,12 @@ void loadTextures()
 		stbi_image_free(data);
 	}
 	//activate shader
-	artificeShaderProgram.bind();
+	textureShader.bind();
 	//set the uniforms
 	int cnt=0;
 	for (GLuint& textureId : textureIds)
 	{
-		glUniform1i(glGetUniformLocation(artificeShaderProgram.getProgramID(), std::string("texture" + std::to_string(textureId)).c_str()), cnt++);
+		glUniform1i(glGetUniformLocation(textureShader.getProgramID(), std::string("texture" + std::to_string(textureId)).c_str()), cnt++);
 	}
 
 }
@@ -318,7 +336,7 @@ unsigned int loadCubemap()
 		}
 		else
 		{
-			std::cout << "Cubemap tex failed to load at path: " << texturePaths[i] << std::endl;
+			std::cout << "Cubemap texture failed to load at path: " << texturePaths[i] << std::endl;
 			stbi_image_free(data);
 		}
 	}
@@ -327,7 +345,8 @@ unsigned int loadCubemap()
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glUniform1i(glGetUniformLocation(artificeShaderProgram.getProgramID(), std::string("cubemap" + std::to_string(textureID)).c_str()), 0);
+	cubeMapShader.bind();
+	glUniform1i(glGetUniformLocation(cubeMapShader.getProgramID(), std::string("cubemap" + std::to_string(textureID)).c_str()), 0);
 	return textureID;
 }
 
@@ -337,34 +356,58 @@ void updateVertices()
 		std::vector<GLuint> indexData;
 		GLuint indexCounter = 0;
 
+		std::vector<GLfloat> cubeVertexData;
+		std::vector<GLuint> cubeIndexData;
+		GLuint cubeIndexCounter = 0;
+
+		std::vector<GLfloat>* vdp = &vertexData;
+
 		//populate vertex vectors with triangle vertex information for each model
 		for (auto &model : artificeEngine->modelsToRaster)
 		{
+			vdp = model.modelMesh.shape == Shape::CUBE ? &cubeVertexData : &vertexData;
+
 			for (auto &tri : model.modelMesh.tris)
 			{
 				for (int i = 0; i < 3; i++)
 				{
-					vertexData.push_back(tri.p[i].x);
-					vertexData.push_back(tri.p[i].y);
-					vertexData.push_back(tri.p[i].z);
-					vertexData.push_back((float)tri.R/255.0f);
-					vertexData.push_back((float)tri.G/255.0f);
-					vertexData.push_back((float)tri.B/255.0f);
-					vertexData.push_back(tri.t[i].u);
-					vertexData.push_back(tri.t[i].v);
-					indexData.push_back(indexCounter++);
+					vdp->push_back(tri.p[i].x);
+					vdp->push_back(tri.p[i].y);
+					vdp->push_back(tri.p[i].z);
+					vdp->push_back((float)tri.R/255.0f);
+					vdp->push_back((float)tri.G/255.0f);
+					vdp->push_back((float)tri.B/255.0f);
+					vdp->push_back(tri.t[i].u);
+					vdp->push_back(tri.t[i].v);
+					if (model.modelMesh.shape != Shape::CUBE)
+					{
+						indexData.push_back(indexCounter++);
+					} else
+					{
+						cubeIndexData.push_back(cubeIndexCounter++);
+					}
 				}
 			}
 		}
 
 		std::cout << "vertex data size: " << vertexData.size() << std::endl;
 		std::cout << "index data size: " << indexData.size() << std::endl;
+		std::cout << "cube vertex data size: " << cubeVertexData.size() << std::endl;
+		std::cout << "cube index data size: " << cubeIndexData.size() << std::endl;
+
+		// glBindVertexArray(gVAO);
+		// glBindVertexArray(gCubeVAO);
+
+		// glBindBuffer( GL_ARRAY_BUFFER, gVBO );
+		// glBindBuffer( GL_ARRAY_BUFFER, gCubeVBO );
+
+		// glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gIBO );
+		// glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gCubeIBO );
 
 		//update VBO
+		glBindVertexArray(gVAO);
+		glBindBuffer( GL_ARRAY_BUFFER, gVBO );
 		glBufferData( GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), vertexData.data(), GL_STATIC_DRAW );
-
-		//update IBO
-		glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), indexData.data(), GL_STATIC_DRAW );
 
 		//position attribute
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -378,6 +421,29 @@ void updateVertices()
 		// //texture id attribute
 		// glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(8 * sizeof(float)));
 		// glEnableVertexAttribArray(3);
+
+		//update IBO
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gIBO );
+		glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), indexData.data(), GL_STATIC_DRAW );
+
+		//update cubeVBO
+		glBindVertexArray(gCubeVAO);
+		glBindBuffer( GL_ARRAY_BUFFER, gCubeVBO );
+		glBufferData( GL_ARRAY_BUFFER, cubeVertexData.size() * sizeof(GLfloat), cubeVertexData.data(), GL_STATIC_DRAW );
+
+		//position attribute
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+		//color attribute
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+		//texture coord attribute
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+
+		//update cubeIBO
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gCubeIBO );
+		glBufferData( GL_ELEMENT_ARRAY_BUFFER, cubeIndexData.size() * sizeof(GLuint), cubeIndexData.data(), GL_STATIC_DRAW );
 }
 
 void render()
@@ -389,42 +455,56 @@ void render()
 	// glActiveTexture(GL_TEXTURE0);
 	// glBindTexture(GL_TEXTURE_2D, textureIds.front());
 
-	// glActiveTexture(GL_TEXTURE1);
-	// glBindTexture(GL_TEXTURE_2D, textureIds.back());
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-
-	artificeShaderProgram.bind();
-
-	artificeShaderProgram.setMat4("projection", artificeEngine->getProjectionMatrix());
-	artificeShaderProgram.setMat4("view", artificeEngine->getViewMatrix());
+	cubeMapShader.bind();
+	cubeMapShader.setMat4("projection", artificeEngine->getProjectionMatrix());
+	cubeMapShader.setMat4("view", artificeEngine->getViewMatrix());
+	textureShader.bind();
+	textureShader.setMat4("projection", artificeEngine->getProjectionMatrix());
+	textureShader.setMat4("view", artificeEngine->getViewMatrix());
 	
 	unsigned int modelCnt = 0;
+	unsigned int cubeCnt = 0;
 	unsigned int prevModelTrisSize = 0;
+	unsigned int prevCubeTrisSize = 0;
 	for (auto &model : artificeEngine->modelsToRaster)
 	{
-		artificeShaderProgram.setMat4("model", model.modelMatrix);
-		glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(((modelCnt++) * (prevModelTrisSize * 3) ) * sizeof(float)));
-		prevModelTrisSize = model.modelMesh.tris.size();
-		// if (model.inFocus)
-		// {
-		// 	std::cout << "in focus!" << std::endl;
-		// }
+		if (model.modelMesh.shape == Shape::CUBE)
+		{
+			cubeMapShader.bind();
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIBO);
+			glBindVertexArray(gCubeVAO);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+			cubeMapShader.setMat4("model", model.modelMatrix);
+			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(((cubeCnt++) * (prevCubeTrisSize * 3) ) * sizeof(float)));
+			prevCubeTrisSize = model.modelMesh.tris.size();
+		}
+		else
+		{
+			textureShader.bind();
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
+			glBindVertexArray(gVAO);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, textureIds.back());
+			textureShader.setMat4("model", model.modelMatrix);
+			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(((modelCnt++) * (prevModelTrisSize * 3) ) * sizeof(float)));
+			prevModelTrisSize = model.modelMesh.tris.size();
+		}
+		glBindVertexArray(0);
 	}
-	glBindVertexArray(gVAO);
 }
 
 void close()
 {
 	//unbind program - deactivate shader
-	artificeShaderProgram.unbind();
+	cubeMapShader.unbind();
 
-	//deallocate program
-	glDeleteProgram( gProgramID );
+	//deallocate programs
+	glDeleteProgram(gCubeMapProgramID);
+	glDeleteProgram(gTextureProgramID);
 
 	//destroy window	
-	SDL_DestroyWindow( gWindow );
+	SDL_DestroyWindow(gWindow);
 	gWindow = NULL;
 
 	engineThread.join();

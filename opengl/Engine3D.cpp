@@ -169,7 +169,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			float dpBack = glm::dot(-cameraFront, normal);
 
 			//normal is up means collision with floor
-			if (normal.y > normal.z && normal.y > normal.x) {
+			if (collidingTriPts[0].y <= cameraPos.y && normal.y > normal.z && normal.y > normal.x) {
 				hasLanded = true;
 			//else collision with wall
 			}else if (modelDistance < cfg.COLLIDING_DISTANCE && maxModelDist < cfg.COLLIDING_DISTANCE * 1.5f) {
@@ -196,7 +196,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			cameraPos = prevCameraPos;
 		}
 	}
-	//std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
+	std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
 	return true;
 }
 
@@ -323,6 +323,8 @@ glm::vec3 Engine3D::getCameraUp() const
 
 glm::mat4 Engine3D::getViewMatrix() const
 {
+	//glm::mat4 viewWithoutTranslation = glm::mat4(glm::mat3(viewMatrix)); 
+	//return viewWithoutTranslation;
 	return viewMatrix;
 }
 

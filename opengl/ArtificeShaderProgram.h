@@ -10,7 +10,7 @@ and may not be redestributed without written permission.*/
 class ArtificeShaderProgram : public ShaderProgram
 {
 	public:
-		bool loadProgram();
+		bool loadProgram(std::string pathVertex, std::string pathFragment);
 		/*
 		Pre Condition:
 			-A valid OpenGL context

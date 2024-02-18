@@ -4,20 +4,20 @@ and may not be redestributed without written permission.*/
 
 #include "ArtificeShaderProgram.h"
 
-bool ArtificeShaderProgram::loadProgram()
+bool ArtificeShaderProgram::loadProgram(std::string pathVertex, std::string pathFragment)
 {
 	//generate program
 	mProgramID = glCreateProgram();
 
 	//load vertex shader
-	GLuint vertexShader = loadShaderFromFile( "shaders/ArtificeShader.glvs", GL_VERTEX_SHADER );
+	GLuint vertexShader = loadShaderFromFile( pathVertex, GL_VERTEX_SHADER );
 
 	//check for errors
 	if( vertexShader == 0 )
 	{
-	glDeleteProgram( mProgramID );
-	mProgramID = 0;
-	return false;
+		glDeleteProgram( mProgramID );
+		mProgramID = 0;
+		return false;
 	}
 
 	//attach vertex shader to program
@@ -25,7 +25,7 @@ bool ArtificeShaderProgram::loadProgram()
 
 
 	//create fragment shader
-	GLuint fragmentShader = loadShaderFromFile( "shaders/ArtificeShader.glfs", GL_FRAGMENT_SHADER );
+	GLuint fragmentShader = loadShaderFromFile( pathFragment, GL_FRAGMENT_SHADER );
 
 	//check for errors
 	if( fragmentShader == 0 )

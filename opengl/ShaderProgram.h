@@ -35,7 +35,7 @@ public:
 		-None
 	*/
 
-	virtual bool loadProgram() = 0;
+	virtual bool loadProgram(std::string pathVertex, std::string pathFragment) = 0;
 	/*
 	Pre Condition:
 		-A valid OpenGL context
