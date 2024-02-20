@@ -196,7 +196,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			cameraPos = prevCameraPos;
 		}
 	}
-	std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
+	//std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
 	return true;
 }
 

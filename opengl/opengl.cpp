@@ -12,6 +12,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string>
+#include <map>
 
 #include "ArtificeShaderProgram.h"
 #include "Configuration.h"
@@ -32,10 +33,10 @@ bool init();
 bool initGL();
 
 //generates and binds textures
-void loadTextures();
+void loadTextures(std::vector<std::string> texturePaths, std::map<std::string, GLuint>& textureIdsMap);
 
-//generates and binds cubemaps
-unsigned int loadCubemap(); 
+//generates and binds a cubemap
+void loadCubemap(std::vector<std::string> cubemapPaths, std::map<std::string, GLuint>& cubemapIdsMap, std::string name); 
 
 //per frame update
 void updateVertices();
@@ -72,6 +73,9 @@ std::vector<GLuint> textureIds;
 GLuint cubemapTexture;
 
 std::vector<std::string> texturePaths;
+std::map<std::string, GLuint> textureIdsMap;
+std::vector<std::string> cubemapPaths;
+std::map<std::string, GLuint> cubemapIdsMap;
 
 //window mouse barrier
 SDL_Rect windowRect{cfg.SCREEN_WIDTH/4, cfg.SCREEN_HEIGHT/4, cfg.SCREEN_WIDTH/2, cfg.SCREEN_HEIGHT/2};
@@ -201,6 +205,12 @@ bool initGL()
 		rect0b.toTriangles(mdl0b.modelMesh.tris);
 		artificeEngine->modelsToRaster.push_back(mdl0b);
 
+		rectangle rect0c{0, 0, 0, 1,    0.2, 0.2,    0.0, 0.0, 1.0};
+		model mdl0c;
+		mdl0c.position = glm::vec3( 0.5f,  0.1f,  0.1f);
+		rect0c.toTriangles(mdl0c.modelMesh.tris);
+		artificeEngine->modelsToRaster.push_back(mdl0c);
+
 		//create a cube
 		cube cube0{0.2f};
 		std::vector<triangle> cube0Triangles;
@@ -213,11 +223,11 @@ bool initGL()
 		mdl.modelMesh.shape = Shape::CUBE;
 		artificeEngine->modelsToRaster.push_back(mdl);
 
-		// model mdl2;
-		// mdl2.position = glm::vec3( 0.0f,  0.0f,  0.2f);
-		// mdl2.modelMesh.tris = cube0Triangles;
-		// mdl2.modelMesh.shape = Shape::CUBE;
-		// artificeEngine->modelsToRaster.push_back(mdl2);
+		model mdl2;
+		mdl2.position = glm::vec3( 0.0f,  0.0f,  0.2f);
+		mdl2.modelMesh.tris = cube0Triangles;
+		mdl2.modelMesh.shape = Shape::CUBE;
+		artificeEngine->modelsToRaster.push_back(mdl2);
 
 		// model mdl3;
 		// mdl3.position = glm::vec3( -0.2f,  0.2f,  0.0f);
@@ -268,22 +278,24 @@ bool initGL()
 		glClearColor( 0.f, 0.f, 0.f, 1.f );
 
 		//generates and binds textures
-		loadTextures();
+		loadTextures(texturePaths, textureIdsMap);
 
-		cubemapTexture = loadCubemap();
+		//generates and binds cubemap
+		loadCubemap(cubemapPaths, cubemapIdsMap, "cubemap");
 	}
 	return success;
 }
 
-void loadTextures()
+void loadTextures(std::vector<std::string> texturePaths, std::map<std::string, GLuint>& textureIdsMap)
 {
 	for (std::string texturePath : texturePaths)
 	{
-		textureIds.push_back(0);
+		textureIdsMap[texturePath] = -1;
+		//textureIds.push_back(0);
 		//declare texture
-		glGenTextures(1, &textureIds.back());
+		glGenTextures(1, &textureIdsMap[texturePath]);
 		//bind texture
-		glBindTexture(GL_TEXTURE_2D, textureIds.back());
+		glBindTexture(GL_TEXTURE_2D, textureIdsMap[texturePath]);
 
 		//set the texture wrapping/filtering options (on the currently bound texture object)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
@@ -310,23 +322,26 @@ void loadTextures()
 	textureShader.bind();
 	//set the uniforms
 	int cnt=0;
-	for (GLuint& textureId : textureIds)
-	{
-		glUniform1i(glGetUniformLocation(textureShader.getProgramID(), std::string("texture" + std::to_string(textureId)).c_str()), cnt++);
+	for (const auto& kv : textureIdsMap) {
+		std::cout << kv.first << ": " << kv.second << std::endl;
+		glUniform1i(glGetUniformLocation(textureShader.getProgramID(), std::string("texture" + std::to_string(kv.second)).c_str()), cnt++);
 	}
-
+	// for (GLuint& textureId : textureIds)
+	// {
+	// 	glUniform1i(glGetUniformLocation(textureShader.getProgramID(), std::string("texture" + std::to_string(textureId)).c_str()), cnt++);
+	// }
 }
 
-unsigned int loadCubemap()
+void loadCubemap(std::vector<std::string> cubemapPaths, std::map<std::string, GLuint>& cubemapIdsMap, std::string name)
 {
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+	cubemapIdsMap[name] = -1;
+	glGenTextures(1, &cubemapIdsMap[name]);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapIdsMap[name]);
 
 	int width, height, nrChannels;
-	for (unsigned int i = 0; i < texturePaths.size(); i++)
+	for (unsigned int i = 0; i < cubemapPaths.size(); i++)
 	{
-		unsigned char *data = stbi_load(texturePaths[i].c_str(), &width, &height, &nrChannels, 0);
+		unsigned char *data = stbi_load(cubemapPaths[i].c_str(), &width, &height, &nrChannels, 0);
 		if (data)
 		{
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
@@ -336,7 +351,7 @@ unsigned int loadCubemap()
 		}
 		else
 		{
-			std::cout << "Cubemap texture failed to load at path: " << texturePaths[i] << std::endl;
+			std::cout << "Cubemap texture failed to load at path: " << cubemapPaths[i] << std::endl;
 			stbi_image_free(data);
 		}
 	}
@@ -346,8 +361,7 @@ unsigned int loadCubemap()
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	cubeMapShader.bind();
-	glUniform1i(glGetUniformLocation(cubeMapShader.getProgramID(), std::string("cubemap" + std::to_string(textureID)).c_str()), 0);
-	return textureID;
+	glUniform1i(glGetUniformLocation(cubeMapShader.getProgramID(), std::string("cubemap" + std::to_string(cubemapIdsMap[name])).c_str()), 0);
 }
 
 void updateVertices()
@@ -474,7 +488,7 @@ void render()
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIBO);
 			glBindVertexArray(gCubeVAO);
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapIdsMap["cubemap"]);
 			cubeMapShader.setMat4("model", model.modelMatrix);
 			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(((cubeCnt++) * (prevCubeTrisSize * 3) ) * sizeof(float)));
 			prevCubeTrisSize = model.modelMesh.tris.size();
@@ -485,7 +499,7 @@ void render()
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
 			glBindVertexArray(gVAO);
 			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, textureIds.back());
+			glBindTexture(GL_TEXTURE_2D, textureIdsMap["brickwallPainted.bmp"]);
 			textureShader.setMat4("model", model.modelMatrix);
 			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(((modelCnt++) * (prevModelTrisSize * 3) ) * sizeof(float)));
 			prevModelTrisSize = model.modelMesh.tris.size();
@@ -516,12 +530,15 @@ void close()
 int main( int argc, char* args[] )
 {
 	//TODO: relocate
-	texturePaths.push_back("brickwallPainted.bmp"); //right
-	texturePaths.push_back("brickwall.bmp"); //left
-	texturePaths.push_back("brickwallPainted.bmp"); //top
-	texturePaths.push_back("brickwall.bmp"); //bottom
-	texturePaths.push_back("brickwallPainted.bmp"); //back
-	texturePaths.push_back("brickwall.bmp"); //front
+	texturePaths.push_back("brickwall.bmp");
+	texturePaths.push_back("brickwallPainted.bmp");
+
+	cubemapPaths.push_back("brickwallPainted.bmp"); //right
+	cubemapPaths.push_back("brickwall.bmp"); //left
+	cubemapPaths.push_back("brickwallPainted.bmp"); //top
+	cubemapPaths.push_back("brickwall.bmp"); //bottom
+	cubemapPaths.push_back("brickwallPainted.bmp"); //back
+	cubemapPaths.push_back("brickwall.bmp"); //front
 
 	//start up SDL and create window
 	if( !init() )
