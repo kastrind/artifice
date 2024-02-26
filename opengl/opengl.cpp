@@ -324,7 +324,7 @@ void loadTextures(std::vector<std::string> texturePaths, std::map<std::string, G
 	int cnt=0;
 	for (const auto& kv : textureIdsMap) {
 		std::cout << kv.first << ": " << kv.second << std::endl;
-		glUniform1i(glGetUniformLocation(textureShader.getProgramID(), std::string("texture" + std::to_string(kv.second)).c_str()), cnt++);
+		glUniform1i(glGetUniformLocation(textureShader.getProgramID(), std::string("texture" + std::to_string(kv.second)).c_str()), 0);
 	}
 	// for (GLuint& textureId : textureIds)
 	// {
@@ -498,7 +498,7 @@ void render()
 			textureShader.bind();
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
 			glBindVertexArray(gVAO);
-			glActiveTexture(GL_TEXTURE1);
+			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, textureIdsMap["brickwallPainted.bmp"]);
 			textureShader.setMat4("model", model.modelMatrix);
 			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(((modelCnt++) * (prevModelTrisSize * 3) ) * sizeof(float)));
