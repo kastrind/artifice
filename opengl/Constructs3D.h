@@ -465,6 +465,7 @@ struct mesh
 struct model {
 	unsigned int id;
 	bool isSolid = true;
+	std::string texture;
 	bool inFocus = false;
 	mesh modelMesh;
 	glm::vec3 position;

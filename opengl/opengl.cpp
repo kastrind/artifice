@@ -192,7 +192,7 @@ bool initGL()
 
 		//create a rectangle
 		rectangle rect0{0, 0, 0, 1,    0.2, 0.4,    0.0, 2.0, 3.0};
-		model mdl0;
+		model mdl0; mdl0.texture = "brickwall.bmp";
 		mdl0.position = glm::vec3( -0.7f,  0.5f,  0.2f);
 		rect0.toTriangles(mdl0.modelMesh.tris);
 		mdl0.modelMesh.shape = Shape::RECTANGLE;
@@ -200,15 +200,17 @@ bool initGL()
 
 		//create a rectangle
 		rectangle rect0b{0, 0, 0, 1,    0.5, 0.2,    0.0, 2.0, 0.0};
-		model mdl0b;
+		model mdl0b; mdl0b.texture = "walnut.bmp";
 		mdl0b.position = glm::vec3( 0.2f,  0.7f,  0.5f);
 		rect0b.toTriangles(mdl0b.modelMesh.tris);
+		mdl0b.modelMesh.shape = Shape::RECTANGLE;
 		artificeEngine->modelsToRaster.push_back(mdl0b);
 
 		rectangle rect0c{0, 0, 0, 1,    0.2, 0.2,    0.0, 0.0, 1.0};
-		model mdl0c;
+		model mdl0c; mdl0c.texture = "brickwallPainted.bmp";
 		mdl0c.position = glm::vec3( 0.5f,  0.1f,  0.1f);
 		rect0c.toTriangles(mdl0c.modelMesh.tris);
+		mdl0c.modelMesh.shape = Shape::RECTANGLE;
 		artificeEngine->modelsToRaster.push_back(mdl0c);
 
 		//create a cube
@@ -217,13 +219,13 @@ bool initGL()
 		cube0.toTriangles(cube0Triangles);
 
 		//create models
-		model mdl;
+		model mdl; mdl.texture = "cubemap";
 		mdl.position = glm::vec3( 0.0f,  0.0f,  0.0f);
 		mdl.modelMesh.tris = cube0Triangles;
 		mdl.modelMesh.shape = Shape::CUBE;
 		artificeEngine->modelsToRaster.push_back(mdl);
 
-		model mdl2;
+		model mdl2; mdl2.texture = "cubemap";
 		mdl2.position = glm::vec3( 0.0f,  0.0f,  0.2f);
 		mdl2.modelMesh.tris = cube0Triangles;
 		mdl2.modelMesh.shape = Shape::CUBE;
@@ -396,7 +398,8 @@ void updateVertices()
 					if (model.modelMesh.shape != Shape::CUBE)
 					{
 						indexData.push_back(indexCounter++);
-					} else
+					}
+					else
 					{
 						cubeIndexData.push_back(cubeIndexCounter++);
 					}
@@ -485,10 +488,10 @@ void render()
 		if (model.modelMesh.shape == Shape::CUBE)
 		{
 			cubeMapShader.bind();
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIBO);
+			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIBO);
 			glBindVertexArray(gCubeVAO);
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapIdsMap["cubemap"]);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapIdsMap[model.texture]);
 			cubeMapShader.setMat4("model", model.modelMatrix);
 			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(((cubeCnt++) * (prevCubeTrisSize * 3) ) * sizeof(float)));
 			prevCubeTrisSize = model.modelMesh.tris.size();
@@ -496,10 +499,10 @@ void render()
 		else
 		{
 			textureShader.bind();
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
+			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
 			glBindVertexArray(gVAO);
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, textureIdsMap["brickwallPainted.bmp"]);
+			glBindTexture(GL_TEXTURE_2D, textureIdsMap[model.texture]);
 			textureShader.setMat4("model", model.modelMatrix);
 			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(((modelCnt++) * (prevModelTrisSize * 3) ) * sizeof(float)));
 			prevModelTrisSize = model.modelMesh.tris.size();
@@ -532,6 +535,7 @@ int main( int argc, char* args[] )
 	//TODO: relocate
 	texturePaths.push_back("brickwall.bmp");
 	texturePaths.push_back("brickwallPainted.bmp");
+	texturePaths.push_back("walnut.bmp");
 
 	cubemapPaths.push_back("brickwallPainted.bmp"); //right
 	cubemapPaths.push_back("brickwall.bmp"); //left
