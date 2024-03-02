@@ -199,7 +199,7 @@ bool initGL()
 		artificeEngine->modelsToRaster.push_back(mdl0);
 
 		//create a rectangle
-		rectangle rect0b{0, 0, 0, 1,    0.5, 0.2,    0.0, 2.0, 0.0};
+		rectangle rect0b{0, 0, 0, 1,    0.2, 0.2,    0.0, 2.0, 0.0};
 		model mdl0b; mdl0b.texture = "walnut.bmp";
 		mdl0b.position = glm::vec3( 0.2f,  0.7f,  0.5f);
 		rect0b.toTriangles(mdl0b.modelMesh.tris);
@@ -385,11 +385,18 @@ void updateVertices()
 
 			for (auto &tri : model.modelMesh.tris)
 			{
+				vec3d line1 = tri.p[1] - tri.p[0];
+				vec3d line2 = tri.p[2] - tri.p[0];
+				vec3d normal = line1.getNormal(line2);
+
 				for (int i = 0; i < 3; i++)
 				{
 					vdp->push_back(tri.p[i].x);
 					vdp->push_back(tri.p[i].y);
 					vdp->push_back(tri.p[i].z);
+					vdp->push_back(normal.x);
+					vdp->push_back(normal.y);
+					vdp->push_back(normal.z);
 					vdp->push_back((float)tri.R/255.0f);
 					vdp->push_back((float)tri.G/255.0f);
 					vdp->push_back((float)tri.B/255.0f);
@@ -427,14 +434,17 @@ void updateVertices()
 		glBufferData( GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), vertexData.data(), GL_STATIC_DRAW );
 
 		//position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(0);
-		//color attribute
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		//normal attribute
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
 		glEnableVertexAttribArray(1);
-		//texture coord attribute
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		//color attribute
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
 		glEnableVertexAttribArray(2);
+		//texture coord attribute
+		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float)));
+		glEnableVertexAttribArray(3);
 		// //texture id attribute
 		// glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(8 * sizeof(float)));
 		// glEnableVertexAttribArray(3);
@@ -449,14 +459,17 @@ void updateVertices()
 		glBufferData( GL_ARRAY_BUFFER, cubeVertexData.size() * sizeof(GLfloat), cubeVertexData.data(), GL_STATIC_DRAW );
 
 		//position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(0);
-		//color attribute
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		//normal attribute
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
 		glEnableVertexAttribArray(1);
-		//texture coord attribute
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		//color attribute
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
 		glEnableVertexAttribArray(2);
+		//texture coord attribute
+		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float)));
+		glEnableVertexAttribArray(3);
 
 		//update cubeIBO
 		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gCubeIBO );
@@ -475,9 +488,18 @@ void render()
 	cubeMapShader.bind();
 	cubeMapShader.setMat4("projection", artificeEngine->getProjectionMatrix());
 	cubeMapShader.setMat4("view", artificeEngine->getViewMatrix());
+	//lighting
+	cubeMapShader.setVec3("lightPos", artificeEngine->getLightPos());
+	cubeMapShader.setVec3("viewPos", artificeEngine->getCameraPos());
+	cubeMapShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+
 	textureShader.bind();
 	textureShader.setMat4("projection", artificeEngine->getProjectionMatrix());
 	textureShader.setMat4("view", artificeEngine->getViewMatrix());
+	//lighting
+	textureShader.setVec3("lightPos", artificeEngine->getLightPos());
+	textureShader.setVec3("viewPos", artificeEngine->getCameraPos());
+	textureShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 	
 	unsigned int modelCnt = 0;
 	unsigned int cubeCnt = 0;

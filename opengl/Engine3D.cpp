@@ -196,6 +196,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			cameraPos = prevCameraPos;
 		}
 	}
+	lightPos = cameraFront;
 	//std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
 	return true;
 }
@@ -319,6 +320,11 @@ glm::vec3 Engine3D::getCameraFront() const
 glm::vec3 Engine3D::getCameraUp() const
 {
 	return cameraUp;
+}
+
+glm::vec3 Engine3D::getLightPos() const
+{
+	return lightPos;
 }
 
 glm::mat4 Engine3D::getViewMatrix() const

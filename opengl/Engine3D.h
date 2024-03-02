@@ -43,6 +43,8 @@ class Engine3D
 
 		glm::vec3 getCameraUp() const;
 
+		glm::vec3 getLightPos() const;
+
 		glm::mat4 getViewMatrix() const;
 
 		std::atomic<bool> isActive;
@@ -88,6 +90,8 @@ class Engine3D
 		glm::vec3 cameraUp;
 
 		glm::vec3 cameraRight;
+
+		glm::vec3 lightPos;
 
 		glm::mat4 viewMatrix;
 

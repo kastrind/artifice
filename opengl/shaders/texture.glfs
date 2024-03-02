@@ -1,8 +1,14 @@
 #version 330 core
 out vec4 FragColor;
 
-in vec3 ourColor;
+in vec3 FragPos;
+in vec3 normal;
+in vec3 color;
 in vec2 TexCoord;
+
+uniform vec3 lightPos;
+uniform vec3 viewPos;
+uniform vec3 lightColor;
 
 // texture samplers
 uniform sampler2D texture1;
@@ -10,5 +16,24 @@ uniform sampler2D texture2;
 
 void main()
 {
-	FragColor = texture(texture1, TexCoord) * vec4(ourColor, 1.0f);
+	// ambient
+	float ambientStrength = 0.1;
+	vec3 ambient = ambientStrength * lightColor;
+
+	// diffuse 
+	vec3 norm = normalize(normal);
+	vec3 lightDir = normalize(lightPos - FragPos);
+	float diff = abs(dot(norm, lightDir));
+	vec3 diffuse = diff * lightColor;
+
+	// specular
+	float specularStrength = 0.3;
+	vec3 viewDir = normalize(viewPos - FragPos);
+	vec3 reflectDir = reflect(-lightDir, norm);
+	float spec = pow(abs(dot(viewDir, reflectDir)), 32);
+	vec3 specular = specularStrength * spec * lightColor;
+
+	vec3 finalColor = (ambient + diffuse + specular) * color;
+
+	FragColor = texture(texture1, TexCoord) * vec4(finalColor, 1.0f);
 }

@@ -1,13 +1,39 @@
 #version 330 core
 out vec4 FragColor;
 
-in vec3 ourColor;
+in vec3 normal;
+in vec3 color;
 in vec3 FragPos;
+in vec3 FragPos2;
+
+uniform vec3 lightPos;
+uniform vec3 viewPos;
+uniform vec3 lightColor;
 
 uniform samplerCube cubemap1; // cubemap texture sampler
 
 void main()
 {
-	FragColor = texture(cubemap1, normalize(FragPos)) * vec4(ourColor, 1.0f);
+	// ambient
+	float ambientStrength = 0.1;
+	vec3 ambient = ambientStrength * lightColor;
+
+	// diffuse 
+	vec3 norm = normalize(normal);
+	vec3 lightDir = normalize(lightPos - FragPos2);
+	float diff = abs(dot(norm, lightDir));
+	vec3 diffuse = diff * lightColor;
+
+	// specular
+	float specularStrength = 0.3;
+	vec3 viewDir = normalize(viewPos - FragPos2);
+	vec3 reflectDir = reflect(-lightDir, norm);
+	float spec = pow(abs(dot(viewDir, reflectDir)), 32);
+	vec3 specular = specularStrength * spec * lightColor;
+
+	vec3 finalColor = (ambient + diffuse + specular) * color;
+
+
+	FragColor = texture(cubemap1, normalize(FragPos)) * vec4(finalColor, 1.0f);
 }
 
