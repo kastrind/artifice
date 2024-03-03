@@ -16,7 +16,7 @@ LIBRARY_PATHS = -LC:\msys64\mingw64\lib
 COMPILER_FLAGS = -w #-Wl,-subsystem,windows
 
 #LINKER_FLAGS specifies the libraries we're linking against
-LINKER_FLAGS = -lmingw32 -lSDL2main -lSDL2 -lfreeglut -lglew32 -lopengl32
+LINKER_FLAGS = -lmingw32 -lSDL2main -lSDL2 -lglew32 -lopengl32
 
 #OBJ_NAME specifies the name of our exectuable
 OBJ_NAME = opengl
