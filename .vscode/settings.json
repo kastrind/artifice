@@ -78,8 +78,6 @@
 		"semaphore": "cpp",
 		"sstream": "cpp",
 		"stop_token": "cpp",
-		"thread": "cpp",
-		"cstring": "cpp",
-		"map": "cpp"
+		"thread": "cpp"
 	}
 }

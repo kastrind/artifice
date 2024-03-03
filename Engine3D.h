@@ -1,10 +1,16 @@
 #pragma once
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "Configuration.h"
 #include "Constructs3D.h"
 #include "EventController.h"
-#define _USE_MATH_DEFINES
-#include <cmath>
+
 #include <vector>
 #include <list>
 #include <thread>
@@ -29,19 +35,25 @@ class Engine3D
 
 		virtual bool onUserDestroy();
 
-		mat4x4 getProjMatrix();
+		glm::mat4 getProjectionMatrix() const;
 
-		void clearDepthBuffer();
+		glm::vec3 getCameraPos() const;
+
+		glm::vec3 getCameraFront() const;
+
+		glm::vec3 getCameraUp() const;
+
+		glm::vec3 getLightPos() const;
+
+		glm::mat4 getViewMatrix() const;
 
 		std::atomic<bool> isActive;
 
-		std::atomic<bool> blockRaster;
+		std::atomic<bool> isTouched;
 
 		float elapsedTime;
 
 		std::mutex mtx;
-
-		std::vector<triangle> trianglesToRaster;
 
 		std::vector<model> modelsToRaster;
 
@@ -52,64 +64,40 @@ class Engine3D
 		float near;
 		float far;
 		float fov;
-		float aspectRatio;
-		float fovRad;
 
-		mat4x4 matProj;
+		//for collide-and-slide
+		bool canSlide = false;
+		bool collides = false;
+		bool collidesFront = false;
+		bool collidesBack = false;
+		bool collidesRight = false;
+		bool collidesLeft = false;
+		bool hasLanded = false;
 
-		float* depthBuffer = nullptr;
+		glm::vec3 desiredMotion;
 
-		float theta = 0;
+		glm::mat4 projectionMatrix;
 
-		float yaw = 0;
+		float yaw = -90.0f;
 
 		float pitch = 0;
 
-		mat4x4 matCameraRotY90CW;
+		//camera
+		glm::vec3 cameraPos;
 
-		mat4x4 matCameraRotY90CCW;
+		glm::vec3 cameraFront;
 
-		vec3d lookDir;
+		glm::vec3 cameraUp;
 
-		vec3d up;
+		glm::vec3 cameraRight;
 
-		vec3d camera;
+		glm::vec3 lightPos;
 
-		vec3d target;
-
-		vec3d forward;
-
-		vec3d right;
-
-		vec3d left;
-
-		vec3d light;
-
-		//planes to clip against and their normals
-		vec3d planeTop;
-		vec3d planeTopNormal;
-
-		vec3d planeBottom;
-		vec3d planeBottomNormal;
-
-		vec3d planeLeft;
-		vec3d planeLeftNormal;
-
-		vec3d planeRight;
-		vec3d planeRightNormal;
-
-		vec3d nearPlane;
-		vec3d nearPlaneNormal;
+		glm::mat4 viewMatrix;
 
 		EventController* eventController;
 
 		void engineThread();
 
-		void fillProjMatrix();
-
-		void move();
-
-		std::unique_ptr<std::list<triangle>> clip(triangle& tri);
-
-		void textureTriangle(triangle& tri);
+		void move(float elapsedTime);
 };
