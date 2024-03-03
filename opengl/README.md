@@ -1,6 +1,6 @@
-#Development Environment Setup in Windows
+# Development Environment Setup in Windows
 
-###Instructions
+### Instructions
 
 1. Install MSYS2: https://www.msys2.org/
 
