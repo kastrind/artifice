@@ -308,8 +308,8 @@ struct triangle
 
 struct rectangle
 {
-	vec3d p;
 	float w; float h; //width along x, height along y
+	vec3d p;
 	float thetaRotX = 0.0f;
 	float thetaRotY = 0.0f;
 	float thetaRotZ = 0.0f;
@@ -334,8 +334,8 @@ struct rectangle
 
 struct cuboid
 {
-	vec3d p;
 	float w; float h; float d;  //width along x, height along y, depth along z
+	vec3d p;
 	float thetaRotX = 0.0f;
 	float thetaRotY = 0.0f;
 	float thetaRotZ = 0.0f;
@@ -404,8 +404,8 @@ struct cube
 		mat4x4 matRotY = mat4x4::getRotMatrixY(thetaRotY);
 		mat4x4 matRotZ = mat4x4::getRotMatrixZ(thetaRotZ);
 		//RIGHT
-		triangle east1{ p.x + s, p.y + s, p.z - s, 1.0f,    p.x + s, p.y + s, p.z + s, 1.0f,    p.x + s, p.y - s, p.z - s, 1.0f };
-		triangle east2{ p.x + s, p.y + s, p.z + s, 1.0f,    p.x + s, p.y - s, p.z + s, 1.0f,    p.x + s, p.y - s, p.z - s, 1.0f };
+		triangle east1{ p.x + s, p.y + s, p.z + s, 1.0f,    p.x + s, p.y + s, p.z - s, 1.0f,    p.x + s, p.y - s, p.z - s, 1.0f };
+		triangle east2{ p.x + s, p.y - s, p.z + s, 1.0f,    p.x + s, p.y + s, p.z + s, 1.0f,    p.x + s, p.y - s, p.z - s, 1.0f };
 		east1 = east1 * matRotX; east1 = east1 * matRotY; east1 = east1 * matRotZ;
 		east2 = east2 * matRotX; east2 = east2 * matRotY; east2 = east2 * matRotZ;
 		triangles.push_back(east1);
@@ -418,8 +418,8 @@ struct cube
 		triangles.push_back(west1);
 		triangles.push_back(west2);
 		//TOP
-		triangle top1{ p.x - s, p.y + s, p.z - s, 1.0f,    p.x - s, p.y + s, p.z + s, 1.0f,    p.x + s, p.y + s, p.z + s, 1.0f };
-		triangle top2{ p.x - s, p.y + s, p.z - s, 1.0f,    p.x + s, p.y + s, p.z + s, 1.0f,    p.x + s, p.y + s, p.z - s, 1.0f };
+		triangle top1{ p.x - s, p.y + s, p.z + s, 1.0f,    p.x - s, p.y + s, p.z - s, 1.0f,    p.x + s, p.y + s, p.z + s, 1.0f };
+		triangle top2{ p.x + s, p.y + s, p.z + s, 1.0f,    p.x - s, p.y + s, p.z - s, 1.0f,    p.x + s, p.y + s, p.z - s, 1.0f };
 		top1 = top1 * matRotX; top1 = top1 * matRotY; top1 = top1 * matRotZ;
 		top2 = top2 * matRotX; top2 = top2 * matRotY; top2 = top2 * matRotZ;
 		triangles.push_back(top1);
@@ -439,8 +439,8 @@ struct cube
 		triangles.push_back(back1);
 		triangles.push_back(back2);
 		//FRONT
-		triangle front1{ p.x + s, p.y + s, p.z + s, 1.0f,    p.x - s, p.y + s, p.z + s, 1.0f,    p.x + s, p.y - s, p.z + s, 1.0f };
-		triangle front2{ p.x - s, p.y + s, p.z + s, 1.0f,    p.x - s, p.y - s, p.z + s, 1.0f,    p.x + s, p.y - s, p.z + s, 1.0f };
+		triangle front1{ p.x - s, p.y + s, p.z + s, 1.0f,    p.x + s, p.y + s, p.z + s, 1.0f,    p.x + s, p.y - s, p.z + s, 1.0f };
+		triangle front2{ p.x - s, p.y - s, p.z + s, 1.0f,    p.x - s, p.y + s, p.z + s, 1.0f,    p.x + s, p.y - s, p.z + s, 1.0f };
 		front1 = front1 * matRotX; front1 = front1 * matRotY; front1 = front1 * matRotZ;
 		front2 = front2 * matRotX; front2 = front2 * matRotY; front2 = front2 * matRotZ;
 		triangles.push_back(front1);

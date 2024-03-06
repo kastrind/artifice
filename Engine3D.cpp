@@ -159,7 +159,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			glm::vec4 line1 = collidingTriPts[1] - collidingTriPts[0];
 			glm::vec4 line2 = collidingTriPts[2] - collidingTriPts[0];
 			glm::vec3 normal = glm::normalize(glm::cross(glm::vec3(line1.x, line1.y, line1.z), glm::vec3(line2.x, line2.y, line2.z)));
-			//std::cout << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
+			std::cout << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
 
 			//based on dp and normal, determine if able to slide and the desired motion
 			float dpFront = glm::dot(cameraFront, normal);
@@ -169,7 +169,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			float dpBack = glm::dot(-cameraFront, normal);
 
 			//normal is up means collision with floor
-			if (collidingTriPts[0].y <= cameraPos.y && normal.y > normal.z && normal.y > normal.x) {
+			if (collidingTriPts[0].y <= cameraPos.y && normal.y < normal.z && normal.y < normal.x) {
 				hasLanded = true;
 			//else collision with wall
 			}else if (modelDistance < cfg.COLLIDING_DISTANCE && maxModelDist < cfg.COLLIDING_DISTANCE * 1.5f) {
@@ -197,7 +197,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		}
 	}
 	lightPos = cameraFront;
-	//std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
+	std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
 	return true;
 }
 

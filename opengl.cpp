@@ -191,7 +191,7 @@ bool initGL()
 		gTextureProgramID = textureShader.getProgramID();
 
 		//create a rectangle
-		rectangle rect0{0, 0, 0, 1,    0.2, 0.4,    0.0, 2.0, 3.0};
+		rectangle rect0{0.2, 0.4};
 		model mdl0; mdl0.texture = "brickwall.bmp";
 		mdl0.position = glm::vec3( -0.7f,  0.5f,  0.2f);
 		rect0.toTriangles(mdl0.modelMesh.tris);
@@ -199,14 +199,14 @@ bool initGL()
 		artificeEngine->modelsToRaster.push_back(mdl0);
 
 		//create a rectangle
-		rectangle rect0b{0, 0, 0, 1,    0.2, 0.2,    0.0, 2.0, 0.0};
+		rectangle rect0b{0.2, 0.2};
 		model mdl0b; mdl0b.texture = "walnut.bmp";
 		mdl0b.position = glm::vec3( 0.2f,  0.7f,  0.5f);
 		rect0b.toTriangles(mdl0b.modelMesh.tris);
 		mdl0b.modelMesh.shape = Shape::RECTANGLE;
 		artificeEngine->modelsToRaster.push_back(mdl0b);
 
-		rectangle rect0c{0, 0, 0, 1,    0.2, 0.2,    0.0, 0.0, 1.0};
+		rectangle rect0c{0.2, 0.2};
 		model mdl0c; mdl0c.texture = "brickwallPainted.bmp";
 		mdl0c.position = glm::vec3( 0.5f,  0.1f,  0.1f);
 		rect0c.toTriangles(mdl0c.modelMesh.tris);
@@ -231,35 +231,35 @@ bool initGL()
 		mdl2.modelMesh.shape = Shape::CUBE;
 		artificeEngine->modelsToRaster.push_back(mdl2);
 
-		// model mdl3;
-		// mdl3.position = glm::vec3( -0.2f,  0.2f,  0.0f);
-		// mdl3.modelMesh.tris = cube0Triangles;
-		// mdl3.modelMesh.shape = Shape::CUBE;
-		// artificeEngine->modelsToRaster.push_back(mdl3);
+		model mdl3; mdl3.texture = "cubemap";
+		mdl3.position = glm::vec3( -0.2f,  0.2f,  0.0f);
+		mdl3.modelMesh.tris = cube0Triangles;
+		mdl3.modelMesh.shape = Shape::CUBE;
+		artificeEngine->modelsToRaster.push_back(mdl3);
 
-		// model mdl4;
-		// mdl4.position = glm::vec3( -0.2f,  0.2f, 0.2f);
-		// mdl4.modelMesh.tris = cube0Triangles;
-		// mdl4.modelMesh.shape = Shape::CUBE;
-		// artificeEngine->modelsToRaster.push_back(mdl4);
+		model mdl4; mdl4.texture = "cubemap";
+		mdl4.position = glm::vec3( -0.2f,  0.2f, 0.2f);
+		mdl4.modelMesh.tris = cube0Triangles;
+		mdl4.modelMesh.shape = Shape::CUBE;
+		artificeEngine->modelsToRaster.push_back(mdl4);
 
-		// model mdl5;
-		// mdl5.position = glm::vec3( 0.0f,  0.0f, 0.4f);
-		// mdl5.modelMesh.tris = cube0Triangles;
-		// mdl5.modelMesh.shape = Shape::CUBE;
-		// artificeEngine->modelsToRaster.push_back(mdl5);
+		model mdl5; mdl5.texture = "cubemap";
+		mdl5.position = glm::vec3( 0.0f,  0.0f, 0.4f);
+		mdl5.modelMesh.tris = cube0Triangles;
+		mdl5.modelMesh.shape = Shape::CUBE;
+		artificeEngine->modelsToRaster.push_back(mdl5);
 
-		// model mdl6;
-		// mdl6.position = glm::vec3( 0.2f,  0.2f, 0.0f);
-		// mdl6.modelMesh.tris = cube0Triangles;
-		// mdl6.modelMesh.shape = Shape::CUBE;
-		// artificeEngine->modelsToRaster.push_back(mdl6);
+		model mdl6; mdl6.texture = "cubemap";
+		mdl6.position = glm::vec3( 0.2f,  0.2f, 0.0f);
+		mdl6.modelMesh.tris = cube0Triangles;
+		mdl6.modelMesh.shape = Shape::CUBE;
+		artificeEngine->modelsToRaster.push_back(mdl6);
 
-		// model mdl7;
-		// mdl7.position = glm::vec3( 0.2f,  0.2f, 0.2f);
-		// mdl7.modelMesh.tris = cube0Triangles;
-		// mdl7.modelMesh.shape = Shape::CUBE;
-		// artificeEngine->modelsToRaster.push_back(mdl7);
+		model mdl7; mdl7.texture = "cubemap";
+		mdl7.position = glm::vec3( 0.2f,  0.2f, 0.2f);
+		mdl7.modelMesh.tris = cube0Triangles;
+		mdl7.modelMesh.shape = Shape::CUBE;
+		artificeEngine->modelsToRaster.push_back(mdl7);
 		
 		//create VAOs
 		glGenVertexArrays(1, &gVAO);
