@@ -385,9 +385,9 @@ void updateVertices()
 
 			for (auto &tri : model.modelMesh.tris)
 			{
-				vec3d line1 = tri.p[1] - tri.p[0];
-				vec3d line2 = tri.p[2] - tri.p[0];
-				vec3d normal = line1.getNormal(line2);
+				glm::vec3 line1 = tri.p[1] - tri.p[0];
+				glm::vec3 line2 = tri.p[2] - tri.p[0];
+				glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
 
 				for (int i = 0; i < 3; i++)
 				{
@@ -400,8 +400,8 @@ void updateVertices()
 					vdp->push_back((float)tri.R/255.0f);
 					vdp->push_back((float)tri.G/255.0f);
 					vdp->push_back((float)tri.B/255.0f);
-					vdp->push_back(tri.t[i].u);
-					vdp->push_back(tri.t[i].v);
+					vdp->push_back(tri.t[i].x);
+					vdp->push_back(tri.t[i].y);
 					if (model.modelMesh.shape != Shape::CUBE)
 					{
 						indexData.push_back(indexCounter++);

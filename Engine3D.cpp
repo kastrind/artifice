@@ -73,7 +73,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	mtx.lock();
 
 	glm::vec3 prevCameraPos = cameraPos;
-	vec3d center{ 0, 0, 0 };
+	glm::vec3 center{ 0, 0, 0 };
 	float modelDistance = cfg.DOF;
 	float maxModelDist = 0.0f;
 	glm::vec4 collidingTriPts[3];
@@ -110,9 +110,9 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		for (auto tri : model.modelMesh.tris)
 		{
 			glm::vec4 pt[3];
-			pt[0] = { tri.p[0].x, tri.p[0].y, tri.p[0].z, tri.p[0].w };
-			pt[1] = { tri.p[1].x, tri.p[1].y, tri.p[1].z, tri.p[1].w };
-			pt[2] = { tri.p[2].x, tri.p[2].y, tri.p[2].z, tri.p[2].w };
+			pt[0] = tri.p[0];
+			pt[1] = tri.p[1];
+			pt[2] = tri.p[2];
 
 			//model transformation
 			pt[0] = modelMatrix * pt[0];
@@ -121,10 +121,10 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 			//finds distance from model
 			glm::vec4 avgP = ( (pt[0]) + (pt[1]) + (pt[2]) ) / 3.0f;
-			float avgDist = glm::distance(cameraPos, glm::vec3(avgP.x, avgP.y, avgP.z));
-			float dist1 = glm::distance(cameraPos, glm::vec3(pt[0].x, pt[0].y, pt[0].z));
-			float dist2 = glm::distance(cameraPos, glm::vec3(pt[1].x, pt[1].y, pt[1].z));
-			float dist3 = glm::distance(cameraPos, glm::vec3(pt[2].x, pt[2].y, pt[2].z));
+			float avgDist = glm::distance(cameraPos, glm::vec3(avgP));
+			float dist1 = glm::distance(cameraPos, glm::vec3(pt[0]));
+			float dist2 = glm::distance(cameraPos, glm::vec3(pt[1]));
+			float dist3 = glm::distance(cameraPos, glm::vec3(pt[2]));
 			float maxDist = std::max(dist1, std::max(dist2, dist3));
 			//std::cout << "maxDist: " << maxDist << std::endl;
 			if (avgDist < modelDistance) {
@@ -148,7 +148,10 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			mtx.unlock();
 
 			//determines whether looking at the current model
-			model.inFocus = tri.contains(center);
+			model.inFocus = tri.contains(glm::vec4(center, 1.0f));
+			// if (model.inFocus) {
+			// 	std::cout << "in focus!" << std::endl;
+			// }
 		}
 
 		//detect if colliding with the model
@@ -156,10 +159,10 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			//std::cout << "modelDistance: " << modelDistance << std::endl;
 
 			//get the triangle normal
-			glm::vec4 line1 = collidingTriPts[1] - collidingTriPts[0];
-			glm::vec4 line2 = collidingTriPts[2] - collidingTriPts[0];
-			glm::vec3 normal = glm::normalize(glm::cross(glm::vec3(line1.x, line1.y, line1.z), glm::vec3(line2.x, line2.y, line2.z)));
-			std::cout << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
+			glm::vec3 line1 = collidingTriPts[1] - collidingTriPts[0];
+			glm::vec3 line2 = collidingTriPts[2] - collidingTriPts[0];
+			glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
+			// std::cout << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
 
 			//based on dp and normal, determine if able to slide and the desired motion
 			float dpFront = glm::dot(cameraFront, normal);
@@ -197,7 +200,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		}
 	}
 	lightPos = cameraFront;
-	std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
+	// std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
 	return true;
 }
 
