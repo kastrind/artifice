@@ -155,9 +155,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		}
 
 		//marks out-of-range models
-		bool wasInDOF = model.isInDOF;
 		model.isInDOF = modelDistance < cfg.DOF;
-		isTouched = wasInDOF != model.isInDOF;
 
 		//detect if colliding with the model
 		if (model.isSolid && modelDistance <= cfg.COLLIDING_DISTANCE * 1.5f) {

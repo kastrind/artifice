@@ -381,8 +381,6 @@ void updateVertices()
 		//populate vertex vectors with triangle vertex information for each model
 		for (auto &model : artificeEngine->modelsToRaster)
 		{
-			//ignore out-of-range models
-			if (!model.isInDOF) continue;
 
 			vdp = model.modelMesh.shape == Shape::CUBE ? &cubeVertexData : &vertexData;
 
