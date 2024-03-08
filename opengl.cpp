@@ -381,6 +381,9 @@ void updateVertices()
 		//populate vertex vectors with triangle vertex information for each model
 		for (auto &model : artificeEngine->modelsToRaster)
 		{
+			//ignore out-of-range models
+			if (!model.isInDOF) continue;
+
 			vdp = model.modelMesh.shape == Shape::CUBE ? &cubeVertexData : &vertexData;
 
 			for (auto &tri : model.modelMesh.tris)
@@ -507,8 +510,12 @@ void render()
 	unsigned int prevCubeTrisSize = 0;
 	for (auto &model : artificeEngine->modelsToRaster)
 	{
+
 		if (model.modelMesh.shape == Shape::CUBE)
 		{
+			//ignore out-of-range models
+			if (!model.isInDOF) { cubeCnt++; prevCubeTrisSize = model.modelMesh.tris.size(); continue; }
+
 			cubeMapShader.bind();
 			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIBO);
 			glBindVertexArray(gCubeVAO);
@@ -520,6 +527,9 @@ void render()
 		}
 		else
 		{
+			//ignore out-of-range models
+			if (!model.isInDOF) { modelCnt++; prevModelTrisSize = model.modelMesh.tris.size(); continue; }
+
 			textureShader.bind();
 			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
 			glBindVertexArray(gVAO);

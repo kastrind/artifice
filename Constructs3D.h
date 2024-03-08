@@ -329,6 +329,7 @@ struct model {
 	bool isSolid = true;
 	std::string texture;
 	bool inFocus = false;
+	bool isInDOF = true;
 	mesh modelMesh;
 	glm::vec3 position;
 	glm::mat4 modelMatrix;
