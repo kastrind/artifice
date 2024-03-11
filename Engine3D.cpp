@@ -1,7 +1,13 @@
 #include "Engine3D.h"
 
-Engine3D::Engine3D(int width, int height, float near, float far, float fov, EventController* ec)
-				: width(width), height(height), near(near), far(far), fov(fov), eventController(ec)
+Engine3D::Engine3D(int width, int height,
+				   float near, float far,
+				   float fov, float dof,
+				   float collidingDistance, float gravitationalPull, EventController* ec)
+				   : width(width), height(height),
+				   near(near), far(far),
+				   fov(fov), dof(dof),
+				   collidingDistance(collidingDistance), gravitationalPull(gravitationalPull), eventController(ec)
 {
 	isActive = false;
 
@@ -74,7 +80,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 	glm::vec3 prevCameraPos = cameraPos;
 	glm::vec3 center{ 0, 0, 0 };
-	float modelDistance = cfg.DOF;
+	float modelDistance = dof;
 	float maxModelDist = 0.0f;
 	glm::vec4 collidingTriPts[3];
 
@@ -105,7 +111,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		model.modelMatrix = modelMatrix;
 		mtx.unlock();
 
-		modelDistance = cfg.DOF;
+		modelDistance = dof;
 
 		for (auto tri : model.modelMesh.tris)
 		{
@@ -155,10 +161,10 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		}
 
 		//marks out-of-range models
-		model.isInDOF = modelDistance < cfg.DOF;
+		model.isInDOF = modelDistance < dof;
 
 		//detect if colliding with the model
-		if (model.isSolid && modelDistance <= cfg.COLLIDING_DISTANCE * 1.5f) {
+		if (model.isSolid && modelDistance <= collidingDistance * 1.5f) {
 			//std::cout << "modelDistance: " << modelDistance << std::endl;
 
 			//get the triangle normal
@@ -178,7 +184,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			if (collidingTriPts[0].y <= cameraPos.y && normal.y < normal.z && normal.y < normal.x) {
 				hasLanded = true;
 			//else collision with wall
-			}else if (modelDistance < cfg.COLLIDING_DISTANCE && maxModelDist < cfg.COLLIDING_DISTANCE * 1.5f) {
+			}else if (modelDistance < collidingDistance && maxModelDist < collidingDistance * 1.5f) {
 				canSlide = absDP < 0.8f && absDP > 0.0f;
 				//std::cout << "dpFront: " << dpFront << std::endl;
 				//std::cout << "maxModelDist: " << maxModelDist << std::endl;
@@ -197,7 +203,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			prevdpFront = dpFront;
 		}
 
-		if (modelDistance < cfg.COLLIDING_DISTANCE * 0.5f)
+		if (modelDistance < collidingDistance * 0.5f)
 		{
 			cameraPos = prevCameraPos;
 		}
@@ -211,7 +217,7 @@ void Engine3D::move(float elapsedTime)
 {
 	float cameraSpeed = static_cast<float>(1.5 * elapsedTime);
 
-	cameraPos += !hasLanded ? cfg.GRAVITATIONAL_PULL * cameraSpeed * glm::vec3(0, -1, 0) : glm::vec3(0, 0, 0);
+	cameraPos += !hasLanded ? gravitationalPull * cameraSpeed * glm::vec3(0, -1, 0) : glm::vec3(0, 0, 0);
 
 	if (eventController != nullptr)
 	{
@@ -338,5 +344,165 @@ glm::mat4 Engine3D::getViewMatrix() const
 	//glm::mat4 viewWithoutTranslation = glm::mat4(glm::mat3(viewMatrix)); 
 	//return viewWithoutTranslation;
 	return viewMatrix;
+}
+
+void Engine3D::updateVertices(GLuint* gVBO, GLuint* gIBO, GLuint* gVAO, GLuint* gCubeVBO, GLuint* gCubeIBO, GLuint* gCubeVAO)
+{
+		std::vector<GLfloat> vertexData;
+		std::vector<GLuint> indexData;
+		GLuint indexCounter = 0;
+
+		std::vector<GLfloat> cubeVertexData;
+		std::vector<GLuint> cubeIndexData;
+		GLuint cubeIndexCounter = 0;
+
+		std::vector<GLfloat>* vdp = &vertexData;
+
+		//populate vertex vectors with triangle vertex information for each model
+		for (auto &model : modelsToRaster)
+		{
+
+			vdp = model.modelMesh.shape == Shape::CUBE ? &cubeVertexData : &vertexData;
+
+			for (auto &tri : model.modelMesh.tris)
+			{
+				glm::vec3 line1 = tri.p[1] - tri.p[0];
+				glm::vec3 line2 = tri.p[2] - tri.p[0];
+				glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
+
+				for (int i = 0; i < 3; i++)
+				{
+					vdp->push_back(tri.p[i].x);
+					vdp->push_back(tri.p[i].y);
+					vdp->push_back(tri.p[i].z);
+					vdp->push_back(normal.x);
+					vdp->push_back(normal.y);
+					vdp->push_back(normal.z);
+					vdp->push_back((float)tri.R/255.0f);
+					vdp->push_back((float)tri.G/255.0f);
+					vdp->push_back((float)tri.B/255.0f);
+					vdp->push_back(tri.t[i].x);
+					vdp->push_back(tri.t[i].y);
+					if (model.modelMesh.shape != Shape::CUBE)
+					{
+						indexData.push_back(indexCounter++);
+					}
+					else
+					{
+						cubeIndexData.push_back(cubeIndexCounter++);
+					}
+				}
+			}
+		}
+
+		std::cout << "vertex data size: " << vertexData.size() << std::endl;
+		std::cout << "index data size: " << indexData.size() << std::endl;
+		std::cout << "cube vertex data size: " << cubeVertexData.size() << std::endl;
+		std::cout << "cube index data size: " << cubeIndexData.size() << std::endl;
+
+		//update VBO
+		glBindVertexArray(*gVAO);
+		glBindBuffer( GL_ARRAY_BUFFER, *gVBO );
+		glBufferData( GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), vertexData.data(), GL_STATIC_DRAW );
+
+		//position attribute
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+		//normal attribute
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+		//color attribute
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+		//texture coord attribute
+		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float)));
+		glEnableVertexAttribArray(3);
+
+		//update IBO
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, *gIBO );
+		glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), indexData.data(), GL_STATIC_DRAW );
+
+		//update cubeVBO
+		glBindVertexArray(*gCubeVAO);
+		glBindBuffer( GL_ARRAY_BUFFER, *gCubeVBO );
+		glBufferData( GL_ARRAY_BUFFER, cubeVertexData.size() * sizeof(GLfloat), cubeVertexData.data(), GL_STATIC_DRAW );
+
+		//position attribute
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+		//normal attribute
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+		//color attribute
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+		//texture coord attribute
+		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float)));
+		glEnableVertexAttribArray(3);
+
+		//update cubeIBO
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, *gCubeIBO );
+		glBufferData( GL_ELEMENT_ARRAY_BUFFER, cubeIndexData.size() * sizeof(GLuint), cubeIndexData.data(), GL_STATIC_DRAW );
+}
+
+void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string, GLuint>* textureIdsMap, ArtificeShaderProgram* cubeMapShader, std::map<std::string, GLuint>* cubemapIdsMap, GLuint* gVAO, GLuint* gCubeVAO)
+{
+	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	//clear color buffer
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	cubeMapShader->bind();
+	cubeMapShader->setMat4("projection", getProjectionMatrix());
+	cubeMapShader->setMat4("view", getViewMatrix());
+	//lighting
+	cubeMapShader->setVec3("lightPos", getLightPos());
+	cubeMapShader->setVec3("viewPos", getCameraPos());
+	cubeMapShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+
+	textureShader->bind();
+	textureShader->setMat4("projection", getProjectionMatrix());
+	textureShader->setMat4("view", getViewMatrix());
+	//lighting
+	textureShader->setVec3("lightPos", getLightPos());
+	textureShader->setVec3("viewPos", getCameraPos());
+	textureShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+	
+	unsigned int modelCnt = 0;
+	unsigned int cubeCnt = 0;
+	unsigned int prevModelTrisSize = 0;
+	unsigned int prevCubeTrisSize = 0;
+	for (auto &model : modelsToRaster)
+	{
+
+		if (model.modelMesh.shape == Shape::CUBE)
+		{
+			//ignore out-of-range models
+			if (!model.isInDOF) { cubeCnt++; prevCubeTrisSize = model.modelMesh.tris.size(); continue; }
+
+			cubeMapShader->bind();
+			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIBO);
+			glBindVertexArray(*gCubeVAO);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, (*cubemapIdsMap)[model.texture]);
+			cubeMapShader->setMat4("model", model.modelMatrix);
+			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(((cubeCnt++) * (prevCubeTrisSize * 3) ) * sizeof(float)));
+			prevCubeTrisSize = model.modelMesh.tris.size();
+		}
+		else
+		{
+			//ignore out-of-range models
+			if (!model.isInDOF) { modelCnt++; prevModelTrisSize = model.modelMesh.tris.size(); continue; }
+
+			textureShader->bind();
+			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
+			glBindVertexArray(*gVAO);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, (*textureIdsMap)[model.texture]);
+			textureShader->setMat4("model", model.modelMatrix);
+			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(((modelCnt++) * (prevModelTrisSize * 3) ) * sizeof(float)));
+			prevModelTrisSize = model.modelMesh.tris.size();
+		}
+		glBindVertexArray(0);
+	}
 }
 

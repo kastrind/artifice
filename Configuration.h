@@ -10,19 +10,19 @@ typedef struct Configuration
 
 	const std::string VERSION = "0.0.1";
 
-	const int SCREEN_FPS = 60;
+	const unsigned int SCREEN_FPS = 60;
 
-	const int SCREEN_WIDTH = 800;
+	const unsigned int SCREEN_WIDTH = 800;
 
-	const int SCREEN_HEIGHT = 600;
+	const unsigned int SCREEN_HEIGHT = 600;
 
 	const float NEAR = 0.01f;
 
 	const float FAR = 100.0f;
 
-	const int FOV = 45; //field of view in degrees
+	const unsigned int FOV = 45; //field of view in degrees
 
-	const float DOF = 20.0f; //depth of field
+	const float DOF = 10.0f; //depth of field
 
 	const float COLLIDING_DISTANCE = 0.2f;
 
@@ -30,7 +30,7 @@ typedef struct Configuration
 
 	//precomputed constants follow
 
-	const int SCREEN_TICK_PER_FRAME = 1000 / SCREEN_FPS;
+	const unsigned int SCREEN_TICK_PER_FRAME = 1000 / SCREEN_FPS;
 
 	const float FOV_RADIANS = (float) FOV * M_PI / 180;
 

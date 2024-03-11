@@ -1,6 +1,303 @@
 #include "Initiator.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 bool Initiator::init()
 {
-return false;
+	//initialization flag
+	bool success = true;
+
+	//initialize SDL
+	printf( "Initializing SDL...\n" );
+	if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
+	{
+		printf( "SDL could not initialize! SDL Error: %s\n", SDL_GetError() );
+		success = false;
+	}
+	else
+	{
+		//use OpenGL 3.1 core
+		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
+		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 1 );
+		SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
+
+		//create window
+		printf( "Creating window...\n" );
+		gWindow = SDL_CreateWindow( "Artifice Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
+		//confine mouse cursor to the window and hide it
+		SDL_SetWindowMouseGrab(gWindow, SDL_TRUE);
+		SDL_SetWindowMouseRect(gWindow, &windowRect);
+		SDL_SetRelativeMouseMode(SDL_TRUE);
+		if( gWindow == NULL )
+		{
+			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
+			success = false;
+		}
+		else
+		{
+			//create context
+			printf( "Creating OpenGL context...\n" );
+			gContext = SDL_GL_CreateContext( gWindow );
+			if( gContext == NULL )
+			{
+				printf( "OpenGL context could not be created! SDL Error: %s\n", SDL_GetError() );
+				success = false;
+			}
+			else
+			{
+				//initialize GLEW
+				printf( "Initializing GLEW...\n" );
+				glewExperimental = GL_TRUE; 
+				GLenum glewError = glewInit();
+				if( glewError != GLEW_OK )
+				{
+					printf( "Error initializing GLEW! %s\n", glewGetErrorString( glewError ) );
+				}
+
+				//use Vsync
+				printf( "Setting VSync...\n" );
+				if( SDL_GL_SetSwapInterval( 1 ) < 0 )
+				{
+					printf( "Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError() );
+				}
+
+				//instantiate the game engine
+				artificeEngine = new Engine3D(cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, cfg.NEAR, cfg.FAR, cfg.FOV, cfg.DOF, cfg.COLLIDING_DISTANCE, cfg.GRAVITATIONAL_PULL, &eventController);
+
+				//initialize OpenGL
+				printf( "Initializing OpenGL...\n" );
+				if( !initGL() )
+				{
+					printf( "Unable to initialize OpenGL!\n" );
+					success = false;
+				}
+
+                //start the 3D engine
+		        engineThread = artificeEngine->startEngine();
+			}
+		}
+	}
+
+    initiated = success;
+	return success;
+}
+
+bool Initiator::initGL()
+{
+	bool success = true;
+
+	printf( "Loading shader programs...\n" );
+	if (!cubeMapShader.loadProgram("shaders/cubemap.glvs", "shaders/cubemap.glfs"))
+	{
+		printf( "Unable to load cubemap shader!\n" );
+		success = false;
+	}
+	else if(!textureShader.loadProgram("shaders/texture.glvs", "shaders/texture.glfs"))
+	{
+		printf( "Unable to load cubemap shader!\n" );
+		success = false;
+	}
+	else
+	{
+		glEnable(GL_DEPTH_TEST);
+		// glDepthFunc(GL_LESS); 
+		// glEnable(GL_CULL_FACE);
+		// glCullFace(GL_BACK);
+
+		gCubeMapProgramID = cubeMapShader.getProgramID();
+		gTextureProgramID = textureShader.getProgramID();
+
+		//create a rectangle
+		rectangle rect0{0.2, 0.4};
+		model mdl0; mdl0.texture = "brickwall.bmp";
+		mdl0.position = glm::vec3( -0.7f,  0.5f,  0.2f);
+		rect0.toTriangles(mdl0.modelMesh.tris);
+		mdl0.modelMesh.shape = Shape::RECTANGLE;
+		artificeEngine->modelsToRaster.push_back(mdl0);
+
+		//create a rectangle
+		rectangle rect0b{0.2, 0.2};
+		model mdl0b; mdl0b.texture = "walnut.bmp";
+		mdl0b.position = glm::vec3( 0.2f,  0.7f,  0.5f);
+		rect0b.toTriangles(mdl0b.modelMesh.tris);
+		mdl0b.modelMesh.shape = Shape::RECTANGLE;
+		artificeEngine->modelsToRaster.push_back(mdl0b);
+
+		rectangle rect0c{0.2, 0.2};
+		model mdl0c; mdl0c.texture = "brickwallPainted.bmp";
+		mdl0c.position = glm::vec3( 0.5f,  0.1f,  0.1f);
+		rect0c.toTriangles(mdl0c.modelMesh.tris);
+		mdl0c.modelMesh.shape = Shape::RECTANGLE;
+		artificeEngine->modelsToRaster.push_back(mdl0c);
+
+		//create a cube
+		cube cube0{0.2f};
+		std::vector<triangle> cube0Triangles;
+		cube0.toTriangles(cube0Triangles);
+
+		//create models
+		model mdl; mdl.texture = "cubemap";
+		mdl.position = glm::vec3( 0.0f,  0.0f,  0.0f);
+		mdl.modelMesh.tris = cube0Triangles;
+		mdl.modelMesh.shape = Shape::CUBE;
+		artificeEngine->modelsToRaster.push_back(mdl);
+
+		model mdl2; mdl2.texture = "cubemap";
+		mdl2.position = glm::vec3( 0.0f,  0.0f,  0.2f);
+		mdl2.modelMesh.tris = cube0Triangles;
+		mdl2.modelMesh.shape = Shape::CUBE;
+		artificeEngine->modelsToRaster.push_back(mdl2);
+
+		model mdl3; mdl3.texture = "cubemap";
+		mdl3.position = glm::vec3( -0.2f,  0.2f,  0.0f);
+		mdl3.modelMesh.tris = cube0Triangles;
+		mdl3.modelMesh.shape = Shape::CUBE;
+		artificeEngine->modelsToRaster.push_back(mdl3);
+
+		model mdl4; mdl4.texture = "cubemap";
+		mdl4.position = glm::vec3( -0.2f,  0.2f, 0.2f);
+		mdl4.modelMesh.tris = cube0Triangles;
+		mdl4.modelMesh.shape = Shape::CUBE;
+		artificeEngine->modelsToRaster.push_back(mdl4);
+
+		model mdl5; mdl5.texture = "cubemap";
+		mdl5.position = glm::vec3( 0.0f,  0.0f, 0.4f);
+		mdl5.modelMesh.tris = cube0Triangles;
+		mdl5.modelMesh.shape = Shape::CUBE;
+		artificeEngine->modelsToRaster.push_back(mdl5);
+
+		model mdl6; mdl6.texture = "cubemap";
+		mdl6.position = glm::vec3( 0.2f,  0.2f, 0.0f);
+		mdl6.modelMesh.tris = cube0Triangles;
+		mdl6.modelMesh.shape = Shape::CUBE;
+		artificeEngine->modelsToRaster.push_back(mdl6);
+
+		model mdl7; mdl7.texture = "cubemap";
+		mdl7.position = glm::vec3( 0.2f,  0.2f, 0.2f);
+		mdl7.modelMesh.tris = cube0Triangles;
+		mdl7.modelMesh.shape = Shape::CUBE;
+		artificeEngine->modelsToRaster.push_back(mdl7);
+		
+		//create VAOs
+		glGenVertexArrays(1, &gVAO);
+		glGenVertexArrays(1, &gCubeVAO);
+
+		//create VBOs
+		glGenBuffers( 1, &gVBO );
+		glGenBuffers( 1, &gCubeVBO );
+
+		//create IBO
+		glGenBuffers( 1, &gIBO );
+		glGenBuffers( 1, &gCubeIBO );
+
+		//update buffers with the new vertices
+		artificeEngine->updateVertices(&gVBO, &gIBO, &gVAO, &gCubeVBO, &gCubeIBO, &gCubeVAO);
+
+		//initialize clear color
+		glClearColor( 0.f, 0.f, 0.f, 1.f );
+
+		//generates and binds textures
+		loadTextures(texturePaths, textureIdsMap);
+
+		//generates and binds cubemap
+		loadCubemap(cubemapPaths, cubemapIdsMap, "cubemap");
+	}
+	return success;
+}
+
+void Initiator::loadTextures(std::vector<std::string> texturePaths, std::map<std::string, GLuint>& textureIdsMap)
+{
+	for (std::string texturePath : texturePaths)
+	{
+		textureIdsMap[texturePath] = -1;
+		//textureIds.push_back(0);
+		//declare texture
+		glGenTextures(1, &textureIdsMap[texturePath]);
+		//bind texture
+		glBindTexture(GL_TEXTURE_2D, textureIdsMap[texturePath]);
+
+		//set the texture wrapping/filtering options (on the currently bound texture object)
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		//load image
+		int width, height, nrChannels;
+		unsigned char *data = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			//generate texture
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			glGenerateMipmap(GL_TEXTURE_2D);
+		}
+		else
+		{
+			std::cout << "Failed to load texture " << texturePath << std::endl;
+		}
+		//free image memory
+		stbi_image_free(data);
+	}
+	//activate shader
+	textureShader.bind();
+	//set the uniforms
+	int cnt=0;
+	for (const auto& kv : textureIdsMap) {
+		std::cout << kv.first << ": " << kv.second << std::endl;
+		glUniform1i(glGetUniformLocation(textureShader.getProgramID(), std::string("texture" + std::to_string(kv.second)).c_str()), 0);
+	}
+	// for (GLuint& textureId : textureIds)
+	// {
+	// 	glUniform1i(glGetUniformLocation(textureShader.getProgramID(), std::string("texture" + std::to_string(textureId)).c_str()), cnt++);
+	// }
+}
+
+void Initiator::loadCubemap(std::vector<std::string> cubemapPaths, std::map<std::string, GLuint>& cubemapIdsMap, std::string name)
+{
+	cubemapIdsMap[name] = -1;
+	glGenTextures(1, &cubemapIdsMap[name]);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapIdsMap[name]);
+
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < cubemapPaths.size(); i++)
+	{
+		unsigned char *data = stbi_load(cubemapPaths[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
+							0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+			);
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Cubemap texture failed to load at path: " << cubemapPaths[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	cubeMapShader.bind();
+	glUniform1i(glGetUniformLocation(cubeMapShader.getProgramID(), std::string("cubemap" + std::to_string(cubemapIdsMap[name])).c_str()), 0);
+}
+
+void Initiator::close()
+{
+	//unbind program - deactivate shader
+	cubeMapShader.unbind();
+
+	//deallocate programs
+	glDeleteProgram(gCubeMapProgramID);
+	glDeleteProgram(gTextureProgramID);
+
+	//destroy window	
+	SDL_DestroyWindow(gWindow);
+	gWindow = NULL;
+
+	engineThread.join();
+
+	//quit SDL subsystems
+	SDL_Quit();
 }
