@@ -10,8 +10,6 @@ typedef struct Configuration
 
 	const std::string VERSION = "0.0.1";
 
-	const unsigned int SCREEN_FPS = 60;
-
 	const unsigned int SCREEN_WIDTH = 800;
 
 	const unsigned int SCREEN_HEIGHT = 600;
@@ -29,8 +27,6 @@ typedef struct Configuration
 	const float GRAVITATIONAL_PULL = 0.1f;
 
 	//precomputed constants follow
-
-	const unsigned int SCREEN_TICK_PER_FRAME = 1000 / SCREEN_FPS;
 
 	const float FOV_RADIANS = (float) FOV * M_PI / 180;
 
