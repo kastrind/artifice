@@ -80,6 +80,8 @@
 		"stop_token": "cpp",
 		"thread": "cpp",
 		"cstring": "cpp",
-		"map": "cpp"
+		"map": "cpp",
+		"codecvt": "cpp",
+		"iomanip": "cpp"
 	}
 }

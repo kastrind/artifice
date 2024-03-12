@@ -1,49 +1,36 @@
 #include "Initiator.h"
+#include <filesystem>
 
 CFG cfg;
 
-std::vector<std::string> texturePaths;
-std::vector<std::string> cubemapPaths;
-
 int main( int argc, char* args[] )
 {
-	//TODO: relocate
-	texturePaths.push_back("brickwall.bmp");
-	texturePaths.push_back("brickwallPainted.bmp");
-	texturePaths.push_back("walnut.bmp");
 
-	cubemapPaths.push_back("brickwallPainted.bmp"); //right
-	cubemapPaths.push_back("brickwall.bmp"); //left
-	cubemapPaths.push_back("brickwallPainted.bmp"); //top
-	cubemapPaths.push_back("brickwall.bmp"); //bottom
-	cubemapPaths.push_back("brickwallPainted.bmp"); //back
-	cubemapPaths.push_back("brickwall.bmp"); //front
-
-	Initiator initor(cfg, texturePaths, cubemapPaths);
+	Initiator init(cfg);
 
 	//start up SDL and create window, OpenGL context, 3D Engine
-	if(!initor())
+	if(!init())
 	{
 		printf( "Failed to initialize!\n" );
 	}
 	else
 	{
-		SDL_Window* gWindow = initor.gWindow;
-		SDL_Rect* windowRect = &initor.windowRect;
-		EventController* eventController = &initor.eventController;
-		Engine3D* artificeEngine = initor.artificeEngine;
-		GLuint* gCubeMapProgramID = &initor.gCubeMapProgramID;
-		GLuint* gTextureProgramID = &initor.gTextureProgramID;
-		GLuint* gVBO = &initor.gVBO;
-		GLuint* gIBO = &initor.gIBO;
-		GLuint* gVAO = &initor.gVAO;
-		GLuint* gCubeVBO = &initor.gCubeVBO;
-		GLuint* gCubeIBO = &initor.gCubeIBO;
-		GLuint* gCubeVAO = &initor.gCubeVAO;
-		ArtificeShaderProgram* textureShader = &initor.textureShader;
-		ArtificeShaderProgram* cubeMapShader = &initor.cubeMapShader;
-		std::map<std::string, GLuint>* textureIdsMap = &initor.textureIdsMap;
-		std::map<std::string, GLuint>* cubemapIdsMap = &initor.cubemapIdsMap;
+		SDL_Window* gWindow = init.gWindow;
+		SDL_Rect* windowRect = &init.windowRect;
+		EventController* eventController = &init.eventController;
+		Engine3D* artificeEngine = init.artificeEngine;
+		GLuint* gCubeMapProgramID = &init.gCubeMapProgramID;
+		GLuint* gTextureProgramID = &init.gTextureProgramID;
+		GLuint* gVBO = &init.gVBO;
+		GLuint* gIBO = &init.gIBO;
+		GLuint* gVAO = &init.gVAO;
+		GLuint* gCubeVBO = &init.gCubeVBO;
+		GLuint* gCubeIBO = &init.gCubeIBO;
+		GLuint* gCubeVAO = &init.gCubeVAO;
+		ArtificeShaderProgram* textureShader = &init.textureShader;
+		ArtificeShaderProgram* cubeMapShader = &init.cubeMapShader;
+		std::map<std::string, GLuint>* textureIdsMap = &init.textureIdsMap;
+		std::map<std::string, GLuint>* cubemapIdsMap = &init.cubemapIdsMap;
 
 		//main loop flag
 		bool quit = false;
@@ -113,7 +100,7 @@ int main( int argc, char* args[] )
 	}
 
 	//free resources and close SDL
-	initor.close();
+	init.close();
 
 	return 0;
 }

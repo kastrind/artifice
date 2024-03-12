@@ -109,7 +109,7 @@ bool Initiator::initGL()
 
 		//create a rectangle
 		rectangle rect0{0.2, 0.4};
-		model mdl0; mdl0.texture = "brickwall.bmp";
+		model mdl0; mdl0.texture = "brickwall";
 		mdl0.position = glm::vec3( -0.7f,  0.5f,  0.2f);
 		rect0.toTriangles(mdl0.modelMesh.tris);
 		mdl0.modelMesh.shape = Shape::RECTANGLE;
@@ -117,14 +117,14 @@ bool Initiator::initGL()
 
 		//create a rectangle
 		rectangle rect0b{0.2, 0.2};
-		model mdl0b; mdl0b.texture = "walnut.bmp";
+		model mdl0b; mdl0b.texture = "walnut";
 		mdl0b.position = glm::vec3( 0.2f,  0.7f,  0.5f);
 		rect0b.toTriangles(mdl0b.modelMesh.tris);
 		mdl0b.modelMesh.shape = Shape::RECTANGLE;
 		artificeEngine->modelsToRaster.push_back(mdl0b);
 
 		rectangle rect0c{0.2, 0.2};
-		model mdl0c; mdl0c.texture = "brickwallPainted.bmp";
+		model mdl0c; mdl0c.texture = "brickwallPainted";
 		mdl0c.position = glm::vec3( 0.5f,  0.1f,  0.1f);
 		rect0c.toTriangles(mdl0c.modelMesh.tris);
 		mdl0c.modelMesh.shape = Shape::RECTANGLE;
@@ -166,13 +166,13 @@ bool Initiator::initGL()
 		mdl5.modelMesh.shape = Shape::CUBE;
 		artificeEngine->modelsToRaster.push_back(mdl5);
 
-		model mdl6; mdl6.texture = "cubemap";
+		model mdl6; mdl6.texture = "box";
 		mdl6.position = glm::vec3( 0.2f,  0.2f, 0.0f);
 		mdl6.modelMesh.tris = cube0Triangles;
 		mdl6.modelMesh.shape = Shape::CUBE;
 		artificeEngine->modelsToRaster.push_back(mdl6);
 
-		model mdl7; mdl7.texture = "cubemap";
+		model mdl7; mdl7.texture = "box";
 		mdl7.position = glm::vec3( 0.2f,  0.2f, 0.2f);
 		mdl7.modelMesh.tris = cube0Triangles;
 		mdl7.modelMesh.shape = Shape::CUBE;
@@ -197,90 +197,117 @@ bool Initiator::initGL()
 		glClearColor( 0.f, 0.f, 0.f, 1.f );
 
 		//generates and binds textures
-		loadTextures(texturePaths, textureIdsMap);
+		loadTextures(textureIdsMap);
 
 		//generates and binds cubemap
-		loadCubemap(cubemapPaths, cubemapIdsMap, "cubemap");
+		loadCubemaps(cubemapIdsMap);
 	}
 	return success;
 }
 
-void Initiator::loadTextures(std::vector<std::string> texturePaths, std::map<std::string, GLuint>& textureIdsMap)
+void Initiator::loadTextures(std::map<std::string, GLuint>& textureIdsMap)
 {
-	for (std::string texturePath : texturePaths)
+	std::string texturesPath = cfg.ASSETS_PATH + std::string("\\textures");
+	std::string filename;
+	for (const auto & entry : std::filesystem::directory_iterator(texturesPath))
 	{
-		textureIdsMap[texturePath] = -1;
-		//textureIds.push_back(0);
-		//declare texture
-		glGenTextures(1, &textureIdsMap[texturePath]);
-		//bind texture
-		glBindTexture(GL_TEXTURE_2D, textureIdsMap[texturePath]);
+		if (entry.is_regular_file())
+		{
+			if (entry.path().filename().has_extension()) {
+				filename = entry.path().filename().replace_extension("").string();
+			} else {
+				filename = entry.path().filename().string();
+			}
 
-		//set the texture wrapping/filtering options (on the currently bound texture object)
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		//load image
-		int width, height, nrChannels;
-		unsigned char *data = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
-		if (data)
-		{
-			//generate texture
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-			glGenerateMipmap(GL_TEXTURE_2D);
+			textureIdsMap[filename] = -1;
+			//declare texture
+			glGenTextures(1, &textureIdsMap[filename]);
+			//bind texture
+			glBindTexture(GL_TEXTURE_2D, textureIdsMap[filename]);
+
+			//set the texture wrapping/filtering options (on the currently bound texture object)
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			//load image
+			int width, height, nrChannels;
+			unsigned char *data = stbi_load(entry.path().string().c_str(), &width, &height, &nrChannels, 0);
+			if (data)
+			{
+				//generate texture
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+				glGenerateMipmap(GL_TEXTURE_2D);
+			} else {
+				std::cout << "Failed to load texture " << filename << std::endl;
+			}
+			//free image memory
+			stbi_image_free(data);
 		}
-		else
-		{
-			std::cout << "Failed to load texture " << texturePath << std::endl;
-		}
-		//free image memory
-		stbi_image_free(data);
 	}
 	//activate shader
 	textureShader.bind();
 	//set the uniforms
-	int cnt=0;
 	for (const auto& kv : textureIdsMap) {
-		std::cout << kv.first << ": " << kv.second << std::endl;
+		//std::cout << kv.first << ": " << kv.second << std::endl;
 		glUniform1i(glGetUniformLocation(textureShader.getProgramID(), std::string("texture" + std::to_string(kv.second)).c_str()), 0);
 	}
-	// for (GLuint& textureId : textureIds)
-	// {
-	// 	glUniform1i(glGetUniformLocation(textureShader.getProgramID(), std::string("texture" + std::to_string(textureId)).c_str()), cnt++);
-	// }
 }
 
-void Initiator::loadCubemap(std::vector<std::string> cubemapPaths, std::map<std::string, GLuint>& cubemapIdsMap, std::string name)
+void Initiator::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap)
 {
-	cubemapIdsMap[name] = -1;
-	glGenTextures(1, &cubemapIdsMap[name]);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapIdsMap[name]);
-
-	int width, height, nrChannels;
-	for (unsigned int i = 0; i < cubemapPaths.size(); i++)
+    std::string cubemapsPath = cfg.ASSETS_PATH + std::string("\\cubemaps");
+	std::string filename;
+	std::string name;
+    for (const auto & entry : std::filesystem::directory_iterator(cubemapsPath))
 	{
-		unsigned char *data = stbi_load(cubemapPaths[i].c_str(), &width, &height, &nrChannels, 0);
-		if (data)
+		if (entry.is_directory())
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
-							0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
-			);
-			stbi_image_free(data);
-		}
-		else
-		{
-			std::cout << "Cubemap texture failed to load at path: " << cubemapPaths[i] << std::endl;
-			stbi_image_free(data);
+			name = entry.path().filename().string();
+
+			cubemapIdsMap[name] = -1;
+			glGenTextures(1, &cubemapIdsMap[name]);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapIdsMap[name]);
+
+			for (const auto & face : std::filesystem::directory_iterator(entry))
+			{
+				if (face.is_regular_file())
+				{
+					if (face.path().filename().has_extension()) {
+						filename = face.path().filename().replace_extension("").string();
+					} else {
+						filename = face.path().filename().string();
+					}
+
+					int width, height, nrChannels;
+					int i = 0;
+					if (cubemapFaceIndexMap[filename] >= 0)
+					{
+						unsigned char *data = stbi_load(face.path().string().c_str(), &width, &height, &nrChannels, 0);
+						if (data)
+						{
+							glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + cubemapFaceIndexMap[filename], 
+											0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+							);
+							stbi_image_free(data);
+						}
+						else
+						{
+							std::cout << "Cubemap texture failed to load at path: " << face.path() << std::endl;
+							stbi_image_free(data);
+						}
+					}
+					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+					cubeMapShader.bind();
+					glUniform1i(glGetUniformLocation(cubeMapShader.getProgramID(), std::string("cubemap" + std::to_string(cubemapIdsMap[name])).c_str()), 0);
+				}
+			}
 		}
 	}
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	cubeMapShader.bind();
-	glUniform1i(glGetUniformLocation(cubeMapShader.getProgramID(), std::string("cubemap" + std::to_string(cubemapIdsMap[name])).c_str()), 0);
 }
 
 void Initiator::close()

@@ -10,6 +10,8 @@ typedef struct Configuration
 
 	const std::string VERSION = "0.0.1";
 
+	const std::string ASSETS_PATH = "assets";
+
 	const unsigned int SCREEN_WIDTH = 800;
 
 	const unsigned int SCREEN_HEIGHT = 600;

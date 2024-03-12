@@ -245,6 +245,9 @@ void Engine3D::move(float elapsedTime)
 		} else if (keysPressed[SupportedKeys::S] && hasLanded && !collides) {
 			cameraFront.y = 0;
 			cameraPos -= cameraSpeed * cameraFront;
+
+		} else if (keysPressed[SupportedKeys::S] && !hasLanded) {
+			cameraPos -= cameraSpeed * cameraFront;
 		}
 
 		if (keysPressed[SupportedKeys::A] && hasLanded && collides && !collidesLeft) {

@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <string>
 #include <map>
+#include <filesystem>
 
 #include "ArtificeShaderProgram.h"
 #include "Configuration.h"
@@ -26,13 +27,18 @@ class Initiator
 {
 	public:
 
-		Initiator(CFG& cfg, std::vector<std::string>& texturePaths, std::vector<std::string>& cubemapPaths)
-					: cfg(cfg), texturePaths(texturePaths), cubemapPaths(cubemapPaths)
+		Initiator(CFG& cfg) : cfg(cfg)
 		{
 			windowRect.x = cfg.SCREEN_WIDTH/4;
 			windowRect.y = cfg.SCREEN_HEIGHT/4;
 			windowRect.w = cfg.SCREEN_WIDTH/2;
 			windowRect.h = cfg.SCREEN_HEIGHT/2;
+			cubemapFaceIndexMap["right"] = 0;
+			cubemapFaceIndexMap["left"] = 1;
+			cubemapFaceIndexMap["top"] = 2;
+			cubemapFaceIndexMap["bottom"] = 3;
+			cubemapFaceIndexMap["back"] = 4;
+			cubemapFaceIndexMap["front"] = 5;
 		}
 
 		bool initiated = false;
@@ -94,15 +100,17 @@ class Initiator
 		bool initGL();
 
 		//generates and binds textures
-		void loadTextures(std::vector<std::string> texturePaths, std::map<std::string, GLuint>& textureIdsMap);
+		void loadTextures(std::map<std::string, GLuint>& textureIdsMap);
 		
 		//generates and binds a cubemap
-		void loadCubemap(std::vector<std::string> cubemapPaths, std::map<std::string, GLuint>& cubemapIdsMap, std::string name);
+		void loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap);
 
 		//frees media and shuts down SDL
 		void close();
 
 
 	private:
+
+		std::map<std::string, unsigned int> cubemapFaceIndexMap;
 
 };
