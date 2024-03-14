@@ -20,6 +20,7 @@
 #include "Configuration.h"
 #include "EventController.h"
 #include "Constructs3D.h"
+#include "Level.h"
 #include "Engine3D.h"
 
 
@@ -27,7 +28,7 @@ class Initiator
 {
 	public:
 
-		Initiator(CFG& cfg) : cfg(cfg)
+		Initiator(CFG& cfg, std::string levelFile) : cfg(cfg), levelFile(levelFile)
 		{
 			windowRect.x = cfg.SCREEN_WIDTH/4;
 			windowRect.y = cfg.SCREEN_HEIGHT/4;
@@ -112,5 +113,7 @@ class Initiator
 	private:
 
 		std::map<std::string, unsigned int> cubemapFaceIndexMap;
+
+		std::string levelFile;
 
 };

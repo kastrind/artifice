@@ -1,12 +1,11 @@
 #include "Initiator.h"
-#include <filesystem>
 
 CFG cfg;
 
 int main( int argc, char* args[] )
 {
 
-	Initiator init(cfg);
+	Initiator init(cfg, "level0.lvl");
 
 	//start up SDL and create window, OpenGL context, 3D Engine
 	if(!init())

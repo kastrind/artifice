@@ -10,9 +10,8 @@ uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform vec3 lightColor;
 
-// texture samplers
+// texture sampler
 uniform sampler2D texture1;
-uniform sampler2D texture2;
 
 void main()
 {

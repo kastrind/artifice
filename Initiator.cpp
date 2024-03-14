@@ -107,6 +107,11 @@ bool Initiator::initGL()
 		gCubeMapProgramID = cubeMapShader.getProgramID();
 		gTextureProgramID = textureShader.getProgramID();
 
+		Level level;
+		level.load(cfg.LEVELS_PATH + "\\" + levelFile);
+		artificeEngine->modelsToRaster = level.models;
+
+		/*
 		//create a rectangle
 		rectangle rect0{0.2, 0.4};
 		model mdl0; mdl0.texture = "brickwall";
@@ -177,6 +182,8 @@ bool Initiator::initGL()
 		mdl7.modelMesh.tris = cube0Triangles;
 		mdl7.modelMesh.shape = Shape::CUBE;
 		artificeEngine->modelsToRaster.push_back(mdl7);
+
+		*/
 		
 		//create VAOs
 		glGenVertexArrays(1, &gVAO);

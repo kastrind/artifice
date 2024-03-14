@@ -12,6 +12,8 @@ typedef struct Configuration
 
 	const std::string ASSETS_PATH = "assets";
 
+	const std::string LEVELS_PATH = "levels";
+
 	const unsigned int SCREEN_WIDTH = 800;
 
 	const unsigned int SCREEN_HEIGHT = 600;

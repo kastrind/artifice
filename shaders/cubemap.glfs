@@ -10,7 +10,7 @@ uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform vec3 lightColor;
 
-uniform samplerCube cubemap1; // cubemap texture sampler
+uniform samplerCube cubemap; // cubemap texture sampler
 
 void main()
 {
@@ -34,6 +34,6 @@ void main()
 	vec3 finalColor = (ambient + diffuse + specular) * color;
 
 
-	FragColor = texture(cubemap1, normalize(FragPos)) * vec4(finalColor, 1.0f);
+	FragColor = texture(cubemap, normalize(FragPos)) * vec4(finalColor, 1.0f);
 }
 
