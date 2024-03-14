@@ -203,7 +203,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			prevdpFront = dpFront;
 		}
 
-		if (modelDistance < collidingDistance * 0.5f)
+		if (model.isSolid && modelDistance < collidingDistance * 0.5f)
 		{
 			cameraPos = prevCameraPos;
 		}
