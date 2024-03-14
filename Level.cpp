@@ -24,7 +24,9 @@ void Level::load(std::string levelPath)
 		s << line;
 		s >> streamstring;
 
+		unsigned long id;
         std::string shape, texture;
+		bool isSolid;
 	    float width, height, depth, rotationX, rotationY, rotationZ, positionX, positionY, positionZ;
 
 		if (streamstring.c_str()[0] == '#')
@@ -38,26 +40,30 @@ void Level::load(std::string levelPath)
 			std::istringstream ss(linestring);
 			std::string token;
 			unsigned int i = -1;
-			std::string tokens[11];
+			std::string tokens[NUM_ATTRIBUTES];
 			while(std::getline(ss, token, ',')) {
-				if (i == 10) break;
+				if (i == NUM_ATTRIBUTES - 1) break;
 				tokens[++i] = token;
 			}
-			if (i == 10) {
-				shape   = tokens[0];
-				texture = tokens[1];
-				width   = std::stof(tokens[2]);
-				height  = std::stof(tokens[3]);
-				depth   = std::stof(tokens[4]);
-				rotationX = std::stof(tokens[5]);
-				rotationY = std::stof(tokens[6]);
-				rotationZ = std::stof(tokens[7]);
-				positionX = std::stof(tokens[8]);
-				positionY = std::stof(tokens[9]);
-				positionZ = std::stof(tokens[10]);
+			if (i == NUM_ATTRIBUTES - 1) {
+				id      = std::stol(tokens[0]);
+				shape   = tokens[1];
+				texture = tokens[2];
+				width   = std::stof(tokens[3]);
+				height  = std::stof(tokens[4]);
+				depth   = std::stof(tokens[5]);
+				isSolid = tokens[6] == "true";
+				rotationX = std::stof(tokens[7]);
+				rotationY = std::stof(tokens[8]);
+				rotationZ = std::stof(tokens[9]);
+				positionX = std::stof(tokens[10]);
+				positionY = std::stof(tokens[11]);
+				positionZ = std::stof(tokens[12]);
 				//std::cout << "shape: " << shape << ", tex: " << texture << ", w: " << width << ", h: " << height << ", d: " << depth << ", rX: " << rotationX << ", rY: " << rotationY << ", rZ: " << rotationZ << ", pX: " << positionX << ", pY: " << positionY << ", pZ: " << positionZ << std::endl;
 
 				model mdl;
+				mdl.id = id;
+				mdl.isSolid = isSolid;
 				mdl.texture = texture;
 				mdl.position = glm::vec3(positionX, positionY, positionZ);
 				bool isShapeValid = false;

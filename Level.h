@@ -11,6 +11,8 @@ class Level
 {
 	public:
 
+		static const unsigned int NUM_ATTRIBUTES = 13;
+
 		Level()
 		{
 		}
