@@ -27,6 +27,88 @@ void EventController::clearMouseMotionState ()
 
 void EventController::processEvent(SDL_Event* e)
 {
+	unsigned short mouseBtnTest = SDL_BUTTON(SDL_GetMouseState(NULL, NULL));
+
+	//User pressed mouse button
+	if (e->type == SDL_MOUSEBUTTONDOWN) {
+		switch(mouseBtnTest)
+		{
+			case 1:
+			keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] = true;
+			break;
+
+			case 2:
+			keysPressed[SupportedKeys::MOUSE_MIDDLE_CLICK] = true;
+			break;
+
+			case 4:
+			keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] = true;
+			keysPressed[SupportedKeys::MOUSE_MIDDLE_CLICK] = true;
+			break;
+
+			case 8:
+			keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] = true;
+			break;
+
+			case 16:
+			keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] = true;
+			keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] = true;
+			break;
+
+			case 32:
+			keysPressed[SupportedKeys::MOUSE_MIDDLE_CLICK] = true;
+			keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] = true;
+			break;
+
+			case 64:
+			keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] = true;
+			keysPressed[SupportedKeys::MOUSE_MIDDLE_CLICK] = true;
+			keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] = true;
+			break;			
+		}
+		//std::cout << "left: " << keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] << ", middle: " << keysPressed[SupportedKeys::MOUSE_MIDDLE_CLICK] << ", right: " << keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] << std::endl;
+	}
+
+	//User released mouse button
+	else if (e->type == SDL_MOUSEBUTTONUP) {
+		switch(mouseBtnTest)
+		{
+			case 0:
+			keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] = false;
+			keysPressed[SupportedKeys::MOUSE_MIDDLE_CLICK] = false;
+			keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] = false;
+			break;
+
+			case 1:
+			keysPressed[SupportedKeys::MOUSE_MIDDLE_CLICK] = false;
+			keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] = false;
+			break;
+
+			case 2:
+			keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] = false;
+			keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] = false;
+			break;
+
+			case 4:
+			keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] = false;
+			break;
+
+			case 8:
+			keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] = false;
+			keysPressed[SupportedKeys::MOUSE_MIDDLE_CLICK] = false;
+			break;
+
+			case 16:
+			keysPressed[SupportedKeys::MOUSE_MIDDLE_CLICK] = false;
+			break;
+
+			case 32:
+			keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] = false;
+			break;			
+		}
+		//std::cout << "left: " << keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] << ", middle: " << keysPressed[SupportedKeys::MOUSE_MIDDLE_CLICK] << ", right: " << keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] << std::endl;
+	}
+
 	if (e->type == SDL_MOUSEMOTION) {
 		//get mouse position
 		//SDL_GetMouseState( &mousePosX, &mousePosY );
