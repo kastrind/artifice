@@ -15,12 +15,30 @@ int EventController::getMouseDistanceY()
 	return mouseDistanceY;
 }
 
+bool EventController::transitionedMouseLeftButton()
+{
+	return prevMouseLeftBtnPressed != keysPressed[SupportedKeys::MOUSE_LEFT_CLICK];
+}
+
+bool EventController::transitionedMouseMiddleButton()
+{
+	return !prevMouseMiddleBtnPressed && keysPressed[SupportedKeys::MOUSE_MIDDLE_CLICK];
+}
+
+bool EventController::transitionedMouseRightButton()
+{
+	return !prevMouseRightBtnPressed && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK];
+}
+
 void EventController::clearMouseMotionState ()
 {
 	keysPressed[SupportedKeys::MOUSE_UP] = false;
 	keysPressed[SupportedKeys::MOUSE_DOWN] = false;
 	keysPressed[SupportedKeys::MOUSE_LEFT] = false;
 	keysPressed[SupportedKeys::MOUSE_RIGHT] = false;
+	prevMouseLeftBtnPressed   = keysPressed[SupportedKeys::MOUSE_LEFT_CLICK];
+	prevMouseMiddleBtnPressed = keysPressed[SupportedKeys::MOUSE_MIDDLE_CLICK];
+	prevMouseRightBtnPressed  = keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK];
 	mouseDistanceX = 0;
 	mouseDistanceY = 0;
 }
@@ -30,7 +48,8 @@ void EventController::processEvent(SDL_Event* e)
 	unsigned short mouseBtnTest = SDL_BUTTON(SDL_GetMouseState(NULL, NULL));
 
 	//User pressed mouse button
-	if (e->type == SDL_MOUSEBUTTONDOWN) {
+	if (e->type == SDL_MOUSEBUTTONDOWN)
+	{
 		switch(mouseBtnTest)
 		{
 			case 1:
@@ -70,7 +89,8 @@ void EventController::processEvent(SDL_Event* e)
 	}
 
 	//User released mouse button
-	else if (e->type == SDL_MOUSEBUTTONUP) {
+	else if (e->type == SDL_MOUSEBUTTONUP)
+	{
 		switch(mouseBtnTest)
 		{
 			case 0:

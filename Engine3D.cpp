@@ -227,6 +227,19 @@ void Engine3D::move(float elapsedTime)
 		float multiplierX = (float)mouseDistanceX * 5;
 		float multiplierY = (float)mouseDistanceY * 5;
 
+		if (eventController->transitionedMouseLeftButton() && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] && !isTouched) {
+			cube cube0{0.2f};
+			std::vector<triangle> cube0Triangles;
+			cube0.toTriangles(cube0Triangles);
+			model mdl; mdl.texture = "box";
+			mdl.position = cameraPos + (cube0.size + cfg.COLLIDING_DISTANCE) * cameraFront;
+			mdl.modelMesh.tris = cube0Triangles;
+			mdl.modelMesh.shape = Shape::CUBE;
+			modelsToRaster.push_back(mdl);
+			isTouched = true;
+			std::cout << "added cube!" << cameraFront.x << cameraFront.y << cameraFront.z << std::endl;
+		}
+
 		if (keysPressed[SupportedKeys::W] && hasLanded && collides && canSlide) {
 			desiredMotion.y = 0;
 			cameraPos += 0.5f * cameraSpeed * desiredMotion;
@@ -469,14 +482,12 @@ void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string
 	textureShader->setVec3("lightPos", getLightPos());
 	textureShader->setVec3("viewPos", getCameraPos());
 	textureShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-	
-	unsigned int modelCnt = 0;
-	unsigned int cubeCnt = 0;
-	unsigned int prevModelTrisSize = 0;
-	unsigned int prevCubeTrisSize = 0;
-	for (auto &model : modelsToRaster)
-	{
 
+	unsigned int cubeCnt = 0;
+	unsigned int prevCubeTrisSize = 0;
+	unsigned int cnt = 0;
+	for (auto &model : modelsToRaster)
+	{	
 		if (model.modelMesh.shape == Shape::CUBE)
 		{
 			//ignore out-of-range models
@@ -494,7 +505,7 @@ void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string
 		else
 		{
 			//ignore out-of-range models
-			if (!model.isInDOF) { modelCnt++; prevModelTrisSize = model.modelMesh.tris.size(); continue; }
+			if (!model.isInDOF) { cnt += model.modelMesh.tris.size() * 3; continue; }
 
 			textureShader->bind();
 			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
@@ -502,8 +513,8 @@ void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, (*textureIdsMap)[model.texture]);
 			textureShader->setMat4("model", model.modelMatrix);
-			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(((modelCnt++) * (prevModelTrisSize * 3) ) * sizeof(float)));
-			prevModelTrisSize = model.modelMesh.tris.size();
+			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(( cnt ) * sizeof(float)));
+			cnt += model.modelMesh.tris.size() * 3;
 		}
 		glBindVertexArray(0);
 	}

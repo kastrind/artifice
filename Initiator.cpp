@@ -183,6 +183,19 @@ bool Initiator::initGL()
 		mdl7.modelMesh.shape = Shape::CUBE;
 		artificeEngine->modelsToRaster.push_back(mdl7);
 
+		model mdl8; mdl8.texture = "walnut";
+		mdl8.position = glm::vec3( 1.0f,  0.0f, 0.2f);
+		cuboid cuboid0{0.2, 0.5, 0.2};
+		cuboid0.toTriangles(mdl8.modelMesh.tris);
+		mdl8.modelMesh.shape = Shape::CUBOID;
+		artificeEngine->modelsToRaster.push_back(mdl8);
+
+		model mdl9; mdl9.texture = "brickwall";
+		mdl9.position = glm::vec3( 1.5f,  1.0f, 0.2f);
+		cuboid cuboid1{0.2, 0.5, 0.2};
+		cuboid1.toTriangles(mdl9.modelMesh.tris);
+		mdl9.modelMesh.shape = Shape::CUBOID;
+		artificeEngine->modelsToRaster.push_back(mdl9);
 		*/
 		
 		//create VAOs

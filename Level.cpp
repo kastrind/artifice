@@ -13,13 +13,13 @@ void Level::load(std::string levelPath)
 		return;
 	}
 
-    std::stringstream s;
-    std::string streamstring;
-
 	while (!f.eof())
 	{
 		char line[256];
 		f.getline(line, 256);
+
+		std::stringstream s;
+    	std::string streamstring;
 		
 		s << line;
 		s >> streamstring;
@@ -29,9 +29,11 @@ void Level::load(std::string levelPath)
 		bool isSolid;
 	    float width, height, depth, rotationX, rotationY, rotationZ, positionX, positionY, positionZ;
 
+		std::cout << " line: " << line << std::endl;
+
 		if (streamstring.c_str()[0] == '#')
 		{
-			//std::cout << "ignoring comment" << std::endl;
+			std::cout << "ignoring comment " << streamstring.c_str() << std::endl;
 			continue;
 		}
 		else

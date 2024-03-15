@@ -47,6 +47,12 @@ class EventController
 
 		int getMouseDistanceY();
 
+		bool transitionedMouseLeftButton();
+
+		bool transitionedMouseMiddleButton();
+
+		bool transitionedMouseRightButton();
+
 	private:
 
 		bool keysPressed[SupportedKeys::ALL_KEYS];
@@ -59,5 +65,9 @@ class EventController
 
 		int mouseDistanceX = 0;
 		int mouseDistanceY = 0;
+
+		bool prevMouseLeftBtnPressed = false;
+		bool prevMouseMiddleBtnPressed = false;
+		bool prevMouseRightBtnPressed = false;
 
 };
