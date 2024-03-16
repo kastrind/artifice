@@ -194,6 +194,10 @@ void EventController::processEvent(SDL_Event* e)
 		{
 			keysPressed[SupportedKeys::D] = true;
 		}
+		else if (e->key.keysym.sym == SDLK_LCTRL)
+		{
+			keysPressed[SupportedKeys::LEFT_CTRL] = true;
+		}
 	}
 	//User releases a key
 	else if( e->type == SDL_KEYUP )
@@ -229,6 +233,10 @@ void EventController::processEvent(SDL_Event* e)
 		else if (e->key.keysym.sym == SDLK_d)
 		{
 			keysPressed[SupportedKeys::D] = false;
+		}
+		else if (e->key.keysym.sym == SDLK_LCTRL)
+		{
+			keysPressed[SupportedKeys::LEFT_CTRL] = false;
 		}
 	}
 }

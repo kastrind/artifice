@@ -22,6 +22,7 @@ typedef enum
 	MOUSE_LEFT_CLICK,
 	MOUSE_MIDDLE_CLICK,
 	MOUSE_RIGHT_CLICK,
+	LEFT_CTRL,
 	ALL_KEYS
 } SupportedKeys;
 
