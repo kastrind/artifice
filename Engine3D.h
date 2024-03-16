@@ -35,6 +35,7 @@ class Engine3D
 				float near = 0.1f, float far = 1000.0f,
 				float fov = 90.0f, float dof = 20.0f,
 				float collidingDistance = 0.2f, float gravitationalPull = 0.1f,
+				UserMode userMode = UserMode::PLAYER,
 				EventController* eventController = nullptr);
 
 		std::thread startEngine();
@@ -95,6 +96,11 @@ class Engine3D
 		bool collidesLeft = false;
 
 		float gravitationalPull;
+
+		UserMode userMode;
+
+		EventController* eventController;
+
 		bool hasLanded = false;
 
 		glm::vec3 desiredMotion;
@@ -104,6 +110,8 @@ class Engine3D
 		float yaw = -90.0f;
 
 		float pitch = 0;
+
+		glm::vec3 lastModelAddedPos;
 
 		//camera
 		glm::vec3 cameraPos;
@@ -118,10 +126,10 @@ class Engine3D
 
 		glm::mat4 viewMatrix;
 
-		EventController* eventController;
-
 		void engineThread();
 
 		void move(float elapsedTime);
+
+		void edit();
 
 };

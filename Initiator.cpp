@@ -62,7 +62,10 @@ bool Initiator::init()
 				}
 
 				//instantiate the game engine
-				artificeEngine = new Engine3D(cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, cfg.NEAR, cfg.FAR, cfg.FOV, cfg.DOF, cfg.COLLIDING_DISTANCE, cfg.GRAVITATIONAL_PULL, &eventController);
+				artificeEngine = new Engine3D(cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT,
+											  cfg.NEAR, cfg.FAR, cfg.FOV, cfg.DOF,
+											  cfg.COLLIDING_DISTANCE, cfg.GRAVITATIONAL_PULL,
+											  cfg.USER_MODE, &eventController);
 
 				//initialize OpenGL
 				printf( "Initializing OpenGL...\n" );

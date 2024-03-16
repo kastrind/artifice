@@ -3,11 +3,12 @@
 Engine3D::Engine3D(int width, int height,
 				   float near, float far,
 				   float fov, float dof,
-				   float collidingDistance, float gravitationalPull, EventController* ec)
+				   float collidingDistance, float gravitationalPull, UserMode userMode, EventController* ec)
 				   : width(width), height(height),
 				   near(near), far(far),
 				   fov(fov), dof(dof),
-				   collidingDistance(collidingDistance), gravitationalPull(gravitationalPull), eventController(ec)
+				   collidingDistance(collidingDistance), gravitationalPull(gravitationalPull),
+				   userMode(userMode), eventController(ec)
 {
 	isActive = false;
 
@@ -22,6 +23,14 @@ Engine3D::Engine3D(int width, int height,
 	cameraRight = glm::vec3(1.0f, 0.0f, 0.0f);
 
 	viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
+	lastModelAddedPos = cameraPos;
+
+	if (userMode == UserMode::EDITOR)
+	{
+		this->gravitationalPull = 0.0f;
+		this->collidingDistance = -0.1f;
+	}
 }
 
 std::thread Engine3D::startEngine()
@@ -85,6 +94,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	glm::vec4 collidingTriPts[3];
 
 	move(elapsedTime);
+	edit();
 
 	collides = false;
 	collidesFront = false;
@@ -109,6 +119,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
 		modelMatrix = glm::translate(modelMatrix, model.position);
 		model.modelMatrix = modelMatrix;
+		model.inFocus = false;
 		mtx.unlock();
 
 		modelDistance = dof;
@@ -128,6 +139,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			//finds distance from model
 			glm::vec4 avgP = ( (pt[0]) + (pt[1]) + (pt[2]) ) / 3.0f;
 			float avgDist = glm::distance(cameraPos, glm::vec3(avgP));
+			model.distance = avgDist;
 			float dist1 = glm::distance(cameraPos, glm::vec3(pt[0]));
 			float dist2 = glm::distance(cameraPos, glm::vec3(pt[1]));
 			float dist3 = glm::distance(cameraPos, glm::vec3(pt[2]));
@@ -154,7 +166,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			mtx.unlock();
 
 			//determines whether looking at the current model
-			model.inFocus = tri.contains(glm::vec4(center, 1.0f));
+			model.inFocus = !model.inFocus ?  tri.contains(glm::vec4(center, 1.0f)) : true;
 			// if (model.inFocus) {
 			// 	std::cout << "in focus!" << std::endl;
 			// }
@@ -213,6 +225,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	return true;
 }
 
+
+
 void Engine3D::move(float elapsedTime)
 {
 	float cameraSpeed = static_cast<float>(1.5 * elapsedTime);
@@ -227,19 +241,6 @@ void Engine3D::move(float elapsedTime)
 		float multiplierX = (float)mouseDistanceX * 5;
 		float multiplierY = (float)mouseDistanceY * 5;
 
-		if (eventController->transitionedMouseLeftButton() && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] && !isTouched) {
-			cube cube0{0.2f};
-			std::vector<triangle> cube0Triangles;
-			cube0.toTriangles(cube0Triangles);
-			model mdl; mdl.texture = "box";
-			mdl.position = cameraPos + (cube0.size + cfg.COLLIDING_DISTANCE) * cameraFront;
-			mdl.modelMesh.tris = cube0Triangles;
-			mdl.modelMesh.shape = Shape::CUBE;
-			modelsToRaster.push_back(mdl);
-			isTouched = true;
-			std::cout << "added cube!" << cameraFront.x << cameraFront.y << cameraFront.z << std::endl;
-		}
-
 		if (keysPressed[SupportedKeys::W] && hasLanded && collides && canSlide) {
 			desiredMotion.y = 0;
 			cameraPos += 0.5f * cameraSpeed * desiredMotion;
@@ -248,7 +249,7 @@ void Engine3D::move(float elapsedTime)
 			cameraFront.y = 0;
 			cameraPos += cameraSpeed * cameraFront;
 
-		} else if (keysPressed[SupportedKeys::W] && !hasLanded) {
+		} else if (keysPressed[SupportedKeys::W] && (!hasLanded || userMode == UserMode::EDITOR)) {
 			cameraPos += cameraSpeed * cameraFront;
 
 		} else if (keysPressed[SupportedKeys::S] && hasLanded && collides && canSlide) {
@@ -259,7 +260,7 @@ void Engine3D::move(float elapsedTime)
 			cameraFront.y = 0;
 			cameraPos -= cameraSpeed * cameraFront;
 
-		} else if (keysPressed[SupportedKeys::S] && !hasLanded) {
+		} else if (keysPressed[SupportedKeys::S] && (!hasLanded || userMode == UserMode::EDITOR)) {
 			cameraPos -= cameraSpeed * cameraFront;
 		}
 
@@ -269,7 +270,7 @@ void Engine3D::move(float elapsedTime)
 			if (desiresRight) cameraPos += 0.5f * cameraSpeed * desiredMotion;
 			else cameraPos -= 0.5f * cameraSpeed * desiredMotion;
 		
-		}else if (keysPressed[SupportedKeys::A] && hasLanded && !collides) {
+		}else if (keysPressed[SupportedKeys::A] && (hasLanded && !collides || userMode == UserMode::EDITOR)) {
 			cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 		
 		} else if (keysPressed[SupportedKeys::D] && hasLanded && collides && !collidesRight) {
@@ -278,7 +279,7 @@ void Engine3D::move(float elapsedTime)
 			if (desiresRight) cameraPos -= 0.5f * cameraSpeed * desiredMotion;
 			else cameraPos += 0.5f * cameraSpeed * desiredMotion;
 
-		} else if (keysPressed[SupportedKeys::D] && hasLanded && !collides) {
+		} else if (keysPressed[SupportedKeys::D] && (hasLanded && !collides || userMode == UserMode::EDITOR)) {
 			cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 		}
 
@@ -321,6 +322,75 @@ void Engine3D::move(float elapsedTime)
 		cameraFront = glm::normalize(front);
 
 		cameraRight = glm::normalize(glm::cross(cameraFront, cameraUp));
+	}
+}
+
+
+void Engine3D::edit()
+{
+	if (userMode != UserMode::EDITOR) return;
+	if (eventController != nullptr)
+	{
+		bool* keysPressed = eventController->getKeysPressed();
+
+		// left mouse click places a new model
+		if (eventController->transitionedMouseLeftButton() && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] && !isTouched) {
+			cube cube0{0.2f};
+			std::vector<triangle> cube0Triangles;
+			cube0.toTriangles(cube0Triangles);
+			model mdl; mdl.texture = "box";
+
+			// pressing LCTRL enables collation of new model to the previous one along the direction the camera is facing
+			if (keysPressed[SupportedKeys::LEFT_CTRL])
+			{
+				glm::vec3 pos = glm::vec3(0, 0, 0);
+				if (std::abs(cameraFront.z) > std::abs(cameraFront.x) && std::abs(cameraFront.z) > std::abs(cameraFront.y))
+				{
+					if (std::abs(cameraFront.x) > std::abs(cameraFront.y))
+						pos.x = cameraFront.x / std::abs(cameraFront.x);
+					else
+						pos.y = cameraFront.y / std::abs(cameraFront.y);
+				}else if (std::abs(cameraFront.x) > std::abs(cameraFront.y) && std::abs(cameraFront.x) > std::abs(cameraFront.z))
+				{
+					if (std::abs(cameraFront.y) > std::abs(cameraFront.z))
+						pos.y = cameraFront.y / std::abs(cameraFront.y);
+					else
+						pos.z = cameraFront.z / std::abs(cameraFront.z);
+				}else if (std::abs(cameraFront.y) > std::abs(cameraFront.x) && std::abs(cameraFront.y) > std::abs(cameraFront.z))
+				{
+					if (std::abs(cameraFront.x) > std::abs(cameraFront.z))
+						pos.x = cameraFront.x / std::abs(cameraFront.x);
+					else
+						pos.z = cameraFront.z / std::abs(cameraFront.z);
+				}
+				
+				mdl.position = lastModelAddedPos + (cube0.size) * pos;
+
+			// standard placement in front of the camera, no collation
+			}else
+			{
+				mdl.position = cameraPos + (cube0.size + cfg.COLLIDING_DISTANCE) * cameraFront;
+			}
+
+			lastModelAddedPos = mdl.position;
+
+			mdl.modelMesh.tris = cube0Triangles;
+			mdl.modelMesh.shape = Shape::CUBE;
+			modelsToRaster.push_back(mdl);
+			isTouched = true;
+			std::cout << "added cube!" << cameraFront.x << cameraFront.y << cameraFront.z << std::endl;
+
+		// right mouse click deletes the model currently in focus
+		}else if (eventController->transitionedMouseRightButton() && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] && !isTouched) {
+
+			modelsToRaster.erase(std::remove_if(modelsToRaster.begin(), modelsToRaster.end(), 
+				[](model m) {
+					return m.inFocus == true && m.distance <= 1.0f;
+					}),
+				modelsToRaster.end());
+			lastModelAddedPos = modelsToRaster.back().position;
+			isTouched = true;
+		}
 	}
 }
 
