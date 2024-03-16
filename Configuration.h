@@ -4,6 +4,12 @@
 #include <cmath>
 #include <string>
 
+typedef enum UserMode
+{
+	PLAYER,
+	EDITOR
+} UserMode;
+
 typedef struct Configuration
 {
 	const std::string NAME = "Artifice";
@@ -13,6 +19,8 @@ typedef struct Configuration
 	const std::string ASSETS_PATH = "assets";
 
 	const std::string LEVELS_PATH = "levels";
+
+	const UserMode USER_MODE = UserMode::EDITOR;
 
 	const unsigned int SCREEN_WIDTH = 800;
 
