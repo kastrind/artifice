@@ -82,6 +82,7 @@
 		"cstring": "cpp",
 		"map": "cpp",
 		"codecvt": "cpp",
-		"iomanip": "cpp"
+		"iomanip": "cpp",
+		"set": "cpp"
 	}
 }

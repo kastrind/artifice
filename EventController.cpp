@@ -36,6 +36,8 @@ void EventController::clearMouseMotionState ()
 	keysPressed[SupportedKeys::MOUSE_DOWN] = false;
 	keysPressed[SupportedKeys::MOUSE_LEFT] = false;
 	keysPressed[SupportedKeys::MOUSE_RIGHT] = false;
+	keysPressed[SupportedKeys::MOUSE_WHEEL_UP] = false;
+	keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] = false;
 	prevMouseLeftBtnPressed   = keysPressed[SupportedKeys::MOUSE_LEFT_CLICK];
 	prevMouseMiddleBtnPressed = keysPressed[SupportedKeys::MOUSE_MIDDLE_CLICK];
 	prevMouseRightBtnPressed  = keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK];
@@ -46,6 +48,24 @@ void EventController::clearMouseMotionState ()
 void EventController::processEvent(SDL_Event* e)
 {
 	unsigned short mouseBtnTest = SDL_BUTTON(SDL_GetMouseState(NULL, NULL));
+
+	//User scrolls up or down
+	if (e->type == SDL_MOUSEWHEEL)
+	{
+		if (e->wheel.y > 0)
+		{
+			keysPressed[SupportedKeys::MOUSE_WHEEL_UP] = true;
+		}
+		else if (e->wheel.y < 0)
+		{
+			keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] = true;
+		}
+	}
+	else
+	{
+		keysPressed[SupportedKeys::MOUSE_WHEEL_UP] = false;
+		keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] = false;
+	}
 
 	//User pressed mouse button
 	if (e->type == SDL_MOUSEBUTTONDOWN)

@@ -16,6 +16,7 @@
 #include "EventController.h"
 
 #include <vector>
+#include <set>
 #include <list>
 #include <thread>
 #include <atomic>
@@ -71,6 +72,8 @@ class Engine3D
 
 		std::atomic<bool> isTouched;
 
+		std::atomic<bool> updateVerticesFlag;
+
 		float elapsedTime;
 
 		std::mutex mtx;
@@ -111,7 +114,14 @@ class Engine3D
 
 		float pitch = 0;
 
-		glm::vec3 lastModelAddedPos;
+		struct ModelDistanceComparator {
+			bool operator()(const model* a, const model* b) const { return a->distance < b->distance; };
+		};
+		std::set<model*, ModelDistanceComparator> modelsInFocus;
+
+		//editor user mode specific
+		unsigned int collationHeight = 1;
+
 
 		//camera
 		glm::vec3 cameraPos;

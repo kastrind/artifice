@@ -66,7 +66,7 @@ int main( int argc, char* args[] )
 					SDL_SetRelativeMouseMode(SDL_TRUE);
 				}
 				//user presses or releases a key
-				else if( e.type == SDL_KEYDOWN || e.type == SDL_KEYUP || e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP )
+				else if( e.type == SDL_KEYDOWN || e.type == SDL_KEYUP || e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP  || e.type == SDL_MOUSEWHEEL)
 				{
 					eventController->processEvent(&e);
 				}
@@ -75,16 +75,16 @@ int main( int argc, char* args[] )
 					for (auto &model : artificeEngine->modelsToRaster) {
 						std::cout << "removing triangle!" << std::endl;
 						if (model.modelMesh.tris.size()) model.modelMesh.tris.pop_back();
-						artificeEngine->isTouched = true;
+						artificeEngine->updateVerticesFlag = true;
 					}
 				}
 			}
 
-			//just a temporary proof-of-concept to update vertices when world is modified
-			if (artificeEngine->isTouched)
+			// update vertices when world is modified
+			if (artificeEngine->updateVerticesFlag)
 			{
 				artificeEngine->updateVertices(gVBO, gIBO, gVAO, gCubeVBO, gCubeIBO, gCubeVAO);
-				artificeEngine->isTouched = false;
+				artificeEngine->updateVerticesFlag = false;
 			}
 
 			//render
@@ -92,6 +92,8 @@ int main( int argc, char* args[] )
 
 			//update screen
 			SDL_GL_SwapWindow( gWindow );
+
+			artificeEngine->isTouched = false;
 		}
 
 		//disable text input
