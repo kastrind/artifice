@@ -38,6 +38,8 @@ typedef struct Configuration
 
 	const float GRAVITATIONAL_PULL = 0.1f;
 
+	const float CAMERA_SPEED_FACTOR = 1.5f;
+
 	//precomputed constants follow
 
 	const float FOV_RADIANS = (float) FOV * M_PI / 180;

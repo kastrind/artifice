@@ -3,11 +3,16 @@
 Engine3D::Engine3D(int width, int height,
 				   float near, float far,
 				   float fov, float dof,
-				   float collidingDistance, float gravitationalPull, UserMode userMode, EventController* ec)
+				   float collidingDistance,
+				   float gravitationalPull,
+				   float cameraSpeedFactor,
+				   UserMode userMode, EventController* ec)
 				   : width(width), height(height),
 				   near(near), far(far),
 				   fov(fov), dof(dof),
-				   collidingDistance(collidingDistance), gravitationalPull(gravitationalPull),
+				   collidingDistance(collidingDistance),
+				   gravitationalPull(gravitationalPull),
+				   cameraSpeedFactor(cameraSpeedFactor),
 				   userMode(userMode), eventController(ec)
 {
 	isActive = false;
@@ -29,6 +34,7 @@ Engine3D::Engine3D(int width, int height,
 	if (userMode == UserMode::EDITOR)
 	{
 		this->gravitationalPull = 0.0f;
+		originalCollidingDistance = this->collidingDistance;
 		this->collidingDistance = -0.1f;
 	}
 }
@@ -105,11 +111,15 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	canSlide = false;
 	hasLanded = false;
 
+	modelsOutOfFocus.clear();
 	modelsInFocus.clear();
 
 	projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
 	viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 	mtx.unlock();
+
+	switchedFocus = false;
+	bool checkAgainForSwitchedFocus = true;
 
 	//for each model to raster
 	for (auto &model : modelsToRaster)
@@ -119,7 +129,9 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
 		modelMatrix = glm::translate(modelMatrix, model.position);
 		model.modelMatrix = modelMatrix;
+		bool oldFocus = model.inFocus;
 		model.inFocus = false;
+		bool checkAgainForFocus = true;
 		mtx.unlock();
 
 		modelDistance = dof;
@@ -166,11 +178,19 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			mtx.unlock();
 
 			//determines whether looking at the current model
-			model.inFocus = !model.inFocus ?  tri.contains(glm::vec4(center, 1.0f)) : true;
-			if (model.inFocus) modelsInFocus.insert(&model);
-			// if (model.inFocus) {
-			// 	std::cout << "in focus!" << std::endl;
-			// }
+			if (checkAgainForFocus && tri.contains(glm::vec4(center, 1.0f)))
+			{
+				model.inFocus = true;
+				modelsInFocus.insert(&model);
+				checkAgainForFocus = false;
+			}
+
+		}
+
+		if (!model.inFocus && oldFocus) { modelsOutOfFocus.insert(&model); }
+		switchedFocus = (!model.inFocus && oldFocus || model.inFocus && !oldFocus);
+		if (checkAgainForSwitchedFocus && switchedFocus) {
+			checkAgainForSwitchedFocus = false;
 		}
 
 		//marks out-of-range models
@@ -229,7 +249,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 void Engine3D::move(float elapsedTime)
 {
-	float cameraSpeed = static_cast<float>(1.5 * elapsedTime);
+	float cameraSpeed = static_cast<float>(cameraSpeedFactor * elapsedTime);
 
 	cameraPos += !hasLanded ? gravitationalPull * cameraSpeed * glm::vec3(0, -1, 0) : glm::vec3(0, 0, 0);
 
@@ -241,6 +261,7 @@ void Engine3D::move(float elapsedTime)
 		float multiplierX = (float)mouseDistanceX * 5;
 		float multiplierY = (float)mouseDistanceY * 5;
 
+		//WSAD camera movement here
 		if (keysPressed[SupportedKeys::W] && hasLanded && collides && canSlide) {
 			desiredMotion.y = 0;
 			cameraPos += 0.5f * cameraSpeed * desiredMotion;
@@ -263,7 +284,6 @@ void Engine3D::move(float elapsedTime)
 		} else if (keysPressed[SupportedKeys::S] && (!hasLanded || userMode == UserMode::EDITOR)) {
 			cameraPos -= cameraSpeed * cameraFront;
 		}
-
 		if (keysPressed[SupportedKeys::A] && hasLanded && collides && !collidesLeft) {
 			desiredMotion.y = 0;
 			bool desiresRight = glm::dot(cameraRight, desiredMotion) < 0;
@@ -283,24 +303,32 @@ void Engine3D::move(float elapsedTime)
 			cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 		}
 
+		//if in editor mode, arrows control track camera movement to the sides, above or below camera position
+		if (userMode == UserMode::EDITOR)
+		{
+			if (keysPressed[SupportedKeys::LEFT_ARROW]) {
+				cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+			} else if (keysPressed[SupportedKeys::RIGHT_ARROW]) {
+				cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+			}
+			if (keysPressed[SupportedKeys::UP_ARROW]) {
+				cameraPos -= glm::normalize(glm::cross(cameraFront, cameraRight)) * cameraSpeed;
+			} else if (keysPressed[SupportedKeys::DOWN_ARROW]) {
+				cameraPos += glm::normalize(glm::cross(cameraFront, cameraRight)) * cameraSpeed;
+			}
+		}
+
+		//mouse motion
 		if (keysPressed[SupportedKeys::MOUSE_LEFT]) {
 			yaw -= multiplierX * elapsedTime;
-		} else if (keysPressed[SupportedKeys::LEFT_ARROW]) {
-			yaw -= cameraSpeed * elapsedTime * 5;
 		} else if (keysPressed[SupportedKeys::MOUSE_RIGHT]) {
 			yaw += multiplierX * elapsedTime;
-		} else if (keysPressed[SupportedKeys::RIGHT_ARROW]) {
-			yaw += cameraSpeed * elapsedTime * 5;
 		}
 
 		if (keysPressed[SupportedKeys::MOUSE_UP]) {
 			pitch += multiplierY * elapsedTime;
-		} else if (keysPressed[SupportedKeys::UP_ARROW]) {
-			pitch += cameraSpeed * elapsedTime * 5;
 		} else if (keysPressed[SupportedKeys::MOUSE_DOWN]) {
 			pitch -= multiplierY * elapsedTime;
-		} else if (keysPressed[SupportedKeys::DOWN_ARROW]) {
-			pitch -= cameraSpeed * elapsedTime * 5;
 		}
 
 		//make sure that when pitch is out of bounds, screen doesn't get flipped
@@ -332,6 +360,7 @@ void Engine3D::edit()
 
 	if (eventController != nullptr)
 	{
+
 		bool* keysPressed = eventController->getKeysPressed();
 
 		// pressing LCTRL + mouse wheel up/down increases/decreases the collation height
@@ -344,14 +373,31 @@ void Engine3D::edit()
 			isTouched = true;
 		}
 
-		// left mouse click places a new model
 		if (eventController->transitionedMouseLeftButton() && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] && !updateVerticesFlag) {
-
 			model mdl; mdl.texture = "box";
-			cube cube0{0.2f};
+			editingWidth = 0.2f; editingHeight = 0.2f; editingDepth = 0.2f;
+			cube cube0{editingWidth};
 			cube0.toTriangles(mdl.modelMesh.tris);
 			mdl.modelMesh.shape = Shape::CUBE;
-			
+			mdl.position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
+			mdl.isEditing = true;
+			modelsToRaster.push_back(mdl);
+			editingModel = &modelsToRaster.back();
+			updateVerticesFlag = true;
+			cameraSpeedFactor /= 100;
+		}
+		
+		if (editingModel != nullptr) {
+			editingModel->position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
+		}
+
+		// releasing left mouse click places a new model
+		if (eventController->transitionedMouseLeftButton() && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]==false && !updateVerticesFlag) {
+
+			model mdl = modelsToRaster.back();
+			modelsToRaster.pop_back();
+			editingModel = nullptr;
+			cameraSpeedFactor *= 100;
 			bool isValidPlacement = false;
 
 			// pressing LCTRL enables collation of new model to the previous one along the direction the camera is facing
@@ -379,13 +425,13 @@ void Engine3D::edit()
 				}
 				
 				auto modelInFocus = *(modelsInFocus.begin());
-				mdl.position = modelInFocus->position + (cube0.size) * pos;
+				mdl.position = modelInFocus->position + editingDepth * pos;
 				isValidPlacement = true;
 
 			// standard placement in front of the camera, no collation
 			}else if (!keysPressed[SupportedKeys::LEFT_CTRL])
 			{
-				mdl.position = cameraPos + (cube0.size + cfg.COLLIDING_DISTANCE) * cameraFront;
+				mdl.position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
 				isValidPlacement = true;
 			}
 
@@ -395,7 +441,7 @@ void Engine3D::edit()
 
 				for (unsigned int i = 1; i < collationHeight; i++) {
 					model m = mdl;
-					m.position.y += i * cube0.size;
+					m.position.y += i * editingHeight;
 					modelsToRaster.push_back(m);
 				}
 				updateVerticesFlag = true;
@@ -410,6 +456,7 @@ void Engine3D::edit()
 			modelsToRaster.erase(std::remove_if(modelsToRaster.begin(), modelsToRaster.end(), [](model m) { return m.removeFlag == true; }), modelsToRaster.end());
 			updateVerticesFlag = true;
 		}
+
 	}
 }
 
@@ -500,10 +547,10 @@ void Engine3D::updateVertices(GLuint* gVBO, GLuint* gIBO, GLuint* gVAO, GLuint* 
 			}
 		}
 
-		std::cout << "vertex data size: " << vertexData.size() << std::endl;
-		std::cout << "index data size: " << indexData.size() << std::endl;
-		std::cout << "cube vertex data size: " << cubeVertexData.size() << std::endl;
-		std::cout << "cube index data size: " << cubeIndexData.size() << std::endl;
+		// std::cout << "vertex data size: " << vertexData.size() << std::endl;
+		// std::cout << "index data size: " << indexData.size() << std::endl;
+		// std::cout << "cube vertex data size: " << cubeVertexData.size() << std::endl;
+		// std::cout << "cube index data size: " << cubeIndexData.size() << std::endl;
 
 		//update VBO
 		glBindVertexArray(*gVAO);
@@ -548,6 +595,8 @@ void Engine3D::updateVertices(GLuint* gVBO, GLuint* gIBO, GLuint* gVAO, GLuint* 
 		//update cubeIBO
 		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, *gCubeIBO );
 		glBufferData( GL_ELEMENT_ARRAY_BUFFER, cubeIndexData.size() * sizeof(GLuint), cubeIndexData.data(), GL_STATIC_DRAW );
+
+		std::cout << "updated vertices" << std::endl;
 }
 
 void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string, GLuint>* textureIdsMap, ArtificeShaderProgram* cubeMapShader, std::map<std::string, GLuint>* cubemapIdsMap, GLuint* gVAO, GLuint* gCubeVAO)

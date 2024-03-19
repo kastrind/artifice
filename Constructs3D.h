@@ -332,6 +332,7 @@ struct model {
 	float distance;
 	bool isInDOF = true;
 	bool removeFlag = false;
+	bool isEditing = false;
 	mesh modelMesh;
 	glm::vec3 position;
 	glm::mat4 modelMatrix;

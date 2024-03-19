@@ -83,7 +83,9 @@ int main( int argc, char* args[] )
 			// update vertices when world is modified
 			if (artificeEngine->updateVerticesFlag)
 			{
+				artificeEngine->mtx.lock();
 				artificeEngine->updateVertices(gVBO, gIBO, gVAO, gCubeVBO, gCubeIBO, gCubeVAO);
+				artificeEngine->mtx.unlock();
 				artificeEngine->updateVerticesFlag = false;
 			}
 

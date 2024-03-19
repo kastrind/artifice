@@ -35,7 +35,9 @@ class Engine3D
 		Engine3D(int width = 320, int height = 240,
 				float near = 0.1f, float far = 1000.0f,
 				float fov = 90.0f, float dof = 20.0f,
-				float collidingDistance = 0.2f, float gravitationalPull = 0.1f,
+				float collidingDistance = 0.2f,
+				float gravitationalPull = 0.1f,
+				float cameraSpeedFactor = 1.5f,
 				UserMode userMode = UserMode::PLAYER,
 				EventController* eventController = nullptr);
 
@@ -98,7 +100,7 @@ class Engine3D
 		bool collidesRight = false;
 		bool collidesLeft = false;
 
-		float gravitationalPull;
+		float gravitationalPull;		
 
 		UserMode userMode;
 
@@ -118,10 +120,16 @@ class Engine3D
 			bool operator()(const model* a, const model* b) const { return a->distance < b->distance; };
 		};
 		std::set<model*, ModelDistanceComparator> modelsInFocus;
+		std::set<model*, ModelDistanceComparator> modelsOutOfFocus;
+		bool switchedFocus;
 
 		//editor user mode specific
+		float originalCollidingDistance;
 		unsigned int collationHeight = 1;
-
+		float editingWidth = 0;
+		float editingHeight = 0;
+		float editingDepth = 0;
+		model* editingModel = nullptr;
 
 		//camera
 		glm::vec3 cameraPos;
@@ -131,6 +139,8 @@ class Engine3D
 		glm::vec3 cameraUp;
 
 		glm::vec3 cameraRight;
+
+		float cameraSpeedFactor;
 
 		glm::vec3 lightPos;
 
