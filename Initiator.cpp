@@ -216,7 +216,9 @@ bool Initiator::initGL()
 		glGenBuffers( 1, &gCubeIBO );
 
 		//update buffers with the new vertices
-		artificeEngine->updateVertices(&gVBO, &gIBO, &gVAO, &gCubeVBO, &gCubeIBO, &gCubeVAO);
+		//artificeEngine->updateVertices(&gVBO, &gIBO, &gVAO, &gCubeVBO, &gCubeIBO, &gCubeVAO);
+		vertexUpdaterThread = artificeEngine->startVertexUpdater(&gVBO, &gIBO, &gVAO, &gCubeVBO, &gCubeIBO, &gCubeVAO);
+		artificeEngine->updateVerticesFlag = true;
 
 		//initialize clear color
 		glClearColor( 0.f, 0.f, 0.f, 1.f );
@@ -339,6 +341,7 @@ void Initiator::close()
 {
 	//unbind program - deactivate shader
 	cubeMapShader.unbind();
+	textureShader.unbind();
 
 	//deallocate programs
 	glDeleteProgram(gCubeMapProgramID);
@@ -349,6 +352,7 @@ void Initiator::close()
 	gWindow = NULL;
 
 	engineThread.join();
+	vertexUpdaterThread.join();
 
 	//quit SDL subsystems
 	SDL_Quit();

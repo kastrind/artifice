@@ -71,23 +71,21 @@ int main( int argc, char* args[] )
 					eventController->processEvent(&e);
 				}
 				//just a temporary proof-of-concept to modify world on user input
-				if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_0) {
-					for (auto &model : artificeEngine->modelsToRaster) {
-						std::cout << "removing triangle!" << std::endl;
-						if (model.modelMesh.tris.size()) model.modelMesh.tris.pop_back();
-						artificeEngine->updateVerticesFlag = true;
-					}
-				}
+				// if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_0) {
+				// 	for (auto &model : artificeEngine->modelsToRaster) {
+				// 		std::cout << "removing triangle!" << std::endl;
+				// 		if (model.modelMesh.tris.size()) model.modelMesh.tris.pop_back();
+				// 		artificeEngine->updateVerticesFlag = true;
+				// 	}
+				// }
 			}
 
 			// update vertices when world is modified
-			if (artificeEngine->updateVerticesFlag)
-			{
-				artificeEngine->mtx.lock();
-				artificeEngine->updateVertices(gVBO, gIBO, gVAO, gCubeVBO, gCubeIBO, gCubeVAO);
-				artificeEngine->mtx.unlock();
-				artificeEngine->updateVerticesFlag = false;
-			}
+			// if (artificeEngine->updateVerticesFlag)
+			// {
+			// 	artificeEngine->updateVertices(gVBO, gIBO, gVAO, gCubeVBO, gCubeIBO, gCubeVAO);
+			// 	artificeEngine->updateVerticesFlag = false;
+			// }
 
 			//render
 			artificeEngine->render(textureShader, textureIdsMap, cubeMapShader, cubemapIdsMap, gVAO, gCubeVAO);

@@ -15,11 +15,15 @@ Engine3D::Engine3D(int width, int height,
 				   cameraSpeedFactor(cameraSpeedFactor),
 				   userMode(userMode), eventController(ec)
 {
+	isReady = false;
+
 	isActive = false;
 
 	isTouched = false;
 
 	updateVerticesFlag = false;
+
+	vertexUpdaterReady = false;
 
 	projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
 
@@ -47,6 +51,14 @@ std::thread Engine3D::startEngine()
 	return t;
 }
 
+std::thread Engine3D::startVertexUpdater(GLuint* gVBO, GLuint* gIBO, GLuint* gVAO, GLuint* gCubeVBO, GLuint* gCubeIBO, GLuint* gCubeVAO)
+{
+	//start thread
+	std::thread t = std::thread(&Engine3D::updateVertices, this, gVBO, gIBO, gVAO, gCubeVBO, gCubeIBO, gCubeVAO);
+
+	return t;
+}
+
 void Engine3D::engineThread()
 {
 	//create user resources as part of this thread
@@ -54,6 +66,8 @@ void Engine3D::engineThread()
 		isActive = false;
 	else
 		isActive = true;
+
+	isReady = true;
 
 	auto tp1 = std::chrono::system_clock::now();
 	auto tp2 = std::chrono::system_clock::now();
@@ -100,7 +114,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	glm::vec4 collidingTriPts[3];
 
 	move(elapsedTime);
-	edit();
+
+	if (modelsInFocus.size()) { prevModelInFocus = *(modelsInFocus.begin()); }
 
 	collides = false;
 	collidesFront = false;
@@ -111,15 +126,11 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	canSlide = false;
 	hasLanded = false;
 
-	modelsOutOfFocus.clear();
 	modelsInFocus.clear();
 
 	projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
 	viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 	mtx.unlock();
-
-	switchedFocus = false;
-	bool checkAgainForSwitchedFocus = true;
 
 	//for each model to raster
 	for (auto &model : modelsToRaster)
@@ -129,9 +140,10 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
 		modelMatrix = glm::translate(modelMatrix, model.position);
 		model.modelMatrix = modelMatrix;
-		bool oldFocus = model.inFocus;
+
 		model.inFocus = false;
 		bool checkAgainForFocus = true;
+
 		mtx.unlock();
 
 		modelDistance = dof;
@@ -187,12 +199,6 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 		}
 
-		if (!model.inFocus && oldFocus) { modelsOutOfFocus.insert(&model); }
-		switchedFocus = (!model.inFocus && oldFocus || model.inFocus && !oldFocus);
-		if (checkAgainForSwitchedFocus && switchedFocus) {
-			checkAgainForSwitchedFocus = false;
-		}
-
 		//marks out-of-range models
 		model.isInDOF = modelDistance < dof;
 
@@ -241,6 +247,9 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		}
 	}
 	lightPos = cameraFront;
+
+	edit();
+
 	// std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
 	return true;
 }
@@ -373,7 +382,7 @@ void Engine3D::edit()
 			isTouched = true;
 		}
 
-		if (eventController->transitionedMouseLeftButton() && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] && !updateVerticesFlag) {
+		if (editingModel == nullptr && eventController->transitionedMouseLeftButton() && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] && !updateVerticesFlag) {
 			model mdl; mdl.texture = "box";
 			editingWidth = 0.2f; editingHeight = 0.2f; editingDepth = 0.2f;
 			cube cube0{editingWidth};
@@ -392,10 +401,11 @@ void Engine3D::edit()
 		}
 
 		// releasing left mouse click places a new model
-		if (eventController->transitionedMouseLeftButton() && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]==false && !updateVerticesFlag) {
+		if (editingModel != nullptr && eventController->transitionedMouseLeftButton() && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] && !updateVerticesFlag) {
 
 			model mdl = modelsToRaster.back();
 			modelsToRaster.pop_back();
+			updateVerticesFlag = true;
 			editingModel = nullptr;
 			cameraSpeedFactor *= 100;
 			bool isValidPlacement = false;
@@ -457,6 +467,27 @@ void Engine3D::edit()
 			updateVerticesFlag = true;
 		}
 
+		/*
+		if (modelsInFocus.size())
+		{
+			if (prevModelInFocus != *(modelsInFocus.begin()))
+			{
+				auto modelInFocus = *(modelsInFocus.begin());
+				for (triangle& tri : modelInFocus->modelMesh.tris) 
+				{
+					tri.R = 0; tri.G = 192; tri.B = 0;
+				}
+				if (prevModelInFocus != nullptr)
+				{
+					for (triangle& tri : prevModelInFocus->modelMesh.tris)
+					{
+						tri.R = 255; tri.G = 255; tri.B = 255;
+					}
+				}
+				//updateVerticesFlag = true;
+			}
+		}*/
+
 	}
 }
 
@@ -500,6 +531,12 @@ glm::mat4 Engine3D::getViewMatrix() const
 
 void Engine3D::updateVertices(GLuint* gVBO, GLuint* gIBO, GLuint* gVAO, GLuint* gCubeVBO, GLuint* gCubeIBO, GLuint* gCubeVAO)
 {
+	while(!isReady) {}
+
+	while(isActive)
+	{
+		if (!updateVerticesFlag) continue;
+
 		std::vector<GLfloat> vertexData;
 		std::vector<GLuint> indexData;
 		GLuint indexCounter = 0;
@@ -597,10 +634,17 @@ void Engine3D::updateVertices(GLuint* gVBO, GLuint* gIBO, GLuint* gVAO, GLuint* 
 		glBufferData( GL_ELEMENT_ARRAY_BUFFER, cubeIndexData.size() * sizeof(GLuint), cubeIndexData.data(), GL_STATIC_DRAW );
 
 		std::cout << "updated vertices" << std::endl;
+
+		updateVerticesFlag = false;
+		vertexUpdaterReady = true;
+
+	}
 }
 
 void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string, GLuint>* textureIdsMap, ArtificeShaderProgram* cubeMapShader, std::map<std::string, GLuint>* cubemapIdsMap, GLuint* gVAO, GLuint* gCubeVAO)
 {
+	if (!isActive || !isReady || !vertexUpdaterReady) return;
+
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	//clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -624,8 +668,11 @@ void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string
 	unsigned int cubeCnt = 0;
 	unsigned int prevCubeTrisSize = 0;
 	unsigned int cnt = 0;
-	for (auto &model : modelsToRaster)
-	{	
+	mtx.lock();
+	std::vector<model> modelsToRaster2 = modelsToRaster;
+	mtx.unlock();
+	for (auto &model : modelsToRaster2)
+	{
 		if (model.modelMesh.shape == Shape::CUBE)
 		{
 			//ignore out-of-range models
@@ -651,7 +698,7 @@ void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, (*textureIdsMap)[model.texture]);
 			textureShader->setMat4("model", model.modelMatrix);
-			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(( cnt ) * sizeof(float)));
+			//glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(( cnt ) * sizeof(float)));
 			cnt += model.modelMesh.tris.size() * 3;
 		}
 		glBindVertexArray(0);

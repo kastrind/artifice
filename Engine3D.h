@@ -43,6 +43,8 @@ class Engine3D
 
 		std::thread startEngine();
 
+		std::thread startVertexUpdater(GLuint* gVBO, GLuint* gIBO, GLuint* gVAO, GLuint* gCubeVBO, GLuint* gCubeIBO, GLuint* gCubeVAO);
+
 		bool onUserCreate();
 
 		bool onUserUpdate(float elapsedTime);
@@ -70,11 +72,18 @@ class Engine3D
 					GLuint* gVAO,
 					GLuint* gCubeVAO);
 
+		GLuint gVAOb = 0;
+		GLuint gCubeVAOb = 0;
+
+		std::atomic<bool> isReady;
+
 		std::atomic<bool> isActive;
 
 		std::atomic<bool> isTouched;
 
 		std::atomic<bool> updateVerticesFlag;
+
+		std::atomic<bool> vertexUpdaterReady;
 
 		float elapsedTime;
 
@@ -120,8 +129,7 @@ class Engine3D
 			bool operator()(const model* a, const model* b) const { return a->distance < b->distance; };
 		};
 		std::set<model*, ModelDistanceComparator> modelsInFocus;
-		std::set<model*, ModelDistanceComparator> modelsOutOfFocus;
-		bool switchedFocus;
+		model* prevModelInFocus = nullptr;
 
 		//editor user mode specific
 		float originalCollidingDistance;
