@@ -217,7 +217,13 @@ bool Initiator::initGL()
 
 		//update buffers with the new vertices
 		//artificeEngine->updateVertices(&gVBO, &gIBO, &gVAO, &gCubeVBO, &gCubeIBO, &gCubeVAO);
-		vertexUpdaterThread = artificeEngine->startVertexUpdater(&gVBO, &gIBO, &gVAO, &gCubeVBO, &gCubeIBO, &gCubeVAO);
+		artificeEngine->gVBO = gVBO;
+		artificeEngine->gIBO = gIBO;
+		artificeEngine->gVAO = gVAO;
+		artificeEngine->gCubeVBO = gCubeVBO;
+		artificeEngine->gCubeIBO = gCubeIBO;
+		artificeEngine->gCubeVAO = gCubeVAO;
+		vertexUpdaterThread = artificeEngine->startVertexUpdater();
 		artificeEngine->updateVerticesFlag = true;
 
 		//initialize clear color

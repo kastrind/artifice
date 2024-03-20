@@ -88,7 +88,9 @@ int main( int argc, char* args[] )
 			// }
 
 			//render
-			artificeEngine->render(textureShader, textureIdsMap, cubeMapShader, cubemapIdsMap, gVAO, gCubeVAO);
+			if (!artificeEngine->updateVerticesFlag) {
+				artificeEngine->render(textureShader, textureIdsMap, cubeMapShader, cubemapIdsMap);
+			}
 
 			//update screen
 			SDL_GL_SwapWindow( gWindow );

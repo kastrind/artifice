@@ -43,7 +43,7 @@ class Engine3D
 
 		std::thread startEngine();
 
-		std::thread startVertexUpdater(GLuint* gVBO, GLuint* gIBO, GLuint* gVAO, GLuint* gCubeVBO, GLuint* gCubeIBO, GLuint* gCubeVAO);
+		std::thread startVertexUpdater();
 
 		bool onUserCreate();
 
@@ -63,17 +63,19 @@ class Engine3D
 
 		glm::mat4 getViewMatrix() const;
 
-		void updateVertices(GLuint* gVBO, GLuint* gIBO, GLuint* gVAO, GLuint* gCubeVBO, GLuint* gCubeIBO, GLuint* gCubeVAO);
+		void updateVertices();
 
 		void render(ArtificeShaderProgram* textureShader,
 					std::map<std::string, GLuint>* textureIdsMap,
 					ArtificeShaderProgram* cubeMapShader,
-					std::map<std::string, GLuint>* cubemapIdsMap,
-					GLuint* gVAO,
-					GLuint* gCubeVAO);
+					std::map<std::string, GLuint>* cubemapIdsMap);
 
-		GLuint gVAOb = 0;
-		GLuint gCubeVAOb = 0;
+		GLuint gVBO = 0;
+		GLuint gIBO = 0;
+		GLuint gVAO = 0;
+		GLuint gCubeVBO = 0;
+		GLuint gCubeIBO = 0;
+		GLuint gCubeVAO = 0;
 
 		std::atomic<bool> isReady;
 
@@ -84,6 +86,8 @@ class Engine3D
 		std::atomic<bool> updateVerticesFlag;
 
 		std::atomic<bool> vertexUpdaterReady;
+
+		std::atomic<bool> isRendering;
 
 		float elapsedTime;
 

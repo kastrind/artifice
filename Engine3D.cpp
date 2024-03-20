@@ -25,6 +25,8 @@ Engine3D::Engine3D(int width, int height,
 
 	vertexUpdaterReady = false;
 
+	isRendering = false;
+
 	projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
 
 	//camera
@@ -51,10 +53,10 @@ std::thread Engine3D::startEngine()
 	return t;
 }
 
-std::thread Engine3D::startVertexUpdater(GLuint* gVBO, GLuint* gIBO, GLuint* gVAO, GLuint* gCubeVBO, GLuint* gCubeIBO, GLuint* gCubeVAO)
+std::thread Engine3D::startVertexUpdater()
 {
 	//start thread
-	std::thread t = std::thread(&Engine3D::updateVertices, this, gVBO, gIBO, gVAO, gCubeVBO, gCubeIBO, gCubeVAO);
+	std::thread t = std::thread(&Engine3D::updateVertices, this);
 
 	return t;
 }
@@ -529,9 +531,9 @@ glm::mat4 Engine3D::getViewMatrix() const
 	return viewMatrix;
 }
 
-void Engine3D::updateVertices(GLuint* gVBO, GLuint* gIBO, GLuint* gVAO, GLuint* gCubeVBO, GLuint* gCubeIBO, GLuint* gCubeVAO)
+void Engine3D::updateVertices()
 {
-	while(!isReady) {}
+	while(!isReady || isRendering) {}
 
 	while(isActive)
 	{
@@ -590,8 +592,8 @@ void Engine3D::updateVertices(GLuint* gVBO, GLuint* gIBO, GLuint* gVAO, GLuint* 
 		// std::cout << "cube index data size: " << cubeIndexData.size() << std::endl;
 
 		//update VBO
-		glBindVertexArray(*gVAO);
-		glBindBuffer( GL_ARRAY_BUFFER, *gVBO );
+		glBindVertexArray(gVAO);
+		glBindBuffer( GL_ARRAY_BUFFER, gVBO );
 		glBufferData( GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), vertexData.data(), GL_STATIC_DRAW );
 
 		//position attribute
@@ -608,12 +610,12 @@ void Engine3D::updateVertices(GLuint* gVBO, GLuint* gIBO, GLuint* gVAO, GLuint* 
 		glEnableVertexAttribArray(3);
 
 		//update IBO
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, *gIBO );
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gIBO );
 		glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), indexData.data(), GL_STATIC_DRAW );
 
 		//update cubeVBO
-		glBindVertexArray(*gCubeVAO);
-		glBindBuffer( GL_ARRAY_BUFFER, *gCubeVBO );
+		glBindVertexArray(gCubeVAO);
+		glBindBuffer( GL_ARRAY_BUFFER, gCubeVBO );
 		glBufferData( GL_ARRAY_BUFFER, cubeVertexData.size() * sizeof(GLfloat), cubeVertexData.data(), GL_STATIC_DRAW );
 
 		//position attribute
@@ -630,7 +632,7 @@ void Engine3D::updateVertices(GLuint* gVBO, GLuint* gIBO, GLuint* gVAO, GLuint* 
 		glEnableVertexAttribArray(3);
 
 		//update cubeIBO
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, *gCubeIBO );
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gCubeIBO );
 		glBufferData( GL_ELEMENT_ARRAY_BUFFER, cubeIndexData.size() * sizeof(GLuint), cubeIndexData.data(), GL_STATIC_DRAW );
 
 		std::cout << "updated vertices" << std::endl;
@@ -641,9 +643,11 @@ void Engine3D::updateVertices(GLuint* gVBO, GLuint* gIBO, GLuint* gVAO, GLuint* 
 	}
 }
 
-void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string, GLuint>* textureIdsMap, ArtificeShaderProgram* cubeMapShader, std::map<std::string, GLuint>* cubemapIdsMap, GLuint* gVAO, GLuint* gCubeVAO)
+void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string, GLuint>* textureIdsMap, ArtificeShaderProgram* cubeMapShader, std::map<std::string, GLuint>* cubemapIdsMap)
 {
 	if (!isActive || !isReady || !vertexUpdaterReady) return;
+
+	isRendering = true;
 
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	//clear color buffer
@@ -668,11 +672,10 @@ void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string
 	unsigned int cubeCnt = 0;
 	unsigned int prevCubeTrisSize = 0;
 	unsigned int cnt = 0;
-	mtx.lock();
 	std::vector<model> modelsToRaster2 = modelsToRaster;
-	mtx.unlock();
 	for (auto &model : modelsToRaster2)
 	{
+
 		if (model.modelMesh.shape == Shape::CUBE)
 		{
 			//ignore out-of-range models
@@ -680,7 +683,7 @@ void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string
 
 			cubeMapShader->bind();
 			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIBO);
-			glBindVertexArray(*gCubeVAO);
+			glBindVertexArray(gCubeVAO);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_CUBE_MAP, (*cubemapIdsMap)[model.texture]);
 			cubeMapShader->setMat4("model", model.modelMatrix);
@@ -694,14 +697,15 @@ void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string
 
 			textureShader->bind();
 			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
-			glBindVertexArray(*gVAO);
+			glBindVertexArray(gVAO);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, (*textureIdsMap)[model.texture]);
 			textureShader->setMat4("model", model.modelMatrix);
-			//glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(( cnt ) * sizeof(float)));
+			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(( cnt ) * sizeof(float)));
 			cnt += model.modelMesh.tris.size() * 3;
 		}
 		glBindVertexArray(0);
 	}
+	isRendering = false;
 }
 
