@@ -15,17 +15,11 @@ Engine3D::Engine3D(int width, int height,
 				   cameraSpeedFactor(cameraSpeedFactor),
 				   userMode(userMode), eventController(ec)
 {
-	isReady = false;
-
 	isActive = false;
 
 	isTouched = false;
 
 	updateVerticesFlag = false;
-
-	vertexUpdaterReady = false;
-
-	isRendering = false;
 
 	projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
 
@@ -53,12 +47,22 @@ std::thread Engine3D::startEngine()
 	return t;
 }
 
-std::thread Engine3D::startVertexUpdater()
+std::thread Engine3D::listenForInput()
 {
 	//start thread
-	std::thread t = std::thread(&Engine3D::updateVertices, this);
+	std::thread t = std::thread(&Engine3D::inputListenerThread, this);
 
 	return t;
+}
+
+void Engine3D::inputListenerThread()
+{
+	while(!isActive) {}
+	while (isActive)
+	{
+		keysPressed = eventController->getKeysPressed();
+		if (keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) std::cout << "LCLICK!\n";
+	}
 }
 
 void Engine3D::engineThread()
@@ -68,8 +72,6 @@ void Engine3D::engineThread()
 		isActive = false;
 	else
 		isActive = true;
-
-	isReady = true;
 
 	auto tp1 = std::chrono::system_clock::now();
 	auto tp2 = std::chrono::system_clock::now();
@@ -266,7 +268,7 @@ void Engine3D::move(float elapsedTime)
 
 	if (eventController != nullptr)
 	{
-		bool* keysPressed = eventController->getKeysPressed();
+		//bool* keysPressed = eventController->getKeysPressed();
 		int mouseDistanceX = eventController->getMouseDistanceX();
 		int mouseDistanceY = eventController->getMouseDistanceY();
 		float multiplierX = (float)mouseDistanceX * 5;
@@ -372,7 +374,7 @@ void Engine3D::edit()
 	if (eventController != nullptr)
 	{
 
-		bool* keysPressed = eventController->getKeysPressed();
+		//bool* keysPressed = eventController->getKeysPressed();
 
 		// pressing LCTRL + mouse wheel up/down increases/decreases the collation height
 		if (keysPressed[SupportedKeys::LEFT_CTRL] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && !isTouched) {
@@ -394,7 +396,9 @@ void Engine3D::edit()
 			mdl.isEditing = true;
 			modelsToRaster.push_back(mdl);
 			editingModel = &modelsToRaster.back();
+			mtx.lock();
 			updateVerticesFlag = true;
+			mtx.unlock();
 			cameraSpeedFactor /= 100;
 		}
 		
@@ -403,11 +407,12 @@ void Engine3D::edit()
 		}
 
 		// releasing left mouse click places a new model
-		if (editingModel != nullptr && eventController->transitionedMouseLeftButton() && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] && !updateVerticesFlag) {
-
+		if (editingModel != nullptr && eventController->transitionedMouseLeftButton() && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]==false && !updateVerticesFlag) {
 			model mdl = modelsToRaster.back();
 			modelsToRaster.pop_back();
+			mtx.lock();
 			updateVerticesFlag = true;
+			mtx.unlock();
 			editingModel = nullptr;
 			cameraSpeedFactor *= 100;
 			bool isValidPlacement = false;
@@ -456,7 +461,9 @@ void Engine3D::edit()
 					m.position.y += i * editingHeight;
 					modelsToRaster.push_back(m);
 				}
+				mtx.lock();
 				updateVerticesFlag = true;
+				mtx.unlock();
 			}
 			//std::cout << "added cube!" << cameraFront.x << cameraFront.y << cameraFront.z << std::endl;
 
@@ -466,7 +473,9 @@ void Engine3D::edit()
 			auto modelInFocus = *(modelsInFocus.begin());
 			modelInFocus->removeFlag = true;
 			modelsToRaster.erase(std::remove_if(modelsToRaster.begin(), modelsToRaster.end(), [](model m) { return m.removeFlag == true; }), modelsToRaster.end());
+			mtx.lock();
 			updateVerticesFlag = true;
+			mtx.unlock();
 		}
 
 		/*
@@ -533,122 +542,109 @@ glm::mat4 Engine3D::getViewMatrix() const
 
 void Engine3D::updateVertices()
 {
-	while(!isReady || isRendering) {}
+	std::cout << "Updating vertices" << std::endl;
+	std::vector<GLfloat> vertexData;
+	std::vector<GLuint> indexData;
+	GLuint indexCounter = 0;
+	std::vector<GLfloat> cubeVertexData;
+	std::vector<GLuint> cubeIndexData;
+	GLuint cubeIndexCounter = 0;
 
-	while(isActive)
+	std::vector<GLfloat>* vdp = &vertexData;
+
+	//populate vertex vectors with triangle vertex information for each model
+	for (auto &model : modelsToRaster)
 	{
-		if (!updateVerticesFlag) continue;
 
-		std::vector<GLfloat> vertexData;
-		std::vector<GLuint> indexData;
-		GLuint indexCounter = 0;
+		vdp = model.modelMesh.shape == Shape::CUBE ? &cubeVertexData : &vertexData;
 
-		std::vector<GLfloat> cubeVertexData;
-		std::vector<GLuint> cubeIndexData;
-		GLuint cubeIndexCounter = 0;
-
-		std::vector<GLfloat>* vdp = &vertexData;
-
-		//populate vertex vectors with triangle vertex information for each model
-		for (auto &model : modelsToRaster)
+		for (auto &tri : model.modelMesh.tris)
 		{
+			glm::vec3 line1 = tri.p[1] - tri.p[0];
+			glm::vec3 line2 = tri.p[2] - tri.p[0];
+			glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
 
-			vdp = model.modelMesh.shape == Shape::CUBE ? &cubeVertexData : &vertexData;
-
-			for (auto &tri : model.modelMesh.tris)
+			for (int i = 0; i < 3; i++)
 			{
-				glm::vec3 line1 = tri.p[1] - tri.p[0];
-				glm::vec3 line2 = tri.p[2] - tri.p[0];
-				glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
-
-				for (int i = 0; i < 3; i++)
+				vdp->push_back(tri.p[i].x);
+				vdp->push_back(tri.p[i].y);
+				vdp->push_back(tri.p[i].z);
+				vdp->push_back(normal.x);
+				vdp->push_back(normal.y);
+				vdp->push_back(normal.z);
+				vdp->push_back((float)tri.R/255.0f);
+				vdp->push_back((float)tri.G/255.0f);
+				vdp->push_back((float)tri.B/255.0f);
+				vdp->push_back(tri.t[i].x);
+				vdp->push_back(tri.t[i].y);
+				if (model.modelMesh.shape != Shape::CUBE)
 				{
-					vdp->push_back(tri.p[i].x);
-					vdp->push_back(tri.p[i].y);
-					vdp->push_back(tri.p[i].z);
-					vdp->push_back(normal.x);
-					vdp->push_back(normal.y);
-					vdp->push_back(normal.z);
-					vdp->push_back((float)tri.R/255.0f);
-					vdp->push_back((float)tri.G/255.0f);
-					vdp->push_back((float)tri.B/255.0f);
-					vdp->push_back(tri.t[i].x);
-					vdp->push_back(tri.t[i].y);
-					if (model.modelMesh.shape != Shape::CUBE)
-					{
-						indexData.push_back(indexCounter++);
-					}
-					else
-					{
-						cubeIndexData.push_back(cubeIndexCounter++);
-					}
+					indexData.push_back(indexCounter++);
+				}
+				else
+				{
+					cubeIndexData.push_back(cubeIndexCounter++);
 				}
 			}
 		}
-
-		// std::cout << "vertex data size: " << vertexData.size() << std::endl;
-		// std::cout << "index data size: " << indexData.size() << std::endl;
-		// std::cout << "cube vertex data size: " << cubeVertexData.size() << std::endl;
-		// std::cout << "cube index data size: " << cubeIndexData.size() << std::endl;
-
-		//update VBO
-		glBindVertexArray(gVAO);
-		glBindBuffer( GL_ARRAY_BUFFER, gVBO );
-		glBufferData( GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), vertexData.data(), GL_STATIC_DRAW );
-
-		//position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-		//normal attribute
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-		//color attribute
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
-		glEnableVertexAttribArray(2);
-		//texture coord attribute
-		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float)));
-		glEnableVertexAttribArray(3);
-
-		//update IBO
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gIBO );
-		glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GLuint), indexData.data(), GL_STATIC_DRAW );
-
-		//update cubeVBO
-		glBindVertexArray(gCubeVAO);
-		glBindBuffer( GL_ARRAY_BUFFER, gCubeVBO );
-		glBufferData( GL_ARRAY_BUFFER, cubeVertexData.size() * sizeof(GLfloat), cubeVertexData.data(), GL_STATIC_DRAW );
-
-		//position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-		//normal attribute
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-		//color attribute
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
-		glEnableVertexAttribArray(2);
-		//texture coord attribute
-		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float)));
-		glEnableVertexAttribArray(3);
-
-		//update cubeIBO
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gCubeIBO );
-		glBufferData( GL_ELEMENT_ARRAY_BUFFER, cubeIndexData.size() * sizeof(GLuint), cubeIndexData.data(), GL_STATIC_DRAW );
-
-		std::cout << "updated vertices" << std::endl;
-
-		updateVerticesFlag = false;
-		vertexUpdaterReady = true;
-
 	}
+
+	std::cout << "  vertex data size: " << vertexData.size() << std::endl;
+	std::cout << "  ndex data size: " << indexData.size() << std::endl;
+	std::cout << "  cube vertex data size: " << cubeVertexData.size() << std::endl;
+	std::cout << "  cube index data size: " << cubeIndexData.size() << std::endl;
+
+	//update VBO
+	glBindVertexArray(*gVAO);
+	glBindBuffer( GL_ARRAY_BUFFER, *gVBO );
+	glBufferData( GL_ARRAY_BUFFER, vertexData.size() * sizeof(GL_FLOAT), vertexData.data(), GL_STATIC_DRAW );
+
+	//position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)0);
+	glEnableVertexAttribArray(0);
+	//normal attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(1);
+	//color attribute
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(6 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(2);
+	//texture coord attribute
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(9 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(3);
+
+	//update IBO
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, *gIBO );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GL_UNSIGNED_INT), indexData.data(), GL_STATIC_DRAW );
+
+	//update cubeVBO
+	glBindVertexArray(*gCubeVAO);
+	glBindBuffer( GL_ARRAY_BUFFER, *gCubeVBO );
+	glBufferData( GL_ARRAY_BUFFER, cubeVertexData.size() * sizeof(GL_FLOAT), cubeVertexData.data(), GL_STATIC_DRAW );
+
+	//position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)0);
+	glEnableVertexAttribArray(0);
+	//normal attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(1);
+	//color attribute
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(6 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(2);
+	//texture coord attribute
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(9 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(3);
+
+	//update cubeIBO
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, *gCubeIBO );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, cubeIndexData.size() * sizeof(GL_UNSIGNED_INT), cubeIndexData.data(), GL_STATIC_DRAW );
+
+	updateVerticesFlag = false;
+
+	std::cout << "Updated vertices" << std::endl;
 }
 
-void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string, GLuint>* textureIdsMap, ArtificeShaderProgram* cubeMapShader, std::map<std::string, GLuint>* cubemapIdsMap)
+void Engine3D::render()
 {
-	if (!isActive || !isReady || !vertexUpdaterReady) return;
-
-	isRendering = true;
-
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	//clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -672,8 +668,7 @@ void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string
 	unsigned int cubeCnt = 0;
 	unsigned int prevCubeTrisSize = 0;
 	unsigned int cnt = 0;
-	std::vector<model> modelsToRaster2 = modelsToRaster;
-	for (auto &model : modelsToRaster2)
+	for (auto &model : modelsToRaster)
 	{
 
 		if (model.modelMesh.shape == Shape::CUBE)
@@ -682,12 +677,12 @@ void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string
 			if (!model.isInDOF) { cubeCnt++; prevCubeTrisSize = model.modelMesh.tris.size(); continue; }
 
 			cubeMapShader->bind();
-			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIBO);
-			glBindVertexArray(gCubeVAO);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *gCubeIBO);
+			glBindVertexArray(*gCubeVAO);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_CUBE_MAP, (*cubemapIdsMap)[model.texture]);
 			cubeMapShader->setMat4("model", model.modelMatrix);
-			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(((cubeCnt++) * (prevCubeTrisSize * 3) ) * sizeof(float)));
+			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(((cubeCnt++) * (prevCubeTrisSize * 3) ) * sizeof(GL_UNSIGNED_INT)));
 			prevCubeTrisSize = model.modelMesh.tris.size();
 		}
 		else
@@ -696,16 +691,16 @@ void Engine3D::render(ArtificeShaderProgram* textureShader, std::map<std::string
 			if (!model.isInDOF) { cnt += model.modelMesh.tris.size() * 3; continue; }
 
 			textureShader->bind();
-			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
-			glBindVertexArray(gVAO);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *gIBO);
+			glBindVertexArray(*gVAO);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, (*textureIdsMap)[model.texture]);
 			textureShader->setMat4("model", model.modelMatrix);
-			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(( cnt ) * sizeof(float)));
+			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(( cnt ) * sizeof(GL_UNSIGNED_INT)));
 			cnt += model.modelMesh.tris.size() * 3;
+		
 		}
 		glBindVertexArray(0);
 	}
-	isRendering = false;
 }
 

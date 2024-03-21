@@ -18,18 +18,6 @@ int main( int argc, char* args[] )
 		SDL_Rect* windowRect = &init.windowRect;
 		EventController* eventController = &init.eventController;
 		Engine3D* artificeEngine = init.artificeEngine;
-		GLuint* gCubeMapProgramID = &init.gCubeMapProgramID;
-		GLuint* gTextureProgramID = &init.gTextureProgramID;
-		GLuint* gVBO = &init.gVBO;
-		GLuint* gIBO = &init.gIBO;
-		GLuint* gVAO = &init.gVAO;
-		GLuint* gCubeVBO = &init.gCubeVBO;
-		GLuint* gCubeIBO = &init.gCubeIBO;
-		GLuint* gCubeVAO = &init.gCubeVAO;
-		ArtificeShaderProgram* textureShader = &init.textureShader;
-		ArtificeShaderProgram* cubeMapShader = &init.cubeMapShader;
-		std::map<std::string, GLuint>* textureIdsMap = &init.textureIdsMap;
-		std::map<std::string, GLuint>* cubemapIdsMap = &init.cubemapIdsMap;
 
 		//main loop flag
 		bool quit = false;
@@ -43,7 +31,6 @@ int main( int argc, char* args[] )
 		//while application is running
 		while( !quit )
 		{
-
 			eventController->clearMouseMotionState();
 
 			//handle events on queue
@@ -80,17 +67,11 @@ int main( int argc, char* args[] )
 				// }
 			}
 
-			// update vertices when world is modified
-			// if (artificeEngine->updateVerticesFlag)
-			// {
-			// 	artificeEngine->updateVertices(gVBO, gIBO, gVAO, gCubeVBO, gCubeIBO, gCubeVAO);
-			// 	artificeEngine->updateVerticesFlag = false;
-			// }
+			//update vertices when world is modified
+			if (artificeEngine->updateVerticesFlag) artificeEngine->updateVertices();
 
 			//render
-			if (!artificeEngine->updateVerticesFlag) {
-				artificeEngine->render(textureShader, textureIdsMap, cubeMapShader, cubemapIdsMap);
-			}
+			artificeEngine->render();
 
 			//update screen
 			SDL_GL_SwapWindow( gWindow );

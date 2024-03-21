@@ -43,7 +43,7 @@ class Engine3D
 
 		std::thread startEngine();
 
-		std::thread startVertexUpdater();
+		std::thread listenForInput();
 
 		bool onUserCreate();
 
@@ -65,29 +65,27 @@ class Engine3D
 
 		void updateVertices();
 
-		void render(ArtificeShaderProgram* textureShader,
-					std::map<std::string, GLuint>* textureIdsMap,
-					ArtificeShaderProgram* cubeMapShader,
-					std::map<std::string, GLuint>* cubemapIdsMap);
+		void render();
 
-		GLuint gVBO = 0;
-		GLuint gIBO = 0;
-		GLuint gVAO = 0;
-		GLuint gCubeVBO = 0;
-		GLuint gCubeIBO = 0;
-		GLuint gCubeVAO = 0;
+		//to render
+		ArtificeShaderProgram* textureShader = nullptr;
+		std::map<std::string, GLuint>* textureIdsMap = nullptr;
+		ArtificeShaderProgram* cubeMapShader = nullptr;
+		std::map<std::string, GLuint>* cubemapIdsMap = nullptr;
 
-		std::atomic<bool> isReady;
+		//to update vertices
+		GLuint* gVBO = nullptr;
+		GLuint* gIBO = nullptr;
+		GLuint* gVAO = nullptr;
+		GLuint* gCubeVBO = nullptr;
+		GLuint* gCubeIBO = nullptr;
+		GLuint* gCubeVAO = nullptr;
 
 		std::atomic<bool> isActive;
 
 		std::atomic<bool> isTouched;
 
 		std::atomic<bool> updateVerticesFlag;
-
-		std::atomic<bool> vertexUpdaterReady;
-
-		std::atomic<bool> isRendering;
 
 		float elapsedTime;
 
@@ -143,6 +141,8 @@ class Engine3D
 		float editingDepth = 0;
 		model* editingModel = nullptr;
 
+		bool* keysPressed = nullptr;
+
 		//camera
 		glm::vec3 cameraPos;
 
@@ -159,6 +159,8 @@ class Engine3D
 		glm::mat4 viewMatrix;
 
 		void engineThread();
+
+		void inputListenerThread();
 
 		void move(float elapsedTime);
 

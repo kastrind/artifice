@@ -62,8 +62,8 @@ class Initiator
 		//the engine thread
 		std::thread engineThread;
 
-		//from the engine, the vertex updater thread
-		std::thread vertexUpdaterThread;
+		//the engine input listener thread
+		std::thread engineInputListenerThread;
 
 		//shader programs
 		ArtificeShaderProgram textureShader;

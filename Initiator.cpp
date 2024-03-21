@@ -78,7 +78,9 @@ bool Initiator::init()
 				}
 
                 //start the 3D engine
+				printf( "Starting Engine...\n" );
 		        engineThread = artificeEngine->startEngine();
+				engineInputListenerThread = artificeEngine->listenForInput();
 			}
 		}
 	}
@@ -215,25 +217,28 @@ bool Initiator::initGL()
 		glGenBuffers( 1, &gIBO );
 		glGenBuffers( 1, &gCubeIBO );
 
+		artificeEngine->gVBO = &gVBO;
+		artificeEngine->gIBO = &gIBO;
+		artificeEngine->gVAO = &gVAO;
+		artificeEngine->gCubeVBO = &gCubeVBO;
+		artificeEngine->gCubeIBO = &gCubeIBO;
+		artificeEngine->gCubeVAO = &gCubeVAO;
+
 		//update buffers with the new vertices
-		//artificeEngine->updateVertices(&gVBO, &gIBO, &gVAO, &gCubeVBO, &gCubeIBO, &gCubeVAO);
-		artificeEngine->gVBO = gVBO;
-		artificeEngine->gIBO = gIBO;
-		artificeEngine->gVAO = gVAO;
-		artificeEngine->gCubeVBO = gCubeVBO;
-		artificeEngine->gCubeIBO = gCubeIBO;
-		artificeEngine->gCubeVAO = gCubeVAO;
-		vertexUpdaterThread = artificeEngine->startVertexUpdater();
-		artificeEngine->updateVerticesFlag = true;
+		artificeEngine->updateVertices();
 
 		//initialize clear color
 		glClearColor( 0.f, 0.f, 0.f, 1.f );
 
 		//generates and binds textures
 		loadTextures(textureIdsMap);
+		artificeEngine->textureShader = &textureShader;
+		artificeEngine->textureIdsMap = &textureIdsMap;
 
 		//generates and binds cubemap
 		loadCubemaps(cubemapIdsMap);
+		artificeEngine->cubeMapShader = &cubeMapShader;
+		artificeEngine->cubemapIdsMap = &cubemapIdsMap;
 	}
 	return success;
 }
@@ -282,7 +287,6 @@ void Initiator::loadTextures(std::map<std::string, GLuint>& textureIdsMap)
 	textureShader.bind();
 	//set the uniforms
 	for (const auto& kv : textureIdsMap) {
-		//std::cout << kv.first << ": " << kv.second << std::endl;
 		glUniform1i(glGetUniformLocation(textureShader.getProgramID(), std::string("texture" + std::to_string(kv.second)).c_str()), 0);
 	}
 }
@@ -358,7 +362,7 @@ void Initiator::close()
 	gWindow = NULL;
 
 	engineThread.join();
-	vertexUpdaterThread.join();
+	engineInputListenerThread.join();
 
 	//quit SDL subsystems
 	SDL_Quit();
