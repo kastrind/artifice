@@ -268,7 +268,7 @@ void Engine3D::move(float elapsedTime)
 
 	if (eventController != nullptr)
 	{
-		//bool* keysPressed = eventController->getKeysPressed();
+		bool* keysPressed = eventController->getKeysPressed();
 		int mouseDistanceX = eventController->getMouseDistanceX();
 		int mouseDistanceY = eventController->getMouseDistanceY();
 		float multiplierX = (float)mouseDistanceX * 5;
@@ -374,7 +374,7 @@ void Engine3D::edit()
 	if (eventController != nullptr)
 	{
 
-		//bool* keysPressed = eventController->getKeysPressed();
+		bool* keysPressed = eventController->getKeysPressed();
 
 		// pressing LCTRL + mouse wheel up/down increases/decreases the collation height
 		if (keysPressed[SupportedKeys::LEFT_CTRL] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && !isTouched) {
@@ -590,7 +590,7 @@ void Engine3D::updateVertices()
 	}
 
 	std::cout << "  vertex data size: " << vertexData.size() << std::endl;
-	std::cout << "  ndex data size: " << indexData.size() << std::endl;
+	std::cout << "  index data size: " << indexData.size() << std::endl;
 	std::cout << "  cube vertex data size: " << cubeVertexData.size() << std::endl;
 	std::cout << "  cube index data size: " << cubeIndexData.size() << std::endl;
 
@@ -645,6 +645,8 @@ void Engine3D::updateVertices()
 
 void Engine3D::render()
 {
+	//if (updateVerticesFlag) updateVertices();
+
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	//clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
