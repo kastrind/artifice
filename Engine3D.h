@@ -43,7 +43,7 @@ class Engine3D
 
 		std::thread startEngine();
 
-		std::thread listenForInput();
+		std::thread startRendering();
 
 		bool onUserCreate();
 
@@ -66,6 +66,8 @@ class Engine3D
 		void updateVertices();
 
 		void render();
+
+		void renderingLoop();
 
 		//to render
 		ArtificeShaderProgram* textureShader = nullptr;
@@ -141,7 +143,7 @@ class Engine3D
 		float editingDepth = 0;
 		model* editingModel = nullptr;
 
-		bool* keysPressed = nullptr;
+		bool keysPressed[SupportedKeys::ALL_KEYS];
 
 		//camera
 		glm::vec3 cameraPos;

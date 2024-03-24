@@ -78,9 +78,12 @@ bool Initiator::init()
 				}
 
                 //start the 3D engine
-				printf( "Starting Engine...\n" );
+				printf( "Starting Engine thread...\n" );
 		        engineThread = artificeEngine->startEngine();
-				engineInputListenerThread = artificeEngine->listenForInput();
+
+				//start listening for input events
+				printf( "Starting input events listener thread...\n" );
+				eventListenerThread = eventController.startListening();
 			}
 		}
 	}
@@ -349,20 +352,28 @@ void Initiator::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap)
 
 void Initiator::close()
 {
+	printf("Unbinding and deleting shader programs...\n");
+
 	//unbind program - deactivate shader
 	cubeMapShader.unbind();
 	textureShader.unbind();
 
 	//deallocate programs
-	glDeleteProgram(gCubeMapProgramID);
-	glDeleteProgram(gTextureProgramID);
+	cubeMapShader.freeProgram();
+	textureShader.freeProgram();
+
+	printf("Destroying SDL window...\n");
 
 	//destroy window	
 	SDL_DestroyWindow(gWindow);
 	gWindow = NULL;
 
+	printf("Stopping threads...\n");
+
 	engineThread.join();
-	engineInputListenerThread.join();
+	eventListenerThread.join();
+
+	printf("Quitting SDL subsystems...\n");
 
 	//quit SDL subsystems
 	SDL_Quit();

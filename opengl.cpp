@@ -41,6 +41,7 @@ int main( int argc, char* args[] )
 				{
 					quit = true;
 					artificeEngine->isActive = false;
+					eventController->isActive = false;
 				}else if (e.key.keysym.sym == SDLK_ESCAPE && SDL_GetWindowMouseGrab(gWindow) == SDL_TRUE) {
 					//free mouse cursor from the window and reveal it
 					SDL_SetWindowMouseGrab(gWindow, SDL_FALSE);
@@ -55,7 +56,7 @@ int main( int argc, char* args[] )
 				//user presses or releases a key
 				else if( e.type == SDL_KEYDOWN || e.type == SDL_KEYUP || e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP  || e.type == SDL_MOUSEWHEEL)
 				{
-					eventController->processEvent(&e);
+					eventController->pushEvent(e);
 				}
 				//just a temporary proof-of-concept to modify world on user input
 				// if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_0) {
@@ -66,9 +67,6 @@ int main( int argc, char* args[] )
 				// 	}
 				// }
 			}
-
-			//update vertices when world is modified
-			if (artificeEngine->updateVerticesFlag) artificeEngine->updateVertices();
 
 			//render
 			artificeEngine->render();

@@ -47,21 +47,20 @@ std::thread Engine3D::startEngine()
 	return t;
 }
 
-std::thread Engine3D::listenForInput()
+std::thread Engine3D::startRendering()
 {
 	//start thread
-	std::thread t = std::thread(&Engine3D::inputListenerThread, this);
+	std::thread t = std::thread(&Engine3D::renderingLoop, this);
 
 	return t;
 }
 
-void Engine3D::inputListenerThread()
+void Engine3D::renderingLoop()
 {
 	while(!isActive) {}
 	while (isActive)
 	{
-		keysPressed = eventController->getKeysPressed();
-		if (keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) std::cout << "LCLICK!\n";
+		render();
 	}
 }
 
@@ -109,6 +108,10 @@ bool Engine3D::onUserCreate()
 
 bool Engine3D::onUserUpdate(float elapsedTime)
 {
+	mtx.lock();
+	std::memcpy(keysPressed, eventController->getKeysPressed(), SupportedKeys::ALL_KEYS * sizeof(bool));
+	mtx.unlock();
+
 	mtx.lock();
 
 	glm::vec3 prevCameraPos = cameraPos;
@@ -258,8 +261,6 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	return true;
 }
 
-
-
 void Engine3D::move(float elapsedTime)
 {
 	float cameraSpeed = static_cast<float>(cameraSpeedFactor * elapsedTime);
@@ -268,7 +269,8 @@ void Engine3D::move(float elapsedTime)
 
 	if (eventController != nullptr)
 	{
-		bool* keysPressed = eventController->getKeysPressed();
+		//bool* keysPressed = eventController->getKeysPressed();
+
 		int mouseDistanceX = eventController->getMouseDistanceX();
 		int mouseDistanceY = eventController->getMouseDistanceY();
 		float multiplierX = (float)mouseDistanceX * 5;
@@ -373,8 +375,7 @@ void Engine3D::edit()
 
 	if (eventController != nullptr)
 	{
-
-		bool* keysPressed = eventController->getKeysPressed();
+		//bool* keysPressed = eventController->getKeysPressed();
 
 		// pressing LCTRL + mouse wheel up/down increases/decreases the collation height
 		if (keysPressed[SupportedKeys::LEFT_CTRL] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && !isTouched) {
@@ -386,7 +387,7 @@ void Engine3D::edit()
 			isTouched = true;
 		}
 
-		if (editingModel == nullptr && eventController->transitionedMouseLeftButton() && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] && !updateVerticesFlag) {
+		if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] && !updateVerticesFlag) {
 			model mdl; mdl.texture = "box";
 			editingWidth = 0.2f; editingHeight = 0.2f; editingDepth = 0.2f;
 			cube cube0{editingWidth};
@@ -407,7 +408,7 @@ void Engine3D::edit()
 		}
 
 		// releasing left mouse click places a new model
-		if (editingModel != nullptr && eventController->transitionedMouseLeftButton() && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]==false && !updateVerticesFlag) {
+		if (editingModel != nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]==false && !updateVerticesFlag) {
 			model mdl = modelsToRaster.back();
 			modelsToRaster.pop_back();
 			mtx.lock();
@@ -468,7 +469,7 @@ void Engine3D::edit()
 			//std::cout << "added cube!" << cameraFront.x << cameraFront.y << cameraFront.z << std::endl;
 
 		// right mouse click deletes the model currently in focus
-		}else if (eventController->transitionedMouseRightButton() && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] && modelsInFocus.size() > 0 && !updateVerticesFlag) {
+		}else if (keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] && modelsInFocus.size() > 0 && !updateVerticesFlag) {
 
 			auto modelInFocus = *(modelsInFocus.begin());
 			modelInFocus->removeFlag = true;
@@ -552,8 +553,12 @@ void Engine3D::updateVertices()
 
 	std::vector<GLfloat>* vdp = &vertexData;
 
+	mtx.lock();
+	std::vector<model> modelsToRaster2 = modelsToRaster;
+	mtx.unlock();
+
 	//populate vertex vectors with triangle vertex information for each model
-	for (auto &model : modelsToRaster)
+	for (auto &model : modelsToRaster2)
 	{
 
 		vdp = model.modelMesh.shape == Shape::CUBE ? &cubeVertexData : &vertexData;
@@ -645,7 +650,7 @@ void Engine3D::updateVertices()
 
 void Engine3D::render()
 {
-	//if (updateVerticesFlag) updateVertices();
+	if (updateVerticesFlag) updateVertices();
 
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	//clear color buffer
@@ -670,7 +675,12 @@ void Engine3D::render()
 	unsigned int cubeCnt = 0;
 	unsigned int prevCubeTrisSize = 0;
 	unsigned int cnt = 0;
-	for (auto &model : modelsToRaster)
+
+	mtx.lock();
+	std::vector<model> modelsToRaster2 = modelsToRaster;
+	mtx.unlock();
+
+	for (auto &model : modelsToRaster2)
 	{
 
 		if (model.modelMesh.shape == Shape::CUBE)

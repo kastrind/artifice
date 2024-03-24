@@ -62,8 +62,8 @@ class Initiator
 		//the engine thread
 		std::thread engineThread;
 
-		//the engine input listener thread
-		std::thread engineInputListenerThread;
+		//the input event listener thread
+		std::thread eventListenerThread;
 
 		//shader programs
 		ArtificeShaderProgram textureShader;
