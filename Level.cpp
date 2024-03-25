@@ -76,6 +76,8 @@ void Level::load(std::string levelPath)
 					rect.thetaRotX = rotationX; rect.thetaRotY = rotationY; rect.thetaRotZ = rotationZ;
 					rect.toTriangles(mdl.modelMesh.tris);
 					mdl.modelMesh.shape = Shape::RECTANGLE;
+					mdl.sn = modelPointsCnt; 
+					modelPointsCnt += mdl.modelMesh.tris.size() * 3;
 					isShapeValid = true;
 				}
 				else if (shape == "cuboid")
@@ -84,6 +86,8 @@ void Level::load(std::string levelPath)
 					cuboid.thetaRotX = rotationX; cuboid.thetaRotY = rotationY; cuboid.thetaRotZ = rotationZ;
 					cuboid.toTriangles(mdl.modelMesh.tris);
 					mdl.modelMesh.shape = Shape::CUBOID;
+					mdl.sn = modelPointsCnt; 
+					modelPointsCnt += mdl.modelMesh.tris.size() * 3;
 					isShapeValid = true;
 				}
 				else if (shape == "cube")
@@ -92,10 +96,15 @@ void Level::load(std::string levelPath)
 					cube.thetaRotX = rotationX; cube.thetaRotY = rotationY; cube.thetaRotZ = rotationZ;
 					cube.toTriangles(mdl.modelMesh.tris);
 					mdl.modelMesh.shape = Shape::CUBE;
+					mdl.sn = cubePointsCnt;
+					cubePointsCnt += mdl.modelMesh.tris.size() * 3;
 					isShapeValid = true;
 				}
 
-				if (isShapeValid) { models.push_back(mdl); }
+				if (isShapeValid)
+				{
+					models.push_back(mdl);
+				}
 			}
 		}
 	}

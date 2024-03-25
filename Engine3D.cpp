@@ -210,7 +210,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		model.isInDOF = modelDistance < dof;
 
 		//detect if colliding with the model
-		if (model.isSolid && modelDistance <= collidingDistance * 1.5f) {
+		if (model.isSolid && modelDistance <= collidingDistance * 1.5f)
+		{
 			//std::cout << "modelDistance: " << modelDistance << std::endl;
 
 			//get the triangle normal
@@ -394,10 +395,12 @@ void Engine3D::edit()
 			cube0.toTriangles(mdl.modelMesh.tris);
 			mdl.modelMesh.shape = Shape::CUBE;
 			mdl.position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
+			mdl.sn = cubePointsCnt;
+			cubePointsCnt += mdl.modelMesh.tris.size() * 3;
 			mdl.isEditing = true;
+			mtx.lock();
 			modelsToRaster.push_back(mdl);
 			editingModel = &modelsToRaster.back();
-			mtx.lock();
 			updateVerticesFlag = true;
 			mtx.unlock();
 			cameraSpeedFactor /= 100;
@@ -409,9 +412,9 @@ void Engine3D::edit()
 
 		// releasing left mouse click places a new model
 		if (editingModel != nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]==false && !updateVerticesFlag) {
+			mtx.lock();
 			model mdl = modelsToRaster.back();
 			modelsToRaster.pop_back();
-			mtx.lock();
 			updateVerticesFlag = true;
 			mtx.unlock();
 			editingModel = nullptr;
@@ -455,14 +458,17 @@ void Engine3D::edit()
 
 			if (isValidPlacement)
 			{
+				mtx.lock();
 				modelsToRaster.push_back(mdl);
 
 				for (unsigned int i = 1; i < collationHeight; i++) {
 					model m = mdl;
 					m.position.y += i * editingHeight;
+					m.sn = cubePointsCnt;
+					cubePointsCnt += m.modelMesh.tris.size() * 3;
 					modelsToRaster.push_back(m);
 				}
-				mtx.lock();
+
 				updateVerticesFlag = true;
 				mtx.unlock();
 			}
@@ -471,10 +477,29 @@ void Engine3D::edit()
 		// right mouse click deletes the model currently in focus
 		}else if (keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] && modelsInFocus.size() > 0 && !updateVerticesFlag) {
 
+			mtx.lock();
 			auto modelInFocus = *(modelsInFocus.begin());
 			modelInFocus->removeFlag = true;
+			unsigned long i = 0;
+			unsigned long lastModelSn = 0;
+			unsigned long lastCubeSn = 0;
+			for (i; i < modelsToRaster.size(); i++)
+			{
+				if (modelsToRaster[i].removeFlag) break;
+			}
+			for (i += 1; i < modelsToRaster.size(); i++)
+			{
+				if (modelInFocus->modelMesh.shape == Shape::CUBE && modelsToRaster[i].modelMesh.shape == Shape::CUBE)
+				{
+					std::cout << "index = " << i << " sn = " << modelsToRaster[i].sn << " - " << modelInFocus->modelMesh.tris.size() * 3 << std::endl;
+					modelsToRaster[i].sn -= modelInFocus->modelMesh.tris.size() * 3;
+				}else if (modelInFocus->modelMesh.shape != Shape::CUBE && modelsToRaster[i].modelMesh.shape != Shape::CUBE)
+				{
+					modelsToRaster[i].sn -= modelInFocus->modelMesh.tris.size() * 3;
+				}
+			}
 			modelsToRaster.erase(std::remove_if(modelsToRaster.begin(), modelsToRaster.end(), [](model m) { return m.removeFlag == true; }), modelsToRaster.end());
-			mtx.lock();
+			
 			updateVerticesFlag = true;
 			mtx.unlock();
 		}
@@ -558,6 +583,9 @@ void Engine3D::updateVertices()
 	mtx.unlock();
 
 	//populate vertex vectors with triangle vertex information for each model
+	// for (auto itr = finalModelsToRender3.begin(); itr != finalModelsToRender3.end(); itr++)
+	// {
+	// 	model model = *(*(itr));
 	for (auto &model : modelsToRaster2)
 	{
 
@@ -672,21 +700,27 @@ void Engine3D::render()
 	textureShader->setVec3("viewPos", getCameraPos());
 	textureShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
-	unsigned int cubeCnt = 0;
-	unsigned int prevCubeTrisSize = 0;
-	unsigned int cnt = 0;
-
+	finalModelsToRender.clear();
 	mtx.lock();
-	std::vector<model> modelsToRaster2 = modelsToRaster;
+	//std::vector<model> modelsToRaster2 = modelsToRaster;
+	for (model& model : modelsToRaster)
+	{
+		if (model.isInDOF) finalModelsToRender.insert(&model);
+	}
+	//std::set<model*, ModelDistanceComparator> finalModelsToRender3 = finalModelsToRender2;
 	mtx.unlock();
 
-	for (auto &model : modelsToRaster2)
+	for (auto itr = finalModelsToRender.begin(); itr != finalModelsToRender.end(); itr++)
 	{
+		model model = *(*itr);
+
+	// for (auto &model : modelsToRaster2)
+	// {
 
 		if (model.modelMesh.shape == Shape::CUBE)
 		{
-			//ignore out-of-range models
-			if (!model.isInDOF) { cubeCnt++; prevCubeTrisSize = model.modelMesh.tris.size(); continue; }
+			//exclude out-of-range models
+			if (!model.isInDOF) { break; }
 
 			cubeMapShader->bind();
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *gCubeIBO);
@@ -694,13 +728,12 @@ void Engine3D::render()
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_CUBE_MAP, (*cubemapIdsMap)[model.texture]);
 			cubeMapShader->setMat4("model", model.modelMatrix);
-			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(((cubeCnt++) * (prevCubeTrisSize * 3) ) * sizeof(GL_UNSIGNED_INT)));
-			prevCubeTrisSize = model.modelMesh.tris.size();
+			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)((model.sn) * sizeof(GL_UNSIGNED_INT)));
 		}
 		else
 		{
-			//ignore out-of-range models
-			if (!model.isInDOF) { cnt += model.modelMesh.tris.size() * 3; continue; }
+			//exclude out-of-range models
+			if (!model.isInDOF) { break; }
 
 			textureShader->bind();
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *gIBO);
@@ -708,11 +741,16 @@ void Engine3D::render()
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, (*textureIdsMap)[model.texture]);
 			textureShader->setMat4("model", model.modelMatrix);
-			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(( cnt ) * sizeof(GL_UNSIGNED_INT)));
-			cnt += model.modelMesh.tris.size() * 3;
+			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(( model.sn ) * sizeof(GL_UNSIGNED_INT)));
 		
 		}
 		glBindVertexArray(0);
 	}
+}
+
+void Engine3D::setLevel(Level* level) {
+	modelsToRaster = level->models;
+	modelPointsCnt = level->modelPointsCnt;
+	cubePointsCnt = level->cubePointsCnt;
 }
 

@@ -326,6 +326,7 @@ struct mesh
 
 struct model {
 	unsigned int id;
+	unsigned long sn;
 	bool isSolid = true;
 	std::string texture;
 	bool inFocus = false;

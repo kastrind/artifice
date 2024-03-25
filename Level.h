@@ -17,9 +17,13 @@ class Level
 		{
 		}
 
-        std::vector<model> models;
+		std::vector<model> models;
 
-        void load(std::string levelPath);
+		unsigned long modelPointsCnt = 0;
+
+		unsigned long cubePointsCnt = 0;
+
+		void load(std::string levelPath);
 
 	private:
 

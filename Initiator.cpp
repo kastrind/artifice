@@ -119,7 +119,7 @@ bool Initiator::initGL()
 
 		Level level;
 		level.load(cfg.LEVELS_PATH + "\\" + levelFile);
-		artificeEngine->modelsToRaster = level.models;
+		artificeEngine->setLevel(&level);
 
 		/*
 		//create a rectangle

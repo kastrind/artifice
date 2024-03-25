@@ -13,6 +13,7 @@
 #include "ArtificeShaderProgram.h"
 #include "Configuration.h"
 #include "Constructs3D.h"
+#include "Level.h"
 #include "EventController.h"
 
 #include <vector>
@@ -68,6 +69,8 @@ class Engine3D
 		void render();
 
 		void renderingLoop();
+
+		void setLevel(Level* level);
 
 		//to render
 		ArtificeShaderProgram* textureShader = nullptr;
@@ -135,6 +138,8 @@ class Engine3D
 		std::set<model*, ModelDistanceComparator> modelsInFocus;
 		model* prevModelInFocus = nullptr;
 
+		std::set<model*, ModelDistanceComparator> finalModelsToRender;
+
 		//editor user mode specific
 		float originalCollidingDistance;
 		unsigned int collationHeight = 1;
@@ -142,6 +147,8 @@ class Engine3D
 		float editingHeight = 0;
 		float editingDepth = 0;
 		model* editingModel = nullptr;
+		unsigned long modelPointsCnt = 0;
+		unsigned long cubePointsCnt = 0;
 
 		bool keysPressed[SupportedKeys::ALL_KEYS];
 
