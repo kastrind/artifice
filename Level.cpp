@@ -1,6 +1,6 @@
 #include "Level.h"
 #include <fstream>
-#include <strstream>
+#include <sstream>
 
 void Level::load(std::string levelPath)
 {

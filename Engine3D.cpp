@@ -109,10 +109,8 @@ bool Engine3D::onUserCreate()
 bool Engine3D::onUserUpdate(float elapsedTime)
 {
 	mtx.lock();
-	std::memcpy(keysPressed, eventController->getKeysPressed(), SupportedKeys::ALL_KEYS * sizeof(bool));
-	mtx.unlock();
 
-	mtx.lock();
+	std::memcpy(keysPressed, eventController->getKeysPressed(), SupportedKeys::ALL_KEYS * sizeof(bool));
 
 	glm::vec3 prevCameraPos = cameraPos;
 	glm::vec3 center{ 0, 0, 0 };
@@ -200,7 +198,9 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			if (checkAgainForFocus && tri.contains(glm::vec4(center, 1.0f)))
 			{
 				model.inFocus = true;
+				mtx.lock();
 				modelsInFocus.insert(&model);
+				mtx.unlock();
 				checkAgainForFocus = false;
 			}
 
@@ -412,12 +412,10 @@ void Engine3D::edit()
 
 		// releasing left mouse click places a new model
 		if (editingModel != nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]==false && !updateVerticesFlag) {
-			mtx.lock();
-			model mdl = modelsToRaster.back();
-			modelsToRaster.pop_back();
-			updateVerticesFlag = true;
-			mtx.unlock();
-			editingModel = nullptr;
+			// mtx.lock();
+			// model mdl = modelsToRaster.back();
+			// modelsToRaster.pop_back();
+			// mtx.unlock();
 			cameraSpeedFactor *= 100;
 			bool isValidPlacement = false;
 
@@ -445,41 +443,52 @@ void Engine3D::edit()
 						pos.z = cameraFront.z / std::abs(cameraFront.z);
 				}
 				
-				auto modelInFocus = *(modelsInFocus.begin());
-				mdl.position = modelInFocus->position + editingDepth * pos;
+				// mtx.lock();
+				// auto modelInFocus = *(modelsInFocus.begin());
+				// mtx.unlock();
+				// mdl.position = modelInFocus->position + editingDepth * pos;
+				editingModel->position = editingModel->position + editingDepth * pos;
 				isValidPlacement = true;
 
 			// standard placement in front of the camera, no collation
 			}else if (!keysPressed[SupportedKeys::LEFT_CTRL])
 			{
-				mdl.position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
+				// mdl.position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
+				editingModel->position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
 				isValidPlacement = true;
 			}
 
 			if (isValidPlacement)
 			{
 				mtx.lock();
-				modelsToRaster.push_back(mdl);
+				//modelsToRaster.push_back(mdl);
 
 				for (unsigned int i = 1; i < collationHeight; i++) {
-					model m = mdl;
+					//model m = mdl;
+					model m = *editingModel;
 					m.position.y += i * editingHeight;
 					m.sn = cubePointsCnt;
 					cubePointsCnt += m.modelMesh.tris.size() * 3;
 					modelsToRaster.push_back(m);
 				}
-
 				updateVerticesFlag = true;
 				mtx.unlock();
 			}
+			std::cout << "model placed has sn: " << editingModel->sn << std::endl;
+			editingModel = nullptr;
 			//std::cout << "added cube!" << cameraFront.x << cameraFront.y << cameraFront.z << std::endl;
 
 		// right mouse click deletes the model currently in focus
-		}else if (keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] && modelsInFocus.size() > 0 && !updateVerticesFlag) {
-
+		}else if (deletingModel == nullptr && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] && modelsInFocus.size() > 0 && !updateVerticesFlag) {
 			mtx.lock();
 			auto modelInFocus = *(modelsInFocus.begin());
-			modelInFocus->removeFlag = true;
+			deletingModel = modelInFocus;
+			mtx.unlock();
+
+		}else if (deletingModel != nullptr && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK]==false && !updateVerticesFlag) {
+			std::cout << "deleted!" << std::endl;
+			mtx.lock();
+			deletingModel->removeFlag = true;
 			unsigned long i = 0;
 			unsigned long lastModelSn = 0;
 			unsigned long lastCubeSn = 0;
@@ -487,21 +496,24 @@ void Engine3D::edit()
 			{
 				if (modelsToRaster[i].removeFlag) break;
 			}
-			for (i += 1; i < modelsToRaster.size(); i++)
+			std::cout << "removed model with index = " << i << " and sn = " << modelsToRaster[i].sn << std::endl;
+			cubePointsCnt -= deletingModel->modelMesh.tris.size() * 3;
+			for (i+=1; i < modelsToRaster.size(); i++)
 			{
-				if (modelInFocus->modelMesh.shape == Shape::CUBE && modelsToRaster[i].modelMesh.shape == Shape::CUBE)
+				if (deletingModel->modelMesh.shape == Shape::CUBE && modelsToRaster[i].modelMesh.shape == Shape::CUBE)
 				{
-					std::cout << "index = " << i << " sn = " << modelsToRaster[i].sn << " - " << modelInFocus->modelMesh.tris.size() * 3 << std::endl;
-					modelsToRaster[i].sn -= modelInFocus->modelMesh.tris.size() * 3;
-				}else if (modelInFocus->modelMesh.shape != Shape::CUBE && modelsToRaster[i].modelMesh.shape != Shape::CUBE)
+					std::cout << "index = " << i << " sn = " << modelsToRaster[i].sn << " - " << deletingModel->modelMesh.tris.size() * 3 << std::endl;
+					modelsToRaster[i].sn -= deletingModel->modelMesh.tris.size() * 3;
+				}else if (deletingModel->modelMesh.shape != Shape::CUBE && modelsToRaster[i].modelMesh.shape != Shape::CUBE)
 				{
-					modelsToRaster[i].sn -= modelInFocus->modelMesh.tris.size() * 3;
+					modelsToRaster[i].sn -= deletingModel->modelMesh.tris.size() * 3;
 				}
 			}
 			modelsToRaster.erase(std::remove_if(modelsToRaster.begin(), modelsToRaster.end(), [](model m) { return m.removeFlag == true; }), modelsToRaster.end());
 			
 			updateVerticesFlag = true;
 			mtx.unlock();
+			deletingModel = nullptr;
 		}
 
 		/*
@@ -622,10 +634,10 @@ void Engine3D::updateVertices()
 		}
 	}
 
-	std::cout << "  vertex data size: " << vertexData.size() << std::endl;
-	std::cout << "  index data size: " << indexData.size() << std::endl;
-	std::cout << "  cube vertex data size: " << cubeVertexData.size() << std::endl;
-	std::cout << "  cube index data size: " << cubeIndexData.size() << std::endl;
+	// std::cout << "  vertex data size: " << vertexData.size() << std::endl;
+	// std::cout << "  index data size: " << indexData.size() << std::endl;
+	// std::cout << "  cube vertex data size: " << cubeVertexData.size() << std::endl;
+	// std::cout << "  cube index data size: " << cubeIndexData.size() << std::endl;
 
 	//update VBO
 	glBindVertexArray(*gVAO);

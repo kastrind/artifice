@@ -147,6 +147,7 @@ class Engine3D
 		float editingHeight = 0;
 		float editingDepth = 0;
 		model* editingModel = nullptr;
+		model* deletingModel = nullptr;
 		unsigned long modelPointsCnt = 0;
 		unsigned long cubePointsCnt = 0;
 
