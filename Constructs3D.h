@@ -23,7 +23,6 @@ typedef enum {
 	CUBE
 } Shape;
 
-
 struct matrix
 {
 

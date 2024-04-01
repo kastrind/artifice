@@ -31,6 +31,8 @@ typedef enum
 	MOUSE_WHEEL_UP,
 	MOUSE_WHEEL_DOWN,
 	LEFT_CTRL,
+	LEFT_SHIFT,
+	LEFT_ALT,
 	ALL_KEYS
 } SupportedKeys;
 

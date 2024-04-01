@@ -128,7 +128,7 @@ bool Initiator::initGL()
 		mdl0.position = glm::vec3( -0.7f,  0.5f,  0.2f);
 		rect0.toTriangles(mdl0.modelMesh.tris);
 		mdl0.modelMesh.shape = Shape::RECTANGLE;
-		artificeEngine->modelsToRaster.push_back(mdl0);
+		artificeEngine->modelsToRender.push_back(mdl0);
 
 		//create a rectangle
 		rectangle rect0b{0.2, 0.2};
@@ -136,14 +136,14 @@ bool Initiator::initGL()
 		mdl0b.position = glm::vec3( 0.2f,  0.7f,  0.5f);
 		rect0b.toTriangles(mdl0b.modelMesh.tris);
 		mdl0b.modelMesh.shape = Shape::RECTANGLE;
-		artificeEngine->modelsToRaster.push_back(mdl0b);
+		artificeEngine->modelsToRender.push_back(mdl0b);
 
 		rectangle rect0c{0.2, 0.2};
 		model mdl0c; mdl0c.texture = "brickwallPainted";
 		mdl0c.position = glm::vec3( 0.5f,  0.1f,  0.1f);
 		rect0c.toTriangles(mdl0c.modelMesh.tris);
 		mdl0c.modelMesh.shape = Shape::RECTANGLE;
-		artificeEngine->modelsToRaster.push_back(mdl0c);
+		artificeEngine->modelsToRender.push_back(mdl0c);
 
 		//create a cube
 		cube cube0{0.2f};
@@ -155,57 +155,57 @@ bool Initiator::initGL()
 		mdl.position = glm::vec3( 0.0f,  0.0f,  0.0f);
 		mdl.modelMesh.tris = cube0Triangles;
 		mdl.modelMesh.shape = Shape::CUBE;
-		artificeEngine->modelsToRaster.push_back(mdl);
+		artificeEngine->modelsToRender.push_back(mdl);
 
 		model mdl2; mdl2.texture = "cubemap";
 		mdl2.position = glm::vec3( 0.0f,  0.0f,  0.2f);
 		mdl2.modelMesh.tris = cube0Triangles;
 		mdl2.modelMesh.shape = Shape::CUBE;
-		artificeEngine->modelsToRaster.push_back(mdl2);
+		artificeEngine->modelsToRender.push_back(mdl2);
 
 		model mdl3; mdl3.texture = "cubemap";
 		mdl3.position = glm::vec3( -0.2f,  0.2f,  0.0f);
 		mdl3.modelMesh.tris = cube0Triangles;
 		mdl3.modelMesh.shape = Shape::CUBE;
-		artificeEngine->modelsToRaster.push_back(mdl3);
+		artificeEngine->modelsToRender.push_back(mdl3);
 
 		model mdl4; mdl4.texture = "cubemap";
 		mdl4.position = glm::vec3( -0.2f,  0.2f, 0.2f);
 		mdl4.modelMesh.tris = cube0Triangles;
 		mdl4.modelMesh.shape = Shape::CUBE;
-		artificeEngine->modelsToRaster.push_back(mdl4);
+		artificeEngine->modelsToRender.push_back(mdl4);
 
 		model mdl5; mdl5.texture = "cubemap";
 		mdl5.position = glm::vec3( 0.0f,  0.0f, 0.4f);
 		mdl5.modelMesh.tris = cube0Triangles;
 		mdl5.modelMesh.shape = Shape::CUBE;
-		artificeEngine->modelsToRaster.push_back(mdl5);
+		artificeEngine->modelsToRender.push_back(mdl5);
 
 		model mdl6; mdl6.texture = "box";
 		mdl6.position = glm::vec3( 0.2f,  0.2f, 0.0f);
 		mdl6.modelMesh.tris = cube0Triangles;
 		mdl6.modelMesh.shape = Shape::CUBE;
-		artificeEngine->modelsToRaster.push_back(mdl6);
+		artificeEngine->modelsToRender.push_back(mdl6);
 
 		model mdl7; mdl7.texture = "box";
 		mdl7.position = glm::vec3( 0.2f,  0.2f, 0.2f);
 		mdl7.modelMesh.tris = cube0Triangles;
 		mdl7.modelMesh.shape = Shape::CUBE;
-		artificeEngine->modelsToRaster.push_back(mdl7);
+		artificeEngine->modelsToRender.push_back(mdl7);
 
 		model mdl8; mdl8.texture = "walnut";
 		mdl8.position = glm::vec3( 1.0f,  0.0f, 0.2f);
 		cuboid cuboid0{0.2, 0.5, 0.2};
 		cuboid0.toTriangles(mdl8.modelMesh.tris);
 		mdl8.modelMesh.shape = Shape::CUBOID;
-		artificeEngine->modelsToRaster.push_back(mdl8);
+		artificeEngine->modelsToRender.push_back(mdl8);
 
 		model mdl9; mdl9.texture = "brickwall";
 		mdl9.position = glm::vec3( 1.5f,  1.0f, 0.2f);
 		cuboid cuboid1{0.2, 0.5, 0.2};
 		cuboid1.toTriangles(mdl9.modelMesh.tris);
 		mdl9.modelMesh.shape = Shape::CUBOID;
-		artificeEngine->modelsToRaster.push_back(mdl9);
+		artificeEngine->modelsToRender.push_back(mdl9);
 		*/
 		
 		//create VAOs

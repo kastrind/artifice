@@ -60,7 +60,7 @@ int main( int argc, char* args[] )
 				}
 				//just a temporary proof-of-concept to modify world on user input
 				// if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_0) {
-				// 	for (auto &model : artificeEngine->modelsToRaster) {
+				// 	for (auto &model : artificeEngine->modelsToRender) {
 				// 		std::cout << "removing triangle!" << std::endl;
 				// 		if (model.modelMesh.tris.size()) model.modelMesh.tris.pop_back();
 				// 		artificeEngine->updateVerticesFlag = true;

@@ -108,9 +108,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 {
 	mtx.lock();
 
-	//listen for input
-	std::memcpy(prevKeysPressed, keysPressed, SupportedKeys::ALL_KEYS * sizeof(bool));
-	std::memcpy(keysPressed, eventController->getKeysPressed(), SupportedKeys::ALL_KEYS * sizeof(bool));
+	captureInput();
 
 	glm::vec3 prevCameraPos = cameraPos;
 	glm::vec3 center{ 0, 0, 0 };
@@ -138,7 +136,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	mtx.unlock();
 
 	//for each model to raster
-	for (auto &model : modelsToRaster)
+	for (auto &model : modelsToRender)
 	{
 
 		mtx.lock();
@@ -384,11 +382,26 @@ void Engine3D::edit(float elapsedTime)
 		// pressing LCTRL + mouse wheel up/down increases/decreases the collation height
 		if (keysPressed[SupportedKeys::LEFT_CTRL] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
 			collationHeight = std::max(--collationHeight, (unsigned int)1);
-			std::cout << "set collation height: " << collationHeight << std::endl;
+			std::cout << "collation height: " << collationHeight << std::endl;
 
 		}else if (keysPressed[SupportedKeys::LEFT_CTRL] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
 			collationHeight++;
-			std::cout << "set collation height: " << collationHeight << std::endl;
+			std::cout << "collation height: " << collationHeight << std::endl;
+		// pressing LSHIFT + mouse wheel up/down increases/decreases the collation width
+		}else if (keysPressed[SupportedKeys::LEFT_SHIFT] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+			collationWidth = std::max(--collationWidth, (unsigned int)1);
+			std::cout << "collation width: " << collationWidth << std::endl;
+		}else if (keysPressed[SupportedKeys::LEFT_SHIFT] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+			collationWidth++;
+			std::cout << "collation width: " << collationWidth << std::endl;
+		}else if (prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+			if (++edShapeInt > Shape::CUBE) edShapeInt = 1;
+			editingShape = (Shape)edShapeInt;
+			std::cout << "shape: " << shapeToString(editingShape) << std::endl;
+		}else if (prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+			if (--edShapeInt < 1) edShapeInt = Shape::CUBE;
+			editingShape = (Shape)edShapeInt;
+			std::cout << "shape: " << shapeToString(editingShape) << std::endl;
 		}
 
 		if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
@@ -403,8 +416,8 @@ void Engine3D::edit(float elapsedTime)
 			std::cout << "about to place model with sn = " << mdl.sn << std::endl;
 			mdl.isEditing = true;
 			mtx.lock();
-			modelsToRaster.push_back(mdl);
-			editingModel = &modelsToRaster.back();
+			modelsToRender.push_back(mdl);
+			editingModel = &modelsToRender.back();
 			std::cout << "placed model has sn = " << editingModel->sn << std::endl;
 			mtx.unlock();
 			cameraSpeedFactor /= 100;
@@ -419,71 +432,63 @@ void Engine3D::edit(float elapsedTime)
 		if (editingModel != nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]==false) {
 			cameraSpeedFactor *= 100;
 			bool isValidPlacement = false;
+			char heightAlongAxis = 'y';
+			char widthAlongAxis = 'x';
 
-			// pressing LCTRL enables collation of new model to the previous one along the direction the camera is facing
-			if (keysPressed[SupportedKeys::LEFT_CTRL] && modelsInFocus.size() > 0)
+			glm::vec3 pos = glm::vec3(0, 0, 0);
+			if (std::abs(cameraFront.z) > std::abs(cameraFront.x)*1.2f && std::abs(cameraFront.z) > std::abs(cameraFront.y)*1.2f)
 			{
-				mtx.lock();
-				model modelInFocus = **(modelsInFocus.begin());
-				mtx.unlock();
-				bool existsPrevailingDim = false;
-
-				glm::vec3 pos = glm::vec3(0, 0, 0);
-				if (std::abs(cameraFront.z) > std::abs(cameraFront.x)*1.2f && std::abs(cameraFront.z) > std::abs(cameraFront.y)*1.2f)
-				{
-					if (std::abs(cameraFront.x) > std::abs(cameraFront.y))
-						pos.x = cameraFront.x / std::abs(cameraFront.x);
-					else
-						pos.y = cameraFront.y / std::abs(cameraFront.y);
-					existsPrevailingDim = true;
-				}else if (std::abs(cameraFront.x) > std::abs(cameraFront.y)*1.2f && std::abs(cameraFront.x) > std::abs(cameraFront.z)*1.2f)
-				{
-					if (std::abs(cameraFront.y) > std::abs(cameraFront.z))
-						pos.y = cameraFront.y / std::abs(cameraFront.y);
-					else
-						pos.z = cameraFront.z / std::abs(cameraFront.z);
-					existsPrevailingDim = true;
-				}else if (std::abs(cameraFront.y) > std::abs(cameraFront.x)*1.2f && std::abs(cameraFront.y) > std::abs(cameraFront.z)*1.2f)
-				{
-					if (std::abs(cameraFront.x) > std::abs(cameraFront.z))
-						pos.x = cameraFront.x / std::abs(cameraFront.x);
-					else
-						pos.z = cameraFront.z / std::abs(cameraFront.z);
-					existsPrevailingDim = true;
-				}
-				
-				if (existsPrevailingDim)
-				{
-					// mdl.position = modelInFocus->position + editingDepth * pos;
-					editingModel->position = modelInFocus.position + editingDepth * pos;
-					isValidPlacement = true;
-				}
-
-			// standard placement in front of the camera, no collation
-			} else if (!keysPressed[SupportedKeys::LEFT_CTRL])
+				heightAlongAxis = 'y';
+				widthAlongAxis = 'x';
+			}else if (std::abs(cameraFront.x) > std::abs(cameraFront.y)*1.2f && std::abs(cameraFront.x) > std::abs(cameraFront.z)*1.2f)
 			{
-				// mdl.position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
-				editingModel->position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
-				isValidPlacement = true;
+				heightAlongAxis = 'y';
+				widthAlongAxis = 'z';
+			}else if (std::abs(cameraFront.y) > std::abs(cameraFront.x)*1.2f && std::abs(cameraFront.y) > std::abs(cameraFront.z)*1.2f)
+			{
+				if (std::abs(cameraFront.x) > std::abs(cameraFront.z))
+				{
+					heightAlongAxis = 'x';
+					widthAlongAxis = 'z';
+				}else
+				{
+					heightAlongAxis = 'z';
+					widthAlongAxis = 'x';
+				}
 			}
+
+			// mdl.position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
+			editingModel->position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
+			isValidPlacement = true;
 
 			if (isValidPlacement)
 			{
 				model m = *editingModel;
+				glm::vec3 initialPos = m.position;
 				mtx.lock();
-				std::cout << "models size before: " << modelsToRaster.size() << std::endl;
-				for (unsigned int i = 1; i < collationHeight; i++) {
-					std::cout << "repeating for model i = " << i;
-					//model m = mdl;
-					m.position.y += editingHeight;
-					m.sn = cubePointsCnt;
-					std::cout << " ... with sn: " << m.sn << std::endl;
-					// std::cout << " ... with sn: " << editingModel->sn << std::endl;
-					cubePointsCnt += m.modelMesh.tris.size() * 3;
-					modelsToRaster.push_back(m);
+				std::cout << "models size before: " << modelsToRender.size() << std::endl;
+				for (unsigned int i = 0; i < collationWidth; i++) {
+					unsigned int j = i > 0 ? 0 : 1;
+					for (j; j < collationHeight; j++) {
+						//std::cout << "repeating for model " << i;
+						//m.position.y += editingHeight;
+						if (heightAlongAxis == 'y') m.position.y += editingHeight;
+						else if (heightAlongAxis == 'x') m.position.x += editingWidth;
+						else if (heightAlongAxis == 'z') m.position.z += editingDepth;
+						m.sn = cubePointsCnt;
+						cubePointsCnt += m.modelMesh.tris.size() * 3;
+						modelsToRender.push_back(m);
+					}
+					if (widthAlongAxis == 'z') m.position.z += editingDepth;
+					else if (widthAlongAxis == 'x') m.position.x += editingWidth;
+					else if (widthAlongAxis == 'y') m.position.y += editingHeight;
+					//m.position.y = initialPos.y - editingHeight;
+					if (heightAlongAxis == 'y') m.position.y = initialPos.y - editingHeight;
+					else if (heightAlongAxis == 'x') m.position.x = initialPos.x - editingWidth;
+					else if (heightAlongAxis == 'z') m.position.z = initialPos.z - editingDepth;
 				}
 				mtx.unlock();
-				std::cout << "models size after: " << modelsToRaster.size() << std::endl;
+				std::cout << "models size after: " << modelsToRender.size() << std::endl;
 
 			}
 			// std::cout << "model placed has sn: " << editingModel->sn << std::endl;
@@ -505,24 +510,24 @@ void Engine3D::edit(float elapsedTime)
 			unsigned long i = 0;
 			unsigned long lastModelSn = 0;
 			unsigned long lastCubeSn = 0;
-			for (i; i < modelsToRaster.size(); i++)
+			for (i; i < modelsToRender.size(); i++)
 			{
-				if (modelsToRaster[i].removeFlag) break;
+				if (modelsToRender[i].removeFlag) break;
 			}
-			std::cout << "removed model with index = " << i << " and sn = " << modelsToRaster[i].sn << std::endl;
+			std::cout << "removed model with index = " << i << " and sn = " << modelsToRender[i].sn << std::endl;
 			cubePointsCnt -= deletingModel->modelMesh.tris.size() * 3;
-			for (i+=1; i < modelsToRaster.size(); i++)
+			for (i+=1; i < modelsToRender.size(); i++)
 			{
-				if (deletingModel->modelMesh.shape == Shape::CUBE && modelsToRaster[i].modelMesh.shape == Shape::CUBE)
+				if (deletingModel->modelMesh.shape == Shape::CUBE && modelsToRender[i].modelMesh.shape == Shape::CUBE)
 				{
-					std::cout << "index = " << i << " sn = " << modelsToRaster[i].sn << " - " << deletingModel->modelMesh.tris.size() * 3 << std::endl;
-					modelsToRaster[i].sn -= deletingModel->modelMesh.tris.size() * 3;
-				}else if (deletingModel->modelMesh.shape != Shape::CUBE && modelsToRaster[i].modelMesh.shape != Shape::CUBE)
+					std::cout << "index = " << i << " sn = " << modelsToRender[i].sn << " - " << deletingModel->modelMesh.tris.size() * 3 << std::endl;
+					modelsToRender[i].sn -= deletingModel->modelMesh.tris.size() * 3;
+				}else if (deletingModel->modelMesh.shape != Shape::CUBE && modelsToRender[i].modelMesh.shape != Shape::CUBE)
 				{
-					modelsToRaster[i].sn -= deletingModel->modelMesh.tris.size() * 3;
+					modelsToRender[i].sn -= deletingModel->modelMesh.tris.size() * 3;
 				}
 			}
-			modelsToRaster.erase(std::remove_if(modelsToRaster.begin(), modelsToRaster.end(), [](model m) { return m.removeFlag == true; }), modelsToRaster.end());
+			modelsToRender.erase(std::remove_if(modelsToRender.begin(), modelsToRender.end(), [](model m) { return m.removeFlag == true; }), modelsToRender.end());
 			
 			mtx.unlock();
 			deletingModel = nullptr;
@@ -604,15 +609,11 @@ void Engine3D::updateVertices()
 	std::vector<GLfloat>* vdp = &vertexData;
 
 	mtx.lock();
-	std::vector<model> modelsToRaster2 = modelsToRaster;
-	std::cout << "updating vertices from models size: " << modelsToRaster2.size() << std::endl;
+	std::vector<model> modelsToRenderCopy = modelsToRender;
 	mtx.unlock();
 
 	//populate vertex vectors with triangle vertex information for each model
-	// for (auto itr = finalModelsToRender3.begin(); itr != finalModelsToRender3.end(); itr++)
-	// {
-	// 	model model = *(*(itr));
-	for (auto &model : modelsToRaster2)
+	for (auto &model : modelsToRenderCopy)
 	{
 
 		vdp = model.modelMesh.shape == Shape::CUBE ? &cubeVertexData : &vertexData;
@@ -728,20 +729,15 @@ void Engine3D::render()
 
 	finalModelsToRender.clear();
 	mtx.lock();
-	//std::vector<model> modelsToRaster2 = modelsToRaster;
-	for (model& model : modelsToRaster)
+	for (model& model : modelsToRender)
 	{
 		if (model.isInDOF) finalModelsToRender.insert(&model);
 	}
-	//std::set<model*, ModelDistanceComparator> finalModelsToRender3 = finalModelsToRender2;
 	mtx.unlock();
 
 	for (auto itr = finalModelsToRender.begin(); itr != finalModelsToRender.end(); itr++)
 	{
 		model model = *(*itr);
-
-	// for (auto &model : modelsToRaster2)
-	// {
 
 		if (model.modelMesh.shape == Shape::CUBE)
 		{
@@ -774,9 +770,32 @@ void Engine3D::render()
 	}
 }
 
-void Engine3D::setLevel(Level* level) {
-	modelsToRaster = level->models;
+void Engine3D::captureInput()
+{
+	//listen for input
+	std::memcpy(prevKeysPressed, keysPressed, SupportedKeys::ALL_KEYS * sizeof(bool));
+	std::memcpy(keysPressed, eventController->getKeysPressed(), SupportedKeys::ALL_KEYS * sizeof(bool));
+}
+
+void Engine3D::setLevel(Level* level)
+{
+	modelsToRender = level->models;
 	modelPointsCnt = level->modelPointsCnt;
 	cubePointsCnt = level->cubePointsCnt;
 }
 
+std::string Engine3D::shapeToString(Shape s)
+{
+	switch (s) {
+		case Shape::TRIANGLE:
+			return "triangle";
+		case Shape::RECTANGLE:
+			return "rectangle";
+		case Shape::CUBOID:
+			return "cuboid";
+		case Shape::CUBE:
+			return "cube";
+		default:
+			return "";
+	}
+}

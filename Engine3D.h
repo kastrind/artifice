@@ -94,7 +94,7 @@ class Engine3D
 
 		std::mutex mtx;
 
-		std::vector<model> modelsToRaster;
+		std::vector<model> modelsToRender;
 
 	private:
 
@@ -141,9 +141,11 @@ class Engine3D
 		//editor user mode specific
 		float originalCollidingDistance;
 		unsigned int collationHeight = 1;
+		unsigned int collationWidth = 1;
 		float editingWidth = 0;
 		float editingHeight = 0;
 		float editingDepth = 0;
+		Shape editingShape = Shape::CUBE; unsigned short edShapeInt = 1;
 		model* editingModel = nullptr;
 		model* deletingModel = nullptr;
 		unsigned long modelPointsCnt = 0;
@@ -174,5 +176,9 @@ class Engine3D
 		void move(float elapsedTime);
 
 		void edit(float elapsedTime);
+
+		void captureInput();
+
+		std::string shapeToString(Shape s);
 
 };

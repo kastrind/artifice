@@ -255,6 +255,14 @@ void EventController::processEvent(SDL_Event* e)
 		{
 			keysPressed[SupportedKeys::LEFT_CTRL] = true;
 		}
+		else if (e->key.keysym.sym == SDLK_LSHIFT)
+		{
+			keysPressed[SupportedKeys::LEFT_SHIFT] = true;
+		}
+		else if (e->key.keysym.sym == SDLK_LALT)
+		{
+			keysPressed[SupportedKeys::LEFT_ALT] = true;
+		}
 	}
 	//user releases a key
 	else if( e->type == SDL_KEYUP )
@@ -294,6 +302,14 @@ void EventController::processEvent(SDL_Event* e)
 		else if (e->key.keysym.sym == SDLK_LCTRL)
 		{
 			keysPressed[SupportedKeys::LEFT_CTRL] = false;
+		}
+		else if (e->key.keysym.sym == SDLK_LSHIFT)
+		{
+			keysPressed[SupportedKeys::LEFT_SHIFT] = false;
+		}
+		else if (e->key.keysym.sym == SDLK_LALT)
+		{
+			keysPressed[SupportedKeys::LEFT_ALT] = false;
 		}
 	}
 	//buffer mouse clicks
