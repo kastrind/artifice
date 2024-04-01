@@ -88,8 +88,6 @@ class Engine3D
 
 		std::atomic<bool> isActive;
 
-		std::atomic<bool> isTouched;
-
 		std::atomic<bool> updateVerticesFlag;
 
 		float elapsedTime;
@@ -152,6 +150,7 @@ class Engine3D
 		unsigned long cubePointsCnt = 0;
 
 		bool keysPressed[SupportedKeys::ALL_KEYS];
+		bool prevKeysPressed[SupportedKeys::ALL_KEYS];
 
 		//camera
 		glm::vec3 cameraPos;
@@ -174,6 +173,6 @@ class Engine3D
 
 		void move(float elapsedTime);
 
-		void edit();
+		void edit(float elapsedTime);
 
 };

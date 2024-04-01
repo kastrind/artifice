@@ -1,9 +1,9 @@
 # this is a comment
 # id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ
-1,cube,box,0.2,0.2,0.2,false,0,0,0,0,1.5,0
-2,rectangle,brickwallPainted,0.6,0.6,0,true,0,0,0.5,2,1.5,0
-3,rectangle,walnut,0.7,0.2,0,true,0,0.5,0,1,1.5,0
-5,cuboid,walnut,0.2,0.5,0.2,true,0,0,0,0,0,0.5,0
-6,cuboid,brickwall,0.4,0.1,0.4,true,0,0,0,0,1,0
-4,cuboid,walnut,0.5,0.2,0.2,true,0,0,0,0,1.5,0
-7,rectangle,walnut,0.2,0.2,0,true,3.14,0,0,0,0,0
+#1,cube,box,0.2,0.2,0.2,false,0,0,0,0,1.5,0
+#2,rectangle,brickwallPainted,0.6,0.6,0,true,0,0,0.5,2,1.5,0
+#3,rectangle,walnut,0.7,0.2,0,true,0,0.5,0,1,1.5,0
+#5,cuboid,walnut,0.2,0.5,0.2,true,0,0,0,0,0,0.5,0
+#6,cuboid,brickwall,0.4,0.1,0.4,true,0,0,0,0,1,0
+#4,cuboid,walnut,0.5,0.2,0.2,true,0,0,0,0,1.5,0
+#7,rectangle,walnut,0.2,0.2,0,true,3.14,0,0,0,0,0

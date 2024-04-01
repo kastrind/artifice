@@ -17,8 +17,6 @@ Engine3D::Engine3D(int width, int height,
 {
 	isActive = false;
 
-	isTouched = false;
-
 	updateVerticesFlag = false;
 
 	projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
@@ -110,6 +108,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 {
 	mtx.lock();
 
+	//listen for input
+	std::memcpy(prevKeysPressed, keysPressed, SupportedKeys::ALL_KEYS * sizeof(bool));
 	std::memcpy(keysPressed, eventController->getKeysPressed(), SupportedKeys::ALL_KEYS * sizeof(bool));
 
 	glm::vec3 prevCameraPos = cameraPos;
@@ -256,7 +256,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	}
 	lightPos = cameraFront;
 
-	edit();
+	edit(elapsedTime);
 
 	// std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
 	return true;
@@ -370,25 +370,28 @@ void Engine3D::move(float elapsedTime)
 }
 
 
-void Engine3D::edit()
+void Engine3D::edit(float elapsedTime)
 {
 	if (userMode != UserMode::EDITOR) return;
+
+	if (updateVerticesFlag) return;
 
 	if (eventController != nullptr)
 	{
 		//bool* keysPressed = eventController->getKeysPressed();
+		bool isEdited = false;
 
 		// pressing LCTRL + mouse wheel up/down increases/decreases the collation height
-		if (keysPressed[SupportedKeys::LEFT_CTRL] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && !isTouched) {
+		if (keysPressed[SupportedKeys::LEFT_CTRL] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
 			collationHeight = std::max(--collationHeight, (unsigned int)1);
 			std::cout << "set collation height: " << collationHeight << std::endl;
-			isTouched = true;
-		}else if (keysPressed[SupportedKeys::LEFT_CTRL] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] && !isTouched) {
-			std::cout << "set collation height: " << ++collationHeight << std::endl;
-			isTouched = true;
+
+		}else if (keysPressed[SupportedKeys::LEFT_CTRL] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+			collationHeight++;
+			std::cout << "set collation height: " << collationHeight << std::endl;
 		}
 
-		if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] && !updateVerticesFlag) {
+		if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
 			model mdl; mdl.texture = "box";
 			editingWidth = 0.2f; editingHeight = 0.2f; editingDepth = 0.2f;
 			cube cube0{editingWidth};
@@ -397,13 +400,15 @@ void Engine3D::edit()
 			mdl.position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
 			mdl.sn = cubePointsCnt;
 			cubePointsCnt += mdl.modelMesh.tris.size() * 3;
+			std::cout << "about to place model with sn = " << mdl.sn << std::endl;
 			mdl.isEditing = true;
 			mtx.lock();
 			modelsToRaster.push_back(mdl);
 			editingModel = &modelsToRaster.back();
-			updateVerticesFlag = true;
+			std::cout << "placed model has sn = " << editingModel->sn << std::endl;
 			mtx.unlock();
 			cameraSpeedFactor /= 100;
+			isEdited = true;
 		}
 		
 		if (editingModel != nullptr) {
@@ -411,47 +416,51 @@ void Engine3D::edit()
 		}
 
 		// releasing left mouse click places a new model
-		if (editingModel != nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]==false && !updateVerticesFlag) {
-			// mtx.lock();
-			// model mdl = modelsToRaster.back();
-			// modelsToRaster.pop_back();
-			// mtx.unlock();
+		if (editingModel != nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]==false) {
 			cameraSpeedFactor *= 100;
 			bool isValidPlacement = false;
 
 			// pressing LCTRL enables collation of new model to the previous one along the direction the camera is facing
 			if (keysPressed[SupportedKeys::LEFT_CTRL] && modelsInFocus.size() > 0)
 			{
+				mtx.lock();
+				model modelInFocus = **(modelsInFocus.begin());
+				mtx.unlock();
+				bool existsPrevailingDim = false;
+
 				glm::vec3 pos = glm::vec3(0, 0, 0);
-				if (std::abs(cameraFront.z) > std::abs(cameraFront.x) && std::abs(cameraFront.z) > std::abs(cameraFront.y))
+				if (std::abs(cameraFront.z) > std::abs(cameraFront.x)*1.2f && std::abs(cameraFront.z) > std::abs(cameraFront.y)*1.2f)
 				{
 					if (std::abs(cameraFront.x) > std::abs(cameraFront.y))
 						pos.x = cameraFront.x / std::abs(cameraFront.x);
 					else
 						pos.y = cameraFront.y / std::abs(cameraFront.y);
-				}else if (std::abs(cameraFront.x) > std::abs(cameraFront.y) && std::abs(cameraFront.x) > std::abs(cameraFront.z))
+					existsPrevailingDim = true;
+				}else if (std::abs(cameraFront.x) > std::abs(cameraFront.y)*1.2f && std::abs(cameraFront.x) > std::abs(cameraFront.z)*1.2f)
 				{
 					if (std::abs(cameraFront.y) > std::abs(cameraFront.z))
 						pos.y = cameraFront.y / std::abs(cameraFront.y);
 					else
 						pos.z = cameraFront.z / std::abs(cameraFront.z);
-				}else if (std::abs(cameraFront.y) > std::abs(cameraFront.x) && std::abs(cameraFront.y) > std::abs(cameraFront.z))
+					existsPrevailingDim = true;
+				}else if (std::abs(cameraFront.y) > std::abs(cameraFront.x)*1.2f && std::abs(cameraFront.y) > std::abs(cameraFront.z)*1.2f)
 				{
 					if (std::abs(cameraFront.x) > std::abs(cameraFront.z))
 						pos.x = cameraFront.x / std::abs(cameraFront.x);
 					else
 						pos.z = cameraFront.z / std::abs(cameraFront.z);
+					existsPrevailingDim = true;
 				}
 				
-				// mtx.lock();
-				// auto modelInFocus = *(modelsInFocus.begin());
-				// mtx.unlock();
-				// mdl.position = modelInFocus->position + editingDepth * pos;
-				editingModel->position = editingModel->position + editingDepth * pos;
-				isValidPlacement = true;
+				if (existsPrevailingDim)
+				{
+					// mdl.position = modelInFocus->position + editingDepth * pos;
+					editingModel->position = modelInFocus.position + editingDepth * pos;
+					isValidPlacement = true;
+				}
 
 			// standard placement in front of the camera, no collation
-			}else if (!keysPressed[SupportedKeys::LEFT_CTRL])
+			} else if (!keysPressed[SupportedKeys::LEFT_CTRL])
 			{
 				// mdl.position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
 				editingModel->position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
@@ -460,32 +469,36 @@ void Engine3D::edit()
 
 			if (isValidPlacement)
 			{
+				model m = *editingModel;
 				mtx.lock();
-				//modelsToRaster.push_back(mdl);
-
+				std::cout << "models size before: " << modelsToRaster.size() << std::endl;
 				for (unsigned int i = 1; i < collationHeight; i++) {
+					std::cout << "repeating for model i = " << i;
 					//model m = mdl;
-					model m = *editingModel;
-					m.position.y += i * editingHeight;
+					m.position.y += editingHeight;
 					m.sn = cubePointsCnt;
+					std::cout << " ... with sn: " << m.sn << std::endl;
+					// std::cout << " ... with sn: " << editingModel->sn << std::endl;
 					cubePointsCnt += m.modelMesh.tris.size() * 3;
 					modelsToRaster.push_back(m);
 				}
-				updateVerticesFlag = true;
 				mtx.unlock();
+				std::cout << "models size after: " << modelsToRaster.size() << std::endl;
+
 			}
-			std::cout << "model placed has sn: " << editingModel->sn << std::endl;
+			// std::cout << "model placed has sn: " << editingModel->sn << std::endl;
 			editingModel = nullptr;
+			isEdited = true;
 			//std::cout << "added cube!" << cameraFront.x << cameraFront.y << cameraFront.z << std::endl;
 
 		// right mouse click deletes the model currently in focus
-		}else if (deletingModel == nullptr && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] && modelsInFocus.size() > 0 && !updateVerticesFlag) {
+		}else if (deletingModel == nullptr && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] && modelsInFocus.size() > 0) {
 			mtx.lock();
 			auto modelInFocus = *(modelsInFocus.begin());
 			deletingModel = modelInFocus;
 			mtx.unlock();
 
-		}else if (deletingModel != nullptr && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK]==false && !updateVerticesFlag) {
+		}else if (deletingModel != nullptr && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK]==false) {
 			std::cout << "deleted!" << std::endl;
 			mtx.lock();
 			deletingModel->removeFlag = true;
@@ -511,9 +524,9 @@ void Engine3D::edit()
 			}
 			modelsToRaster.erase(std::remove_if(modelsToRaster.begin(), modelsToRaster.end(), [](model m) { return m.removeFlag == true; }), modelsToRaster.end());
 			
-			updateVerticesFlag = true;
 			mtx.unlock();
 			deletingModel = nullptr;
+			isEdited = true;
 		}
 
 		/*
@@ -536,7 +549,7 @@ void Engine3D::edit()
 				//updateVerticesFlag = true;
 			}
 		}*/
-
+		updateVerticesFlag = isEdited;
 	}
 }
 
@@ -592,6 +605,7 @@ void Engine3D::updateVertices()
 
 	mtx.lock();
 	std::vector<model> modelsToRaster2 = modelsToRaster;
+	std::cout << "updating vertices from models size: " << modelsToRaster2.size() << std::endl;
 	mtx.unlock();
 
 	//populate vertex vectors with triangle vertex information for each model

@@ -73,8 +73,6 @@ int main( int argc, char* args[] )
 
 			//update screen
 			SDL_GL_SwapWindow( gWindow );
-
-			artificeEngine->isTouched = false;
 		}
 
 		//disable text input
