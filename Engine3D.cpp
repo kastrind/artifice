@@ -416,6 +416,7 @@ void Engine3D::edit(float elapsedTime)
 			std::cout << "about to place model with sn = " << mdl.sn << std::endl;
 			mdl.isEditing = true;
 			mtx.lock();
+			if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
 			modelsToRender.push_back(mdl);
 			editingModel = &modelsToRender.back();
 			std::cout << "placed model has sn = " << editingModel->sn << std::endl;
@@ -431,66 +432,84 @@ void Engine3D::edit(float elapsedTime)
 		// releasing left mouse click places a new model
 		if (editingModel != nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]==false) {
 			cameraSpeedFactor *= 100;
-			bool isValidPlacement = false;
 			char heightAlongAxis = 'y';
 			char widthAlongAxis = 'x';
+			short dirX = cameraFront.x / std::abs(cameraFront.x);
+			short dirY = cameraFront.y / std::abs(cameraFront.y);
+			short dirZ = cameraFront.z / std::abs(cameraFront.z);
 
 			glm::vec3 pos = glm::vec3(0, 0, 0);
 			if (std::abs(cameraFront.z) > std::abs(cameraFront.x)*1.2f && std::abs(cameraFront.z) > std::abs(cameraFront.y)*1.2f)
 			{
 				heightAlongAxis = 'y';
-				widthAlongAxis = 'x';
-			}else if (std::abs(cameraFront.x) > std::abs(cameraFront.y)*1.2f && std::abs(cameraFront.x) > std::abs(cameraFront.z)*1.2f)
+				widthAlongAxis = 'z';
+				pos.z = dirZ;
+			} else if (std::abs(cameraFront.x) > std::abs(cameraFront.y)*1.2f && std::abs(cameraFront.x) > std::abs(cameraFront.z)*1.2f)
 			{
 				heightAlongAxis = 'y';
-				widthAlongAxis = 'z';
-			}else if (std::abs(cameraFront.y) > std::abs(cameraFront.x)*1.2f && std::abs(cameraFront.y) > std::abs(cameraFront.z)*1.2f)
+				widthAlongAxis = 'x';
+				pos.x = dirX;
+			} else if (std::abs(cameraFront.y) > std::abs(cameraFront.x)*1.2f && std::abs(cameraFront.y) > std::abs(cameraFront.z)*1.2f)
 			{
-				if (std::abs(cameraFront.x) > std::abs(cameraFront.z))
-				{
+				if (std::abs(cameraFront.x) > std::abs(cameraFront.z)) {
 					heightAlongAxis = 'x';
 					widthAlongAxis = 'z';
-				}else
-				{
+					pos.z = dirZ;
+				} else {
 					heightAlongAxis = 'z';
 					widthAlongAxis = 'x';
+					pos.x = dirX;
 				}
 			}
 
-			// mdl.position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
-			editingModel->position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
-			isValidPlacement = true;
-
-			if (isValidPlacement)
-			{
-				model m = *editingModel;
-				glm::vec3 initialPos = m.position;
+			model m = *editingModel;
+			bool isGlued = false;
+			if (keysPressed[SupportedKeys::LEFT_CTRL] && modelInFocusTmp.inFocus) {
+				m.position = modelInFocusTmp.position + editingDepth * pos;
+				modelInFocusTmp.inFocus = false;
 				mtx.lock();
-				std::cout << "models size before: " << modelsToRender.size() << std::endl;
-				for (unsigned int i = 0; i < collationWidth; i++) {
-					unsigned int j = i > 0 ? 0 : 1;
-					for (j; j < collationHeight; j++) {
-						//std::cout << "repeating for model " << i;
-						//m.position.y += editingHeight;
-						if (heightAlongAxis == 'y') m.position.y += editingHeight;
-						else if (heightAlongAxis == 'x') m.position.x += editingWidth;
-						else if (heightAlongAxis == 'z') m.position.z += editingDepth;
-						m.sn = cubePointsCnt;
-						cubePointsCnt += m.modelMesh.tris.size() * 3;
-						modelsToRender.push_back(m);
-					}
-					if (widthAlongAxis == 'z') m.position.z += editingDepth;
-					else if (widthAlongAxis == 'x') m.position.x += editingWidth;
-					else if (widthAlongAxis == 'y') m.position.y += editingHeight;
-					//m.position.y = initialPos.y - editingHeight;
-					if (heightAlongAxis == 'y') m.position.y = initialPos.y - editingHeight;
-					else if (heightAlongAxis == 'x') m.position.x = initialPos.x - editingWidth;
-					else if (heightAlongAxis == 'z') m.position.z = initialPos.z - editingDepth;
-				}
+				model* m2 = &modelsToRender.back();
+				cubePointsCnt -= m2->sn;
+				modelsToRender.pop_back();
+				m.sn = cubePointsCnt;
+				cubePointsCnt += m.modelMesh.tris.size() * 3;
+				modelsToRender.push_back(m);
 				mtx.unlock();
-				std::cout << "models size after: " << modelsToRender.size() << std::endl;
-
+				isGlued = true;
+				std::cout << "glued placement" << std::endl;
+			}else {
+				editingModel->position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
+				std::cout << "standard placement" << std::endl;
 			}
+
+			glm::vec3 initialPos = m.position;
+			std::cout << "dir X Y Z : " << dirX << ", " << dirY << ", " << dirZ << std::endl;
+			mtx.lock();
+			std::cout << "models size before: " << modelsToRender.size() << std::endl;
+			for (unsigned int i = 0; i < collationWidth; i++) {
+				unsigned int j = i > 0 ? 0 : 1;
+				for (j; j < collationHeight; j++) {
+					std::cout << "into collation height loop!" << std::endl;
+					//std::cout << "repeating for model " << i;
+					//m.position.y += editingHeight;
+					if (heightAlongAxis == 'y') m.position.y += editingHeight;
+					else if (heightAlongAxis == 'x') m.position.x += dirX * editingWidth;
+					else if (heightAlongAxis == 'z') m.position.z += dirZ *  editingDepth;
+					m.sn = cubePointsCnt;
+					cubePointsCnt += m.modelMesh.tris.size() * 3;
+					modelsToRender.push_back(m);
+				}
+				if (widthAlongAxis == 'z') m.position.z += dirZ * editingDepth;
+				else if (widthAlongAxis == 'x') m.position.x += dirX * editingWidth;
+				else if (widthAlongAxis == 'y') m.position.y += editingHeight;
+				//m.position.y = initialPos.y - editingHeight;
+				if (heightAlongAxis == 'y') m.position.y = initialPos.y - editingHeight;
+				else if (heightAlongAxis == 'x') m.position.x = initialPos.x - dirX * editingWidth;
+				else if (heightAlongAxis == 'z') m.position.z = initialPos.z - dirZ * editingDepth;
+			}
+			mtx.unlock();
+			std::cout << "models size after: " << modelsToRender.size() << std::endl;
+
 			// std::cout << "model placed has sn: " << editingModel->sn << std::endl;
 			editingModel = nullptr;
 			isEdited = true;

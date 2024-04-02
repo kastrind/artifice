@@ -148,6 +148,7 @@ class Engine3D
 		Shape editingShape = Shape::CUBE; unsigned short edShapeInt = 1;
 		model* editingModel = nullptr;
 		model* deletingModel = nullptr;
+		model modelInFocusTmp;
 		unsigned long modelPointsCnt = 0;
 		unsigned long cubePointsCnt = 0;
 
