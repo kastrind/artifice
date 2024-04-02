@@ -34,6 +34,7 @@ void main()
 	vec3 finalColor = (ambient + diffuse + specular) * color;
 
 
-	FragColor = texture(cubemap, normalize(FragPos)) * vec4(finalColor, 1.0f);
+	//FragColor = texture(cubemap, normalize(FragPos)) * vec4(finalColor, 1.0f);
+	FragColor = texture(cubemap, normalize(FragPos)) * vec4(color, 1.0f);
 }
 
