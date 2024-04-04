@@ -136,8 +136,11 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	mtx.unlock();
 
 	//for each model to raster
-	for (auto &model : modelsToRender)
+	//for (auto &model : modelsToRender)
+	for (auto &ptrCube : ptrCubesToRender)
 	{
+		if (!ptrCube) continue;
+		model& model = *ptrCube;
 
 		mtx.lock();
 		glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
@@ -146,6 +149,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 		model.inFocus = false;
 		bool checkAgainForFocus = true;
+		model.isInFOV = false;
+		bool checkAgainForFOV = true;
 
 		mtx.unlock();
 
@@ -181,6 +186,14 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			}
 			//std::cout << "modelDistance: " << modelDistance << std::endl;
 
+			glm::vec3 linePt0 = glm::vec3(pt[0]) - cameraPos;
+			glm::vec3 linePt1 = glm::vec3(pt[1]) - cameraPos;
+			glm::vec3 linePt2 = glm::vec3(pt[2]) - cameraPos;
+
+			//mark out-of-FOV models
+			model.isInFOV = (glm::dot(cameraFront, glm::normalize(linePt0)) > 0.8) || (glm::dot(cameraFront, glm::normalize(linePt1)) > 0.8) || (glm::dot(cameraFront, glm::normalize(linePt2)) > 0.8);
+			if (model.isInFOV) { checkAgainForFOV = false; }
+
 			//camera/view transformation
 			pt[0] = projectionMatrix * viewMatrix * pt[0];
 			pt[1] = projectionMatrix * viewMatrix * pt[1];
@@ -204,7 +217,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 		}
 
-		//marks out-of-range models
+		//marks out-of-DOF models
 		model.isInDOF = modelDistance < dof;
 
 		//detect if colliding with the model
@@ -417,8 +430,10 @@ void Engine3D::edit(float elapsedTime)
 			mdl.isEditing = true;
 			mtx.lock();
 			if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
-			modelsToRender.push_back(mdl);
-			editingModel = &modelsToRender.back();
+			//modelsToRender.push_back(mdl);
+			//editingModel = &modelsToRender.back();
+			ptrCubesToRender.push_back(std::make_shared<model>(mdl));
+			editingModel = ptrCubesToRender.back();
 			std::cout << "placed model has sn = " << editingModel->sn << std::endl;
 			mtx.unlock();
 			cameraSpeedFactor /= 100;
@@ -468,12 +483,15 @@ void Engine3D::edit(float elapsedTime)
 				m.position = modelInFocusTmp.position + editingDepth * pos;
 				modelInFocusTmp.inFocus = false;
 				mtx.lock();
-				model* m2 = &modelsToRender.back();
-				cubePointsCnt -= m2->sn;
-				modelsToRender.pop_back();
+				//model* m2 = &modelsToRender.back();
+				//cubePointsCnt -= m2->sn;
+				cubePointsCnt -= ptrCubesToRender.back()->sn;
+				//modelsToRender.pop_back();
+				ptrCubesToRender.pop_back();
 				m.sn = cubePointsCnt;
 				cubePointsCnt += m.modelMesh.tris.size() * 3;
-				modelsToRender.push_back(m);
+				//modelsToRender.push_back(m);
+				ptrCubesToRender.push_back(std::make_shared<model>(m));
 				mtx.unlock();
 				isGlued = true;
 				std::cout << "glued placement" << std::endl;
@@ -485,7 +503,8 @@ void Engine3D::edit(float elapsedTime)
 			glm::vec3 initialPos = m.position;
 			std::cout << "dir X Y Z : " << dirX << ", " << dirY << ", " << dirZ << std::endl;
 			mtx.lock();
-			std::cout << "models size before: " << modelsToRender.size() << std::endl;
+			//std::cout << "models size before: " << modelsToRender.size() << std::endl;
+			std::cout << "models size before: " << ptrCubesToRender.size() << std::endl;
 			for (unsigned int i = 0; i < collationWidth; i++) {
 				unsigned int j = i > 0 ? 0 : 1;
 				for (j; j < collationHeight; j++) {
@@ -497,7 +516,8 @@ void Engine3D::edit(float elapsedTime)
 					else if (heightAlongAxis == 'z') m.position.z += dirZ *  editingDepth;
 					m.sn = cubePointsCnt;
 					cubePointsCnt += m.modelMesh.tris.size() * 3;
-					modelsToRender.push_back(m);
+					//modelsToRender.push_back(m);
+					ptrCubesToRender.push_back(std::make_shared<model>(m));
 				}
 				if (widthAlongAxis == 'z') m.position.z += dirZ * editingDepth;
 				else if (widthAlongAxis == 'x') m.position.x += dirX * editingWidth;
@@ -508,7 +528,8 @@ void Engine3D::edit(float elapsedTime)
 				else if (heightAlongAxis == 'z') m.position.z = initialPos.z - dirZ * editingDepth;
 			}
 			mtx.unlock();
-			std::cout << "models size after: " << modelsToRender.size() << std::endl;
+			//std::cout << "models size after: " << modelsToRender.size() << std::endl;
+			std::cout << "models size after: " << ptrCubesToRender.size() << std::endl;
 
 			// std::cout << "model placed has sn: " << editingModel->sn << std::endl;
 			editingModel = nullptr;
@@ -529,24 +550,25 @@ void Engine3D::edit(float elapsedTime)
 			unsigned long i = 0;
 			unsigned long lastModelSn = 0;
 			unsigned long lastCubeSn = 0;
-			for (i; i < modelsToRender.size(); i++)
-			{
-				if (modelsToRender[i].removeFlag) break;
-			}
-			std::cout << "removed model with index = " << i << " and sn = " << modelsToRender[i].sn << std::endl;
-			cubePointsCnt -= deletingModel->modelMesh.tris.size() * 3;
-			for (i+=1; i < modelsToRender.size(); i++)
-			{
-				if (deletingModel->modelMesh.shape == Shape::CUBE && modelsToRender[i].modelMesh.shape == Shape::CUBE)
-				{
-					std::cout << "index = " << i << " sn = " << modelsToRender[i].sn << " - " << deletingModel->modelMesh.tris.size() * 3 << std::endl;
-					modelsToRender[i].sn -= deletingModel->modelMesh.tris.size() * 3;
-				}else if (deletingModel->modelMesh.shape != Shape::CUBE && modelsToRender[i].modelMesh.shape != Shape::CUBE)
-				{
-					modelsToRender[i].sn -= deletingModel->modelMesh.tris.size() * 3;
-				}
-			}
-			modelsToRender.erase(std::remove_if(modelsToRender.begin(), modelsToRender.end(), [](model m) { return m.removeFlag == true; }), modelsToRender.end());
+			//TODO AFTER PTR CUBES TO RENDER IS DONE
+			// for (i; i < modelsToRender.size(); i++)
+			// {
+			// 	if (modelsToRender[i].removeFlag) break;
+			// }
+			// std::cout << "removed model with index = " << i << " and sn = " << modelsToRender[i].sn << std::endl;
+			// cubePointsCnt -= deletingModel->modelMesh.tris.size() * 3;
+			// for (i+=1; i < modelsToRender.size(); i++)
+			// {
+			// 	if (deletingModel->modelMesh.shape == Shape::CUBE && modelsToRender[i].modelMesh.shape == Shape::CUBE)
+			// 	{
+			// 		std::cout << "index = " << i << " sn = " << modelsToRender[i].sn << " - " << deletingModel->modelMesh.tris.size() * 3 << std::endl;
+			// 		modelsToRender[i].sn -= deletingModel->modelMesh.tris.size() * 3;
+			// 	}else if (deletingModel->modelMesh.shape != Shape::CUBE && modelsToRender[i].modelMesh.shape != Shape::CUBE)
+			// 	{
+			// 		modelsToRender[i].sn -= deletingModel->modelMesh.tris.size() * 3;
+			// 	}
+			// }
+			// modelsToRender.erase(std::remove_if(modelsToRender.begin(), modelsToRender.end(), [](model m) { return m.removeFlag == true; }), modelsToRender.end());
 			
 			mtx.unlock();
 			deletingModel = nullptr;
@@ -632,8 +654,11 @@ void Engine3D::updateVertices()
 	mtx.unlock();
 
 	//populate vertex vectors with triangle vertex information for each model
-	for (auto &model : modelsToRenderCopy)
+	for (auto &ptrCube : ptrCubesToRender)
+	//for (auto &model : modelsToRenderCopy)
 	{
+		if (!ptrCube) continue;
+		model& model = *ptrCube;
 
 		vdp = model.modelMesh.shape == Shape::CUBE ? &cubeVertexData : &vertexData;
 
@@ -746,37 +771,32 @@ void Engine3D::render()
 	textureShader->setVec3("viewPos", getCameraPos());
 	textureShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
-	// finalModelsToRender.clear();
 	// mtx.lock();
-	// for (model& model : modelsToRender)
-	// {
-	// 	if (model.isInDOF) finalModelsToRender.insert(&model);
-	// }
+	// std::vector<model> modelsToRenderCopy = modelsToRender;
 	// mtx.unlock();
 
-	mtx.lock();
-	std::vector<model> modelsToRenderCopy = modelsToRender;
-	mtx.unlock();
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+	cubeMapShader->bind();
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *gCubeIBO);
+	glBindVertexArray(*gCubeVAO);
+	glActiveTexture(GL_TEXTURE0);
 
-	for (model& model : modelsToRenderCopy)
-	//for (auto itr = finalModelsToRender.begin(); itr != finalModelsToRender.end(); itr++)
+	for(const auto& model : ptrCubesToRender)
+	//for (model& model : modelsToRenderCopy)
 	{
-		if (!model.distance) continue;
+		if (!model) continue;
 
-		if (model.modelMesh.shape == Shape::CUBE)
+		mtx.lock();
+
+		if (model && model->isInDOF && model->isInFOV && model->modelMesh.shape == Shape::CUBE)
 		{
-			//exclude out-of-range models
-			if (!model.isInDOF) { break; }
-
-			cubeMapShader->bind();
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *gCubeIBO);
-			glBindVertexArray(*gCubeVAO);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, (*cubemapIdsMap)[model.texture]);
-			cubeMapShader->setMat4("model", model.modelMatrix);
-			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)((model.sn) * sizeof(GL_UNSIGNED_INT)));
+			glBindTexture(GL_TEXTURE_CUBE_MAP, (*cubemapIdsMap)[model->texture]);
+			cubeMapShader->setMat4("model", model->modelMatrix);
+			glDrawElements(GL_TRIANGLES, model->modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)((model->sn) * sizeof(GL_UNSIGNED_INT)));
 		}
-		else
+		mtx.unlock();
+		/*else
 		{
 			//exclude out-of-range models
 			if (!model.isInDOF) { break; }
@@ -789,9 +809,9 @@ void Engine3D::render()
 			textureShader->setMat4("model", model.modelMatrix);
 			glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(( model.sn ) * sizeof(GL_UNSIGNED_INT)));
 		
-		}
-		glBindVertexArray(0);
+		}*/
 	}
+	glBindVertexArray(0);
 }
 
 void Engine3D::captureInput()
@@ -803,7 +823,14 @@ void Engine3D::captureInput()
 
 void Engine3D::setLevel(Level* level)
 {
-	modelsToRender = level->models;
+	//modelsToRender = level->models;
+	for (model& m : level->models)
+	{
+		if (m.modelMesh.shape == Shape::CUBE)
+		{
+			ptrCubesToRender.push_back(std::make_shared<model>(m));
+		}
+	}
 	modelPointsCnt = level->modelPointsCnt;
 	cubePointsCnt = level->cubePointsCnt;
 }

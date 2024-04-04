@@ -331,6 +331,7 @@ struct model {
 	bool inFocus = false;
 	float distance;
 	bool isInDOF = true;
+	bool isInFOV = true;
 	bool removeFlag = false;
 	bool isEditing = false;
 	mesh modelMesh;

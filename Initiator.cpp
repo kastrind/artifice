@@ -110,9 +110,7 @@ bool Initiator::initGL()
 	else
 	{
 		glEnable(GL_DEPTH_TEST);
-		// glDepthFunc(GL_LESS); 
-		// glEnable(GL_CULL_FACE);
-		// glCullFace(GL_BACK);
+		glDepthFunc(GL_LESS); 
 
 		gCubeMapProgramID = cubeMapShader.getProgramID();
 		gTextureProgramID = textureShader.getProgramID();

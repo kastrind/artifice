@@ -32,7 +32,7 @@ typedef struct Configuration
 
 	const unsigned int FOV = 45; //field of view in degrees
 
-	const float DOF = 10.0f; //depth of field
+	const float DOF = 20.0f; //depth of field
 
 	const float COLLIDING_DISTANCE = 0.2f;
 

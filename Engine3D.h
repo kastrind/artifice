@@ -28,6 +28,7 @@
 #include <iostream>
 #include <sstream>
 #include <map>
+#include <memory>
 
 class Engine3D
 {
@@ -95,6 +96,7 @@ class Engine3D
 		std::mutex mtx;
 
 		std::vector<model> modelsToRender;
+		std::vector<std::shared_ptr<model>> ptrCubesToRender;
 
 	private:
 
@@ -136,7 +138,7 @@ class Engine3D
 		std::set<model*, ModelDistanceComparator> modelsInFocus;
 		model* prevModelInFocus = nullptr;
 
-		std::set<model*, ModelDistanceComparator> finalModelsToRender;
+
 
 		//editor user mode specific
 		float originalCollidingDistance;
@@ -146,7 +148,7 @@ class Engine3D
 		float editingHeight = 0;
 		float editingDepth = 0;
 		Shape editingShape = Shape::CUBE; unsigned short edShapeInt = 1;
-		model* editingModel = nullptr;
+		std::shared_ptr<model> editingModel = nullptr;
 		model* deletingModel = nullptr;
 		model modelInFocusTmp;
 		unsigned long modelPointsCnt = 0;
