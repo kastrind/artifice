@@ -746,17 +746,22 @@ void Engine3D::render()
 	textureShader->setVec3("viewPos", getCameraPos());
 	textureShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
-	finalModelsToRender.clear();
+	// finalModelsToRender.clear();
+	// mtx.lock();
+	// for (model& model : modelsToRender)
+	// {
+	// 	if (model.isInDOF) finalModelsToRender.insert(&model);
+	// }
+	// mtx.unlock();
+
 	mtx.lock();
-	for (model& model : modelsToRender)
-	{
-		if (model.isInDOF) finalModelsToRender.insert(&model);
-	}
+	std::vector<model> modelsToRenderCopy = modelsToRender;
 	mtx.unlock();
 
-	for (auto itr = finalModelsToRender.begin(); itr != finalModelsToRender.end(); itr++)
+	for (model& model : modelsToRenderCopy)
+	//for (auto itr = finalModelsToRender.begin(); itr != finalModelsToRender.end(); itr++)
 	{
-		model model = *(*itr);
+		if (!model.distance) continue;
 
 		if (model.modelMesh.shape == Shape::CUBE)
 		{
