@@ -138,6 +138,8 @@ class Engine3D
 		std::set<model*, ModelDistanceComparator> modelsInFocus;
 		model* prevModelInFocus = nullptr;
 
+		std::set<std::shared_ptr<model>> finalModelsToRender;
+
 
 
 		//editor user mode specific
@@ -183,5 +185,7 @@ class Engine3D
 		void captureInput();
 
 		std::string shapeToString(Shape s);
+
+		void markCoveredModels();
 
 };

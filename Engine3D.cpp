@@ -151,6 +151,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		bool checkAgainForFocus = true;
 		model.isInFOV = false;
 		bool checkAgainForFOV = true;
+		float minX = 1.0f, maxX = -1.0f, minY = 1.0f, maxY = -1.0f, minZ = 100000.0f, maxZ = -100000.0f;
 
 		mtx.unlock();
 
@@ -186,14 +187,6 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			}
 			//std::cout << "modelDistance: " << modelDistance << std::endl;
 
-			glm::vec3 linePt0 = glm::vec3(pt[0]) - cameraPos;
-			glm::vec3 linePt1 = glm::vec3(pt[1]) - cameraPos;
-			glm::vec3 linePt2 = glm::vec3(pt[2]) - cameraPos;
-
-			//mark out-of-FOV models
-			model.isInFOV = (glm::dot(cameraFront, glm::normalize(linePt0)) > 0.8) || (glm::dot(cameraFront, glm::normalize(linePt1)) > 0.8) || (glm::dot(cameraFront, glm::normalize(linePt2)) > 0.8);
-			if (model.isInFOV) { checkAgainForFOV = false; }
-
 			//camera/view transformation
 			pt[0] = projectionMatrix * viewMatrix * pt[0];
 			pt[1] = projectionMatrix * viewMatrix * pt[1];
@@ -215,9 +208,28 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 				checkAgainForFocus = false;
 			}
 
+			//calculate bounding box
+			minX = std::min(minX, std::min(std::min(pt[0].x/pt[0].w, pt[1].x/pt[1].w), pt[2].x/pt[2].w));
+			minY = std::min(minY, std::min(std::min(pt[0].y/pt[0].w, pt[1].y/pt[1].w), pt[2].y/pt[2].w));
+			minZ = std::min(minZ, std::min(std::min(pt[0].z, pt[1].z), pt[2].z));
+			maxX = std::max(maxX, std::max(std::max(pt[0].x/pt[0].w, pt[1].x/pt[1].w), pt[2].x/pt[2].w));
+			maxY = std::max(maxY, std::max(std::max(pt[0].y/pt[0].w, pt[1].y/pt[1].w), pt[2].y/pt[2].w));
+			maxZ = std::max(maxZ, std::max(std::max(pt[0].z, pt[1].z), pt[2].z));
 		}
 
-		//marks out-of-DOF models
+		//assign bounding box, to check for coverage later
+		minX = (std::max(-1.0f, minX) + 1) / 2.0f;
+		minY = (std::max(-1.0f, minY) + 1) / 2.0f;
+		maxX = (std::min(1.0f, maxX) + 1) / 2.0f;
+		maxY = (std::min(1.0f, maxY) + 1) / 2.0f;
+		//std::cout << "X: " << minX << " - "<< maxX << ", Y: " << minY << " - " << maxY << ", Z: " << minZ << " - " << maxZ << std::endl;
+		BoundingBox bbox = { minX, maxX, minY, maxY, minZ, maxZ };
+		model.bbox = bbox;
+
+		//mark out-of-FOV models to avoid needless rendering
+		model.isInFOV = ((model.bbox.minX > 0 && model.bbox.minX < 1) || (model.bbox.maxX > 0 && model.bbox.maxX < 1)) && ((model.bbox.minY > 0 && model.bbox.minY < 1) || (model.bbox.maxY > 0 && model.bbox.maxY < 1));
+
+		//mark out-of-DOF models to avoid needless rendering
 		model.isInDOF = modelDistance < dof;
 
 		//detect if colliding with the model
@@ -267,10 +279,59 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	}
 	lightPos = cameraFront;
 
+	
+	//mark covered models to avoid needless rendering
+	mtx.lock();
+	markCoveredModels();
+	mtx.unlock();
+
+	//mtx.lock();
+	for (auto &ptrCube : ptrCubesToRender)
+	{
+		if (!ptrCube) continue;
+		model& model = *ptrCube;
+		if (!model.isCovered && model.isInDOF && model.isInFOV)
+		{
+			finalModelsToRender.insert(ptrCube);
+		}else
+		{
+			finalModelsToRender.erase(ptrCube);
+		}
+	}
+	//std::cout << "final models to render: " << finalModelsToRender.size() << std::endl;
+	//mtx.unlock();
+
 	edit(elapsedTime);
 
 	// std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
 	return true;
+}
+
+void Engine3D::markCoveredModels()
+{
+	for (auto &ptrCube1 : ptrCubesToRender)
+	{
+		if (!ptrCube1) continue;
+		//if (!ptrCube1->isInDOF || !ptrCube1->isInFOV) continue;
+		model& model1 = *ptrCube1;
+		for (auto &ptrCube2 : ptrCubesToRender)
+		{
+			if (!ptrCube2) continue;
+			//if (!ptrCube2->isInDOF || !ptrCube2->isInFOV) continue;
+			model& model2 = *ptrCube2;
+			model1.isCovered = model2.bbox.minX > 0 && model2.bbox.maxX < 1 &&
+							   model2.bbox.minY > 0 && model2.bbox.maxY < 1 &&
+							   model1.bbox.minX > model2.bbox.minX &&
+							   model1.bbox.maxX < model2.bbox.maxX &&
+							   model1.bbox.minY > model2.bbox.minY &&
+							   model1.bbox.maxY < model2.bbox.maxY &&
+							   model1.bbox.maxZ > model2.bbox.minZ;
+
+			if (model1.isCovered) break;
+
+		}
+		//std::cout << "model " << model1.id << " is covered? " << model1.isCovered << std::endl;
+	}
 }
 
 void Engine3D::move(float elapsedTime)
@@ -763,13 +824,13 @@ void Engine3D::render()
 	cubeMapShader->setVec3("viewPos", getCameraPos());
 	cubeMapShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
-	textureShader->bind();
-	textureShader->setMat4("projection", getProjectionMatrix());
-	textureShader->setMat4("view", getViewMatrix());
-	//lighting
-	textureShader->setVec3("lightPos", getLightPos());
-	textureShader->setVec3("viewPos", getCameraPos());
-	textureShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+	// textureShader->bind();
+	// textureShader->setMat4("projection", getProjectionMatrix());
+	// textureShader->setMat4("view", getViewMatrix());
+	// //lighting
+	// textureShader->setVec3("lightPos", getLightPos());
+	// textureShader->setVec3("viewPos", getCameraPos());
+	// textureShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
 	// mtx.lock();
 	// std::vector<model> modelsToRenderCopy = modelsToRender;
@@ -777,25 +838,27 @@ void Engine3D::render()
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
-	cubeMapShader->bind();
+	//cubeMapShader->bind();
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *gCubeIBO);
 	glBindVertexArray(*gCubeVAO);
 	glActiveTexture(GL_TEXTURE0);
-
-	for(const auto& model : ptrCubesToRender)
-	//for (model& model : modelsToRenderCopy)
+	int cnt = 0;
+	//mtx.lock();
+	if (finalModelsToRender.size() == 0) { /*mtx.unlock();*/ return; }
+	//std::cout << "about to render " << finalModelsToRender.size() << " out of " << ptrCubesToRender.size() << " models" << std::endl;
+	
+	//for(const auto& model : ptrCubesToRender)
+	for (auto itr = finalModelsToRender.begin(); itr != finalModelsToRender.end(); itr++)
 	{
-		if (!model) continue;
+		//const model& model = *(*itr);
+		//model model = *(*itr);
+		if (!(*itr)) continue;
+		const model& model = *(*itr);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, (*cubemapIdsMap)[model.texture]);
+		cubeMapShader->setMat4("model", model.modelMatrix);
+		glDrawElements(GL_TRIANGLES, model.modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)((model.sn) * sizeof(GL_UNSIGNED_INT)));
+		cnt++;
 
-		mtx.lock();
-
-		if (model && model->isInDOF && model->isInFOV && model->modelMesh.shape == Shape::CUBE)
-		{
-			glBindTexture(GL_TEXTURE_CUBE_MAP, (*cubemapIdsMap)[model->texture]);
-			cubeMapShader->setMat4("model", model->modelMatrix);
-			glDrawElements(GL_TRIANGLES, model->modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)((model->sn) * sizeof(GL_UNSIGNED_INT)));
-		}
-		mtx.unlock();
 		/*else
 		{
 			//exclude out-of-range models
@@ -811,6 +874,8 @@ void Engine3D::render()
 		
 		}*/
 	}
+	//finalModelsToRender.clear();
+	//mtx.unlock();
 	glBindVertexArray(0);
 }
 

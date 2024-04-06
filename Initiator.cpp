@@ -240,6 +240,7 @@ bool Initiator::initGL()
 		loadCubemaps(cubemapIdsMap);
 		artificeEngine->cubeMapShader = &cubeMapShader;
 		artificeEngine->cubemapIdsMap = &cubemapIdsMap;
+		
 	}
 	return success;
 }

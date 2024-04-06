@@ -322,6 +322,12 @@ struct mesh
 	std::vector<triangle> tris;
 };
 
+typedef struct boundingBox {
+	float minX; float maxX;
+	float minY; float maxY;
+	float minZ; float maxZ;
+} BoundingBox;
+
 
 struct model {
 	unsigned long id;
@@ -334,6 +340,8 @@ struct model {
 	bool isInFOV = true;
 	bool removeFlag = false;
 	bool isEditing = false;
+	bool isCovered = false;
+	BoundingBox bbox;
 	mesh modelMesh;
 	glm::vec3 position;
 	glm::mat4 modelMatrix;
