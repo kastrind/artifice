@@ -6,6 +6,7 @@
 #include <GL/glew.h>
 #include <SDL2/SDL_opengl.h>
 #include <GL/gl.h>
+#include "stb_image.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -16,25 +17,28 @@
 #include "Level.h"
 #include "EventController.h"
 
+#include <stdio.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <filesystem>
 #include <vector>
 #include <set>
 #include <list>
+#include <map>
 #include <thread>
 #include <atomic>
 #include <mutex>
 #include <chrono>
 #include <algorithm>
-#include <string>
-#include <iostream>
-#include <sstream>
-#include <map>
 #include <memory>
 
 class Engine3D
 {
 	public:
 
-		Engine3D(int width = 320, int height = 240,
+		Engine3D(SDL_Window* gWindow,
+				int width = 320, int height = 240,
 				float near = 0.1f, float far = 1000.0f,
 				float fov = 90.0f, float dof = 20.0f,
 				float collidingDistance = 0.2f,
@@ -67,27 +71,37 @@ class Engine3D
 
 		void updateVertices();
 
-		void render();
-
-		void renderingLoop();
-
 		void setLevel(Level* level);
 
+		std::atomic<bool> isActive;
+
+	private:
+
+		//the window
+		SDL_Window* gWindow;
+
+		//OpenGL context
+		SDL_GLContext gContext;
+
+		//shader programs
+		ArtificeShaderProgram textureShader;
+		ArtificeShaderProgram cubeMapShader;
+
 		//to render
-		ArtificeShaderProgram* textureShader = nullptr;
-		std::map<std::string, GLuint>* textureIdsMap = nullptr;
-		ArtificeShaderProgram* cubeMapShader = nullptr;
-		std::map<std::string, GLuint>* cubemapIdsMap = nullptr;
+		std::vector<std::string> texturePaths;
+		std::map<std::string, GLuint> textureIdsMap;
+		std::vector<std::string> cubemapPaths;
+		std::map<std::string, GLuint> cubemapIdsMap;
 
 		//to update vertices
-		GLuint* gVBO = nullptr;
-		GLuint* gIBO = nullptr;
-		GLuint* gVAO = nullptr;
-		GLuint* gCubeVBO = nullptr;
-		GLuint* gCubeIBO = nullptr;
-		GLuint* gCubeVAO = nullptr;
-
-		std::atomic<bool> isActive;
+		GLuint gCubeMapProgramID = 0;
+		GLuint gTextureProgramID = 0;
+		GLuint gVBO = 0;
+		GLuint gIBO = 0;
+		GLuint gVAO = 0;
+		GLuint gCubeVBO = 0;
+		GLuint gCubeIBO = 0;
+		GLuint gCubeVAO = 0;
 
 		std::atomic<bool> updateVerticesFlag;
 
@@ -96,9 +110,8 @@ class Engine3D
 		std::mutex mtx;
 
 		std::vector<model> modelsToRender;
-		std::vector<std::shared_ptr<model>> ptrCubesToRender;
 
-	private:
+		std::vector<std::shared_ptr<model>> ptrCubesToRender;
 
 		int width;
 		int height;
@@ -140,8 +153,6 @@ class Engine3D
 
 		std::set<std::shared_ptr<model>> finalModelsToRender;
 
-
-
 		//editor user mode specific
 		float originalCollidingDistance;
 		unsigned int collationHeight = 1;
@@ -174,9 +185,21 @@ class Engine3D
 
 		glm::mat4 viewMatrix;
 
+		std::map<std::string, unsigned int> cubemapFaceIndexMap;
+				
+		std::thread rendererThread;
+
+		bool initGL();
+
+		void loadTextures(std::map<std::string, GLuint>& textureIdsMap);
+
+		void loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap);
+
 		void engineThread();
 
-		void inputListenerThread();
+		void renderingThread();
+
+		void render();
 
 		void move(float elapsedTime);
 

@@ -112,6 +112,8 @@ class EventController
 
 		void clearMouseMotionState();
 
+		void processEvent(SDL_Event* e);
+
 		std::mutex mtx;
 
 		std::atomic<bool> isActive;
@@ -123,8 +125,6 @@ class EventController
 		bool isMouseClicked();
 
 		bool isMouseButton(SupportedKeys btn);
-
-		void processEvent(SDL_Event* e);
 
 		void bufferKeysPressed();
 

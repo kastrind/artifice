@@ -30,20 +30,20 @@ void EventController::pushEvent(SDL_Event e) {
 
 bool* EventController::getKeysPressed()
 {
-	if (!keysPressedQueue.empty())
-	{
-		BoolArray ba = keysPressedQueue.front();
-		for (size_t i = 0; i < ba.size; ++i)
-		{
-			if (isMouseButton((SupportedKeys)i))
-				poppedKeysPressed[i] = keysPressed[i];	
-			else poppedKeysPressed[i] = ba.array[i];
-		}
-		mtx.lock();
-		keysPressedQueue.pop();
-		mtx.unlock();
-		return poppedKeysPressed;
-	}
+	// if (!keysPressedQueue.empty())
+	// {
+	// 	BoolArray ba = keysPressedQueue.front();
+	// 	for (size_t i = 0; i < ba.size; ++i)
+	// 	{
+	// 		if (isMouseButton((SupportedKeys)i))
+	// 			poppedKeysPressed[i] = keysPressed[i];	
+	// 		else poppedKeysPressed[i] = ba.array[i];
+	// 	}
+	// 	mtx.lock();
+	// 	keysPressedQueue.pop();
+	// 	mtx.unlock();
+	// 	return poppedKeysPressed;
+	// }
 	return keysPressed;
 }
 
@@ -190,30 +190,30 @@ void EventController::processEvent(SDL_Event* e)
 		//get mouse position
 		//SDL_GetMouseState( &mousePosX, &mousePosY );
 		SDL_GetRelativeMouseState( &mousePosX, &mousePosY );
-		mouseDistanceX = std::abs(mousePosX - prevMousePosX);
-		mouseDistanceY = std::abs(mousePosY - prevMousePosY);
-		if (mousePosX < prevMousePosX) {
-			keysPressed[SupportedKeys::MOUSE_RIGHT] = true;
-			keysPressed[SupportedKeys::MOUSE_LEFT] = false;
-		}else if (mousePosX > prevMousePosX) {
-			keysPressed[SupportedKeys::MOUSE_LEFT] = true;
-			keysPressed[SupportedKeys::MOUSE_RIGHT] = false;
-		}else {
-			keysPressed[SupportedKeys::MOUSE_LEFT] = false;
-			keysPressed[SupportedKeys::MOUSE_RIGHT] = false;
+		int tmpMouseDistanceX = std::abs(mousePosX - prevMousePosX);
+		int tmpMouseDistanceY = std::abs(mousePosY - prevMousePosY);
+		if (tmpMouseDistanceX > 0) {
+			if (mousePosX < prevMousePosX) {
+				keysPressed[SupportedKeys::MOUSE_RIGHT] = true;
+				keysPressed[SupportedKeys::MOUSE_LEFT] = false;
+			}else if (mousePosX > prevMousePosX) {
+				keysPressed[SupportedKeys::MOUSE_LEFT] = true;
+				keysPressed[SupportedKeys::MOUSE_RIGHT] = false;
+			}
+			prevMousePosX = mousePosX;
+			mouseDistanceX = tmpMouseDistanceX;
 		}
-		if (mousePosY < prevMousePosY) {
-			keysPressed[SupportedKeys::MOUSE_DOWN] = true;
-			keysPressed[SupportedKeys::MOUSE_UP] = false;
-		}else if (mousePosY > prevMousePosY) {
-			keysPressed[SupportedKeys::MOUSE_UP] = true;
-			keysPressed[SupportedKeys::MOUSE_DOWN] = false;
-		}else {
-			keysPressed[SupportedKeys::MOUSE_UP] = false;
-			keysPressed[SupportedKeys::MOUSE_DOWN] = false;
+		if (tmpMouseDistanceY > 0) {
+			if (mousePosY < prevMousePosY) {
+				keysPressed[SupportedKeys::MOUSE_DOWN] = true;
+				keysPressed[SupportedKeys::MOUSE_UP] = false;
+			}else if (mousePosY > prevMousePosY) {
+				keysPressed[SupportedKeys::MOUSE_UP] = true;
+				keysPressed[SupportedKeys::MOUSE_DOWN] = false;
+			}
+			prevMousePosY = mousePosY;
+			mouseDistanceY = tmpMouseDistanceY;
 		}
-		prevMousePosX = mousePosX;
-		prevMousePosY = mousePosY;
 	}
 
 	//user presses a key
@@ -313,7 +313,7 @@ void EventController::processEvent(SDL_Event* e)
 		}
 	}
 	//buffer mouse clicks
-	if (isMouseClicked()) bufferKeysPressed();
+	//if (isMouseClicked()) bufferKeysPressed();
 }
 
 void EventController::bufferKeysPressed()
