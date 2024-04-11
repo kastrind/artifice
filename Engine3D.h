@@ -69,8 +69,6 @@ class Engine3D
 
 		glm::mat4 getViewMatrix() const;
 
-		void updateVertices();
-
 		void setLevel(Level* level);
 
 		std::atomic<bool> isActive;
@@ -194,6 +192,8 @@ class Engine3D
 		void loadTextures(std::map<std::string, GLuint>& textureIdsMap);
 
 		void loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap);
+
+		void updateVertices();
 
 		void engineThread();
 

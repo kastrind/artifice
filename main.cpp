@@ -41,6 +41,8 @@ int main( int argc, char* args[] )
 		level.load(cfg.LEVELS_PATH + "\\level0.lvl");
 		artificeEngine->setLevel(&level);
 
+		//artificeEngine->renderingThread();
+
 		//start the 3D engine
 		printf( "Starting Engine thread...\n" );
 		std::thread engineThread = artificeEngine->startEngine();
@@ -55,7 +57,7 @@ int main( int argc, char* args[] )
 		SDL_StartTextInput();
 
 		// Define a duration of 20 milliseconds
-		std::chrono::milliseconds duration_milliseconds(20);
+		std::chrono::milliseconds duration_milliseconds(50);
 
 		//while application is running
 		while( !quit )
@@ -100,7 +102,7 @@ int main( int argc, char* args[] )
 			}
 
 			//render
-			//artificeEngine->render();
+			//if (artificeEngine->isActive) artificeEngine->render();
 
 			//update screen
 			//SDL_GL_SwapWindow( gWindow );

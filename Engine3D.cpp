@@ -866,12 +866,13 @@ void Engine3D::updateVertices()
 void Engine3D::render()
 {
 	if (updateVerticesFlag) updateVertices();
+	//if (finalModelsToRender.size() == 0) return;
 
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	//clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	cubeMapShader.bind();
+	// cubeMapShader.bind();
 	cubeMapShader.setMat4("projection", getProjectionMatrix());
 	cubeMapShader.setMat4("view", getViewMatrix());
 	//lighting
@@ -899,7 +900,6 @@ void Engine3D::render()
 	glActiveTexture(GL_TEXTURE0);
 	int cnt = 0;
 	//mtx.lock();
-	if (finalModelsToRender.size() == 0) { /*mtx.unlock();*/ return; }
 	//std::cout << "about to render " << finalModelsToRender.size() << " out of " << ptrCubesToRender.size() << " models" << std::endl;
 	
 	//for(const auto& model : ptrCubesToRender)
@@ -1020,6 +1020,8 @@ bool Engine3D::initGL()
 
 		//generates and binds cubemap
 		loadCubemaps(cubemapIdsMap);
+
+		cubeMapShader.bind();
 		
 	}
 	return success;
