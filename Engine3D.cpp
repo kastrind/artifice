@@ -327,8 +327,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	for (auto &ptrModel : ptrModelsToRender)
 	{
 		if (!ptrModel) continue;
-		//cubeModel model = *ptrModel;
-		if (!(*ptrModel).isCovered && (*ptrModel).isInDOF && (*ptrModel).isInFOV)
+		if (!ptrModel->isCovered && ptrModel->isInDOF && ptrModel->isInFOV)
 		{
 			if (ptrModel->modelMesh.shape == shapetype::CUBE) finalCubeModelsToRender.insert(ptrModel);
 			else finalModelsToRender.insert(ptrModel);
@@ -485,7 +484,7 @@ void Engine3D::move(float elapsedTime)
 
 
 void Engine3D::edit(float elapsedTime)
-{/*
+{
 	if (userMode != UserMode::EDITOR) return;
 
 	if (updateVerticesFlag) return;
@@ -521,20 +520,16 @@ void Engine3D::edit(float elapsedTime)
 		}
 
 		if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
-			model mdl; mdl.texture = "box";
 			editingWidth = 0.2f; editingHeight = 0.2f; editingDepth = 0.2f;
-			cube cube0{editingWidth};
-			cube0.toTriangles(mdl.modelMesh.tris);
-			mdl.modelMesh.shape = shapetype::CUBE;
-			mdl.position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
-			mdl.sn = cubePointsCnt;
+			cube cube(std::max(editingWidth, std::max(editingHeight, editingDepth)), 0, 0, 0);
+			glm::vec3 position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
+			cubeModel mdl(0, cubePointsCnt, "box", position, cube, true);
 			cubePointsCnt += mdl.modelMesh.tris.size() * 3;
 			std::cout << "about to place model with sn = " << mdl.sn << std::endl;
 			mtx.lock();
 			if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
-			//modelsToRender.push_back(mdl);
-			//editingModel = &modelsToRender.back();
-			ptrModelsToRender.push_back(std::make_shared<model>(mdl));
+			//ptrModelsToRender.push_back(std::make_shared<model>(mdl));
+			ptrModelsToRender.push_back(std::make_shared<cubeModel>(mdl));
 			editingModel = ptrModelsToRender.back();
 			std::cout << "placed model has sn = " << editingModel->sn << std::endl;
 			mtx.unlock();
@@ -548,6 +543,7 @@ void Engine3D::edit(float elapsedTime)
 
 		// releasing left mouse click places a new model
 		if (editingModel != nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]==false) {
+			
 			cameraSpeedFactor *= 100;
 			char heightAlongAxis = 'y';
 			char widthAlongAxis = 'x';
@@ -619,7 +615,7 @@ void Engine3D::edit(float elapsedTime)
 					m.sn = cubePointsCnt;
 					cubePointsCnt += m.modelMesh.tris.size() * 3;
 					//modelsToRender.push_back(m);
-					ptrModelsToRender.push_back(std::make_shared<model>(m));
+					ptrModelsToRender.push_back(std::make_shared<cubeModel>(m));
 				}
 				if (widthAlongAxis == 'z') m.position.z += dirZ * editingDepth;
 				else if (widthAlongAxis == 'x') m.position.x += dirX * editingWidth;
@@ -699,7 +695,7 @@ void Engine3D::edit(float elapsedTime)
 		// }
 		updateVerticesFlag = isEdited;
 	}
-*/
+
 }
 
 bool Engine3D::onUserDestroy()
@@ -881,10 +877,12 @@ void Engine3D::render()
 	cubeMapShader.setVec3("lightPos", getLightPos());
 	cubeMapShader.setVec3("viewPos", getCameraPos());
 	cubeMapShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+	cubeMapShader.unbind();
 
 	textureShader.bind();
 	textureShader.setMat4("projection", getProjectionMatrix());
 	textureShader.setMat4("view", getViewMatrix());
+	textureShader.unbind();
 	// //lighting
 	// textureShader->setVec3("lightPos", getLightPos());
 	// textureShader->setVec3("viewPos", getCameraPos());
@@ -894,12 +892,12 @@ void Engine3D::render()
 	// std::vector<model> modelsToRenderCopy = modelsToRender;
 	// mtx.unlock();
 
+	cubeMapShader.bind();
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
 	glBindVertexArray(gCubeVAO);
 	glActiveTexture(GL_TEXTURE0);
-	cubeMapShader.bind();
 	int cnt = 0;
 	mtx.lock();
 	//std::cout << "about to render " << finalCubeModelsToRender.size() << " out of " << ptrModelsToRender.size() << " models" << std::endl;
@@ -914,13 +912,14 @@ void Engine3D::render()
 		cnt++;
 	}
 	glBindVertexArray(0);
+	cubeMapShader.unbind();
 
+	textureShader.bind();
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIBO);
 	glBindVertexArray(gVAO);
 	glActiveTexture(GL_TEXTURE0);
-	textureShader.bind();
 	for (auto itr = finalModelsToRender.begin(); itr != finalModelsToRender.end(); itr++)
 	{
 		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
@@ -930,6 +929,7 @@ void Engine3D::render()
 		cnt++;
 	}
 	glBindVertexArray(0);
+	textureShader.unbind();
 	mtx.unlock();
 
 	//update screen

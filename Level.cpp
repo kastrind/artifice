@@ -67,7 +67,6 @@ void Level::load(std::string levelPath)
 				{
 					rectangle rectangle(width, height, rotationX, rotationY, rotationZ);
 					model model(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), rectangle, isSolid);
-					model.modelMesh.shape = shapetype::RECTANGLE;
 					modelPointsCnt += model.modelMesh.tris.size() * 3;
 					models.push_back(model);
 				}
@@ -75,7 +74,6 @@ void Level::load(std::string levelPath)
 				{
 					cuboid cuboid(width, height, depth, rotationX, rotationY, rotationZ);
 					model model(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), cuboid, isSolid);
-					model.modelMesh.shape = shapetype::CUBOID;
 					modelPointsCnt += model.modelMesh.tris.size() * 3;
 					models.push_back(model);
 				}

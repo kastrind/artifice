@@ -181,6 +181,7 @@ typedef struct shape
 		float thetaRotY = 0.0f;
 		float thetaRotZ = 0.0f;
 		std::vector<triangle> triangles;
+		shapetype type;
 
 		shape(float thetaRotationX = 0.0f, float thetaRotationY = 0.0f,float thetaRotationZ = 0.0f)
 		: thetaRotX(thetaRotationX), thetaRotY(thetaRotationY), thetaRotZ(thetaRotationZ) {}
@@ -204,6 +205,7 @@ typedef struct rectangle : public shape
 		: w(width), h(height), shape(thetaRotationX, thetaRotationY, thetaRotationZ)
 		{
 			toTriangles();
+			type = shapetype::RECTANGLE;
 		}
 
 	private:
@@ -237,6 +239,7 @@ typedef struct cuboid : public shape
 		: w(width), h(height), d(depth), shape(thetaRotationX, thetaRotationY, thetaRotationZ)
 		{
 			toTriangles();
+			type = shapetype::CUBOID;
 		}
 
 	private:
@@ -302,6 +305,7 @@ typedef struct cube : public shape
 		: size(size), shape(thetaRotationX, thetaRotationY, thetaRotationZ)
 		{
 			toTriangles();
+			type = shapetype::CUBE;
 		}
 
 	private:
@@ -400,6 +404,7 @@ typedef struct model {
 		: id(id), sn(sn), texture(texture), position(position), isSolid(isSolid)
 		{
 			modelMesh.tris = shape.triangles;
+			modelMesh.shape = shape.type;
 		}
 
 		virtual void render(ArtificeShaderProgram* shader, GLuint textureId)
@@ -419,11 +424,9 @@ typedef struct cubeModel : public model {
 	public:
 
 		cubeModel(unsigned long id, unsigned long sn, std::string texture, glm::vec3 position, shape& shape, bool isSolid = true)
-		: model(id, sn, texture, position, shape, isSolid) { modelMesh.shape = shapetype::CUBE; }
+		: model(id, sn, texture, position, shape, isSolid) {}
 
-		cubeModel(model& m) : model(m) {
-			modelMesh.shape = shapetype::CUBE;
-		}
+		cubeModel(model& m) : model(m) {}
 
 		void render(ArtificeShaderProgram* cubeMapShader, GLuint textureId) override
 		{
