@@ -144,10 +144,10 @@ class Engine3D
 		float pitch = 0;
 
 		struct ModelDistanceComparator {
-			bool operator()(const model* a, const model* b) const { return a->distance < b->distance; };
+			bool operator()(std::shared_ptr<model> a, std::shared_ptr<model> b) const { return a->distance < b->distance; };
 		};
-		std::set<model*, ModelDistanceComparator> modelsInFocus;
-		model* prevModelInFocus = nullptr;
+		std::set<std::shared_ptr<model>, ModelDistanceComparator> modelsInFocus;
+		std::shared_ptr<model> prevModelInFocus = nullptr;
 
 		std::set<std::shared_ptr<model>> finalCubeModelsToRender;
 		std::set<std::shared_ptr<model>> finalModelsToRender;
@@ -161,7 +161,7 @@ class Engine3D
 		float editingDepth = 0;
 		shapetype editingShape = shapetype::CUBE; unsigned short edShapeInt = 1;
 		std::shared_ptr<model> editingModel = nullptr;
-		model* deletingModel = nullptr;
+		std::shared_ptr<model> deletingModel = nullptr;
 		model modelInFocusTmp;
 		unsigned long modelPointsCnt = 0;
 		unsigned long cubePointsCnt = 0;

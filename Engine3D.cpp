@@ -241,7 +241,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			{
 				model.inFocus = true;
 				mtx.lock();
-				modelsInFocus.insert(&model);
+				modelsInFocus.insert(ptrModel);
 				mtx.unlock();
 				checkAgainForFocus = false;
 			}
