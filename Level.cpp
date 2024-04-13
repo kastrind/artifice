@@ -63,47 +63,28 @@ void Level::load(std::string levelPath)
 				positionZ = std::stof(tokens[12]);
 				//std::cout << "shape: " << shape << ", tex: " << texture << ", w: " << width << ", h: " << height << ", d: " << depth << ", rX: " << rotationX << ", rY: " << rotationY << ", rZ: " << rotationZ << ", pX: " << positionX << ", pY: " << positionY << ", pZ: " << positionZ << std::endl;
 
-				model mdl;
-				mdl.id = id;
-				mdl.isSolid = isSolid;
-				mdl.texture = texture;
-				mdl.position = glm::vec3(positionX, positionY, positionZ);
-				bool isShapeValid = false;
-
                 if (shape == "rectangle")
 				{
-					rectangle rect{width, height};
-					rect.thetaRotX = rotationX; rect.thetaRotY = rotationY; rect.thetaRotZ = rotationZ;
-					rect.toTriangles(mdl.modelMesh.tris);
-					mdl.modelMesh.shape = Shape::RECTANGLE;
-					mdl.sn = modelPointsCnt; 
-					modelPointsCnt += mdl.modelMesh.tris.size() * 3;
-					isShapeValid = true;
+					rectangle rectangle(width, height, rotationX, rotationY, rotationZ);
+					model model(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), rectangle, isSolid);
+					model.modelMesh.shape = shapetype::RECTANGLE;
+					modelPointsCnt += model.modelMesh.tris.size() * 3;
+					models.push_back(model);
 				}
 				else if (shape == "cuboid")
 				{
-					cuboid cuboid{width, height, depth};
-					cuboid.thetaRotX = rotationX; cuboid.thetaRotY = rotationY; cuboid.thetaRotZ = rotationZ;
-					cuboid.toTriangles(mdl.modelMesh.tris);
-					mdl.modelMesh.shape = Shape::CUBOID;
-					mdl.sn = modelPointsCnt; 
-					modelPointsCnt += mdl.modelMesh.tris.size() * 3;
-					isShapeValid = true;
+					cuboid cuboid(width, height, depth, rotationX, rotationY, rotationZ);
+					model model(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), cuboid, isSolid);
+					model.modelMesh.shape = shapetype::CUBOID;
+					modelPointsCnt += model.modelMesh.tris.size() * 3;
+					models.push_back(model);
 				}
 				else if (shape == "cube")
 				{
-					cube cube{std::max(width, std::max(height, depth))};
-					cube.thetaRotX = rotationX; cube.thetaRotY = rotationY; cube.thetaRotZ = rotationZ;
-					cube.toTriangles(mdl.modelMesh.tris);
-					mdl.modelMesh.shape = Shape::CUBE;
-					mdl.sn = cubePointsCnt;
-					cubePointsCnt += mdl.modelMesh.tris.size() * 3;
-					isShapeValid = true;
-				}
-
-				if (isShapeValid)
-				{
-					models.push_back(mdl);
+					cube cube(std::max(width, std::max(height, depth)), rotationX, rotationY, rotationZ);
+					cubeModel cubeModel(id, cubePointsCnt, texture, glm::vec3(positionX, positionY, positionZ), cube, isSolid);
+					cubePointsCnt += cubeModel.modelMesh.tris.size() * 3;
+					models.push_back(cubeModel);
 				}
 			}
 		}

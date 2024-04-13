@@ -109,7 +109,7 @@ class Engine3D
 
 		std::vector<model> modelsToRender;
 
-		std::vector<std::shared_ptr<model>> ptrCubesToRender;
+		std::vector<std::shared_ptr<model>> ptrModelsToRender;
 
 		int width;
 		int height;
@@ -149,6 +149,7 @@ class Engine3D
 		std::set<model*, ModelDistanceComparator> modelsInFocus;
 		model* prevModelInFocus = nullptr;
 
+		std::set<std::shared_ptr<model>> finalCubeModelsToRender;
 		std::set<std::shared_ptr<model>> finalModelsToRender;
 
 		//editor user mode specific
@@ -158,7 +159,7 @@ class Engine3D
 		float editingWidth = 0;
 		float editingHeight = 0;
 		float editingDepth = 0;
-		Shape editingShape = Shape::CUBE; unsigned short edShapeInt = 1;
+		shapetype editingShape = shapetype::CUBE; unsigned short edShapeInt = 1;
 		std::shared_ptr<model> editingModel = nullptr;
 		model* deletingModel = nullptr;
 		model modelInFocusTmp;
@@ -207,7 +208,7 @@ class Engine3D
 
 		void captureInput();
 
-		std::string shapeToString(Shape s);
+		std::string shapeTypeToString(shapetype s);
 
 		void markCoveredModels();
 
