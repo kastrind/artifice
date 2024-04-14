@@ -153,6 +153,8 @@ class Engine3D
 		std::set<std::shared_ptr<model>> finalModelsToRender;
 
 		//editor user mode specific
+		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX", "rotationY", "rotationZ", "texture", "isSolid", "collationHeight", "collationWidth"};
+		unsigned short editOptionIndex = 0;
 		float originalCollidingDistance;
 		unsigned int collationHeight = 1;
 		unsigned int collationWidth = 1;

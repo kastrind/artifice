@@ -494,14 +494,23 @@ void Engine3D::edit(float elapsedTime)
 		//bool* keysPressed = eventController->getKeysPressed();
 		bool isEdited = false;
 
-		// pressing LCTRL + mouse wheel up/down increases/decreases the collation height
+		// pressing LCTRL + mouse wheel up/down cycles through edit options
 		if (keysPressed[SupportedKeys::LEFT_CTRL] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
-			collationHeight = std::max(--collationHeight, (unsigned int)1);
-			std::cout << "collation height: " << collationHeight << std::endl;
+			if (--editOptionIndex > editOptions.size() - 1) editOptionIndex = editOptions.size() - 1;
+			std::cout << "editing: " << editOptions[editOptionIndex] << std::endl;
 
 		}else if (keysPressed[SupportedKeys::LEFT_CTRL] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
-			collationHeight++;
-			std::cout << "collation height: " << collationHeight << std::endl;
+			if (++editOptionIndex > editOptions.size() - 1) editOptionIndex = 0;
+			std::cout << "editing: " << editOptions[editOptionIndex] << std::endl;
+
+		// // pressing LCTRL + mouse wheel up/down increases/decreases the collation height
+		// if (keysPressed[SupportedKeys::LEFT_CTRL] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+		// 	collationHeight = std::max(--collationHeight, (unsigned int)1);
+		// 	std::cout << "collation height: " << collationHeight << std::endl;
+
+		// }else if (keysPressed[SupportedKeys::LEFT_CTRL] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+		// 	collationHeight++;
+		// 	std::cout << "collation height: " << collationHeight << std::endl;
 		// pressing LSHIFT + mouse wheel up/down increases/decreases the collation width
 		}else if (keysPressed[SupportedKeys::LEFT_SHIFT] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
 			collationWidth = std::max(--collationWidth, (unsigned int)1);

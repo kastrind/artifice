@@ -56,8 +56,8 @@ int main( int argc, char* args[] )
 		//enable text input
 		SDL_StartTextInput();
 
-		// Define a duration of 20 milliseconds
-		std::chrono::milliseconds duration_milliseconds(50);
+		// Define a duration of 3 milliseconds
+		std::chrono::milliseconds duration_milliseconds(3);
 
 		//while application is running
 		while( !quit )
@@ -107,7 +107,7 @@ int main( int argc, char* args[] )
 			//update screen
 			//SDL_GL_SwapWindow( gWindow );
 
-			// Sleep for 20 milliseconds
+			// Sleep for 3 milliseconds
     		std::this_thread::sleep_for(duration_milliseconds);
 			//std::cout << "mouseDistX: " << eventController.getMouseDistanceX() << " ! " << std::endl;
 		}
