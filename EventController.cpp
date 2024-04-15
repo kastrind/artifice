@@ -1,49 +1,21 @@
 #include "EventController.h"
 
-std::thread EventController::startListening()
-{
-	//start thread
-	std::thread t = std::thread(&EventController::eventLoop, this);
-
-	return t;
-}
-
-void EventController::eventLoop() {
-	isActive = true;
-	while(isActive)
-	{
-		if (!sdlEventQueue.empty())
-		{
-			processEvent(&sdlEventQueue.front());
-			mtx.lock();
-			sdlEventQueue.pop();
-			mtx.unlock();
-		}
-	}
-}
-
-void EventController::pushEvent(SDL_Event e) {
-	mtx.lock();
-	sdlEventQueue.push(e);
-	mtx.unlock();
-}
-
 bool* EventController::getKeysPressed()
 {
-	// if (!keysPressedQueue.empty())
-	// {
-	// 	BoolArray ba = keysPressedQueue.front();
-	// 	for (size_t i = 0; i < ba.size; ++i)
-	// 	{
-	// 		if (isMouseButton((SupportedKeys)i))
-	// 			poppedKeysPressed[i] = keysPressed[i];	
-	// 		else poppedKeysPressed[i] = ba.array[i];
-	// 	}
-	// 	mtx.lock();
-	// 	keysPressedQueue.pop();
-	// 	mtx.unlock();
-	// 	return poppedKeysPressed;
-	// }
+	if (!keysPressedQueue.empty())
+	{
+		BoolArray ba = keysPressedQueue.front();
+		for (size_t i = 0; i < ba.size; ++i)
+		{
+			if (isMouseButton((SupportedKeys)i))
+				poppedKeysPressed[i] = keysPressed[i];	
+			else poppedKeysPressed[i] = ba.array[i];
+		}
+		mtx.lock();
+		keysPressedQueue.pop();
+		mtx.unlock();
+		return poppedKeysPressed;
+	}
 	return keysPressed;
 }
 
@@ -82,7 +54,7 @@ bool EventController::isMouseButton(SupportedKeys btn) {
 		   btn == keysPressed[SupportedKeys::MOUSE_WHEEL_UP];
 }
 
-void EventController::processEvent(SDL_Event* e)
+void EventController::decodeEvent(SDL_Event* e)
 {
 	unsigned short mouseBtnTest = SDL_BUTTON(SDL_GetMouseState(NULL, NULL));
 
@@ -313,7 +285,7 @@ void EventController::processEvent(SDL_Event* e)
 		}
 	}
 	//buffer mouse clicks
-	//if (isMouseClicked()) bufferKeysPressed();
+	if (isMouseClicked()) bufferKeysPressed();
 }
 
 void EventController::bufferKeysPressed()

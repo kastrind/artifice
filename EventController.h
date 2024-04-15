@@ -6,8 +6,6 @@
 #include <iostream>
 #include <queue>
 #include <cstring>
-#include <thread>
-#include <atomic>
 #include <mutex>
 
 
@@ -97,12 +95,7 @@ class EventController
 			{
 				keysPressed[i] = false;
 			}
-			isActive = false;
 		}
-
-		std::thread startListening();
-
-		void pushEvent(SDL_Event e);
 
 		bool* getKeysPressed();
 
@@ -112,15 +105,11 @@ class EventController
 
 		void clearMouseMotionState();
 
-		void processEvent(SDL_Event* e);
+		void decodeEvent(SDL_Event* e);
 
 		std::mutex mtx;
 
-		std::atomic<bool> isActive;
-
 	private:
-
-		void eventLoop();
 
 		bool isMouseClicked();
 
@@ -133,8 +122,6 @@ class EventController
 		bool poppedKeysPressed[SupportedKeys::ALL_KEYS];
 
 		std::queue<BoolArray> keysPressedQueue;
-
-		std::queue<SDL_Event> sdlEventQueue;
 
 		int mousePosX = 0;
 		int prevMousePosX = 0;

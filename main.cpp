@@ -2,7 +2,6 @@
 #include "EventController.h"
 #include "Level.h"
 #include "Engine3D.h"
-#include <thread>
 #include <chrono>
 
 CFG cfg;
@@ -24,10 +23,6 @@ int main( int argc, char* args[] )
 
 		//input event controller
 		EventController eventController;
-
-		//start listening for input events
-		// printf( "Starting input events listener thread...\n" );
-		// std::thread eventListenerThread = eventController.startListening();
 		
 		//instantiate the game engine
 		Engine3D* artificeEngine = new Engine3D(gWindow, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT,
@@ -40,8 +35,6 @@ int main( int argc, char* args[] )
 		Level level;
 		level.load(cfg.LEVELS_PATH + "\\level0.lvl");
 		artificeEngine->setLevel(&level);
-
-		//artificeEngine->renderingThread();
 
 		//start the 3D engine
 		printf( "Starting Engine thread...\n" );
@@ -56,12 +49,13 @@ int main( int argc, char* args[] )
 		//enable text input
 		SDL_StartTextInput();
 
-		// Define a duration of 3 milliseconds
+		//define a duration of 3 milliseconds
 		std::chrono::milliseconds duration_milliseconds(3);
 
 		//while application is running
 		while( !quit )
 		{
+
 			eventController.clearMouseMotionState();
 
 			//handle events on queue
@@ -73,7 +67,6 @@ int main( int argc, char* args[] )
 				{
 					quit = true;
 					artificeEngine->isActive = false;
-					eventController.isActive = false;
 				}else if (e.key.keysym.sym == SDLK_ESCAPE && SDL_GetWindowMouseGrab(gWindow) == SDL_TRUE) {
 					//free mouse cursor from the window and reveal it
 					SDL_SetWindowMouseGrab(gWindow, SDL_FALSE);
@@ -88,9 +81,9 @@ int main( int argc, char* args[] )
 				//user presses or releases a key
 				else if( e.type == SDL_KEYDOWN || e.type == SDL_KEYUP || e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP  || e.type == SDL_MOUSEWHEEL)
 				{
-					//eventController.pushEvent(e);
-					eventController.processEvent(&e);
+					eventController.decodeEvent(&e);
 				}
+
 				//just a temporary proof-of-concept to modify world on user input
 				// if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_0) {
 				// 	for (auto &model : artificeEngine->modelsToRender) {
@@ -101,15 +94,8 @@ int main( int argc, char* args[] )
 				// }
 			}
 
-			//render
-			//if (artificeEngine->isActive) artificeEngine->render();
-
-			//update screen
-			//SDL_GL_SwapWindow( gWindow );
-
-			// Sleep for 3 milliseconds
+			//sleep for 3 milliseconds
     		std::this_thread::sleep_for(duration_milliseconds);
-			//std::cout << "mouseDistX: " << eventController.getMouseDistanceX() << " ! " << std::endl;
 		}
 
 		//disable text input
@@ -118,7 +104,6 @@ int main( int argc, char* args[] )
 		printf("Stopping threads...\n");
 
 		engineThread.join();
-		//eventListenerThread.join();
 	}
 
 	//free resources and close SDL
