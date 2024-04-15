@@ -499,38 +499,55 @@ void Engine3D::edit(float elapsedTime)
 			if (--editOptionIndex > editOptions.size() - 1) editOptionIndex = editOptions.size() - 1;
 			std::cout << "editing: " << editOptions[editOptionIndex] << std::endl;
 
-		}else if (keysPressed[SupportedKeys::LEFT_CTRL] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+		} else if (keysPressed[SupportedKeys::LEFT_CTRL] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
 			if (++editOptionIndex > editOptions.size() - 1) editOptionIndex = 0;
 			std::cout << "editing: " << editOptions[editOptionIndex] << std::endl;
 
-		// // pressing LCTRL + mouse wheel up/down increases/decreases the collation height
-		// if (keysPressed[SupportedKeys::LEFT_CTRL] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
-		// 	collationHeight = std::max(--collationHeight, (unsigned int)1);
-		// 	std::cout << "collation height: " << collationHeight << std::endl;
+		// increases/decreases collation height
+		} else if (editOptions[editOptionIndex] == "collationHeight" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+			collationHeight = std::max(--collationHeight, (unsigned int)1);
+			std::cout << "collation height: " << collationHeight << std::endl;
+		} else if (editOptions[editOptionIndex] == "collationHeight" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+			collationHeight++;
+			std::cout << "collation height: " << collationHeight << std::endl;
 
-		// }else if (keysPressed[SupportedKeys::LEFT_CTRL] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
-		// 	collationHeight++;
-		// 	std::cout << "collation height: " << collationHeight << std::endl;
-		// pressing LSHIFT + mouse wheel up/down increases/decreases the collation width
-		}else if (keysPressed[SupportedKeys::LEFT_SHIFT] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+		// increases/decreases collation width
+		} else if (editOptions[editOptionIndex] == "collationWidth" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
 			collationWidth = std::max(--collationWidth, (unsigned int)1);
 			std::cout << "collation width: " << collationWidth << std::endl;
-		}else if (keysPressed[SupportedKeys::LEFT_SHIFT] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+		} else if (editOptions[editOptionIndex] == "collationWidth" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
 			collationWidth++;
 			std::cout << "collation width: " << collationWidth << std::endl;
-		}else if (prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
-			if (++edShapeInt > shapetype::CUBE) edShapeInt = 1;
+
+		// cycles through shapes
+		} else if (editOptions[editOptionIndex] == "shape" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+			if (++edShapeInt > shapetype::CUBE) edShapeInt = 0;
 			editingShape = (shapetype)edShapeInt;
 			std::cout << "shape: " << shapeTypeToString(editingShape) << std::endl;
-		}else if (prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
-			if (--edShapeInt < 1) edShapeInt = shapetype::CUBE;
+		} else if (editOptions[editOptionIndex] == "shape" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+			if (--edShapeInt > shapetype::CUBE) edShapeInt = shapetype::CUBE;
 			editingShape = (shapetype)edShapeInt;
 			std::cout << "shape: " << shapeTypeToString(editingShape) << std::endl;
+
+		// increases/decreases width
+		} else if (editOptions[editOptionIndex] == "width" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+			editingWidth = std::max(editingWidth - 0.1f, 0.1f);
+			std::cout << "width: " << editingWidth << std::endl;
+		} else if (editOptions[editOptionIndex] == "width" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+			editingWidth += 0.1f;
+			std::cout << "width: " << editingWidth << std::endl;
+
+		// increases/decreases X rotation
+		} else if (editOptions[editOptionIndex] == "rotationX" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+			editingRotationX = std::max(editingRotationX - 0.1f, 0.0f);
+			std::cout << "rotationX: " << editingRotationX << std::endl;
+		} else if (editOptions[editOptionIndex] == "rotationX" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+			editingRotationX += 0.1f;
+			std::cout << "rotationX: " << editingRotationX << std::endl;
 		}
 
 		if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
-			editingWidth = 0.2f; editingHeight = 0.2f; editingDepth = 0.2f;
-			cube cube(std::max(editingWidth, std::max(editingHeight, editingDepth)), 0, 0, 0);
+			cube cube(std::max(editingWidth, std::max(editingHeight, editingDepth)), editingRotationX, 0, 0);
 			glm::vec3 position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
 			cubeModel mdl(0, cubePointsCnt, "box", position, cube, true);
 			cubePointsCnt += mdl.modelMesh.tris.size() * 3;

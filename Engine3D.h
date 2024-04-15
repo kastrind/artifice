@@ -158,10 +158,14 @@ class Engine3D
 		float originalCollidingDistance;
 		unsigned int collationHeight = 1;
 		unsigned int collationWidth = 1;
-		float editingWidth = 0;
-		float editingHeight = 0;
-		float editingDepth = 0;
-		shapetype editingShape = shapetype::CUBE; unsigned short edShapeInt = 1;
+		float editingWidth = 0.1f;
+		float editingHeight = 0.1f;
+		float editingDepth = 0.1f;
+		float editingRotationX = 0.0f;
+		float editingRotationY = 0.0f;
+		float editingRotationZ = 0.0f;
+		shapetype editingShape = shapetype::CUBE;
+		unsigned short edShapeInt = 1;
 		std::shared_ptr<model> editingModel = nullptr;
 		std::shared_ptr<model> deletingModel = nullptr;
 		model modelInFocusTmp;
