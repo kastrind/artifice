@@ -5,6 +5,7 @@
 #include <GL/gl.h>
 #include "ArtificeShaderProgram.h"
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <cmath>
 #include <vector>
 #include <iostream>
@@ -182,11 +183,16 @@ typedef struct shape
 		float thetaRotZ = 0.0f;
 		std::vector<triangle> triangles;
 		shapetype type;
+		glm::mat4 rotationMatrix = glm::mat4(1.0f);
 
 		shape(float thetaRotationX = 0.0f, float thetaRotationY = 0.0f,float thetaRotationZ = 0.0f)
-		: thetaRotX(thetaRotationX), thetaRotY(thetaRotationY), thetaRotZ(thetaRotationZ) {}
+		: thetaRotX(thetaRotationX), thetaRotY(thetaRotationY), thetaRotZ(thetaRotationZ) {
+			if (thetaRotX > 0.0f) rotationMatrix = glm::rotate(rotationMatrix, thetaRotX, glm::vec3(1.0f, 0.0f, 0.0f));
+			if (thetaRotY > 0.0f) rotationMatrix = glm::rotate(rotationMatrix, thetaRotY, glm::vec3(0.0f, 1.0f, 0.0f));
+			if (thetaRotZ > 0.0f) rotationMatrix = glm::rotate(rotationMatrix, thetaRotZ, glm::vec3(0.0f, 0.0f, 1.0f));
+		}
 
-		shape(shape& s) : thetaRotX(s.thetaRotX), thetaRotY(s.thetaRotY), thetaRotZ(s.thetaRotZ), triangles(triangles) {}
+		shape(shape& s) : thetaRotX(s.thetaRotX), thetaRotY(s.thetaRotY), thetaRotZ(s.thetaRotZ), triangles(s.triangles), rotationMatrix(s.rotationMatrix) {}
 
 	private:
 
@@ -211,17 +217,8 @@ typedef struct rectangle : public shape
 	private:
 
 		inline void toTriangles() override {
-			glm::mat4 matRotX = matrix::getRotMatrixX(thetaRotX);
-			glm::mat4 matRotY = matrix::getRotMatrixY(thetaRotY);
-			glm::mat4 matRotZ = matrix::getRotMatrixZ(thetaRotZ);
 			triangle tri1{ { {p.x, p.y, p.z, 1.0f}, {p.x, p.y + h, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 1.0f} } };
-			tri1 = tri1 * matRotX;
-			tri1 = tri1 * matRotY;
-			tri1 = tri1 * matRotZ;
 			triangle tri2{ { {p.x, p.y, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
-			tri2 = tri2 * matRotX;
-			tri2 = tri2 * matRotY;
-			tri2 = tri2 * matRotZ;
 			triangles.push_back(tri1);
 			triangles.push_back(tri2);
 		}
@@ -245,49 +242,34 @@ typedef struct cuboid : public shape
 	private:
 
 		inline void toTriangles() override {
-			glm::mat4 matRotX = matrix::getRotMatrixX(thetaRotX);
-			glm::mat4 matRotY = matrix::getRotMatrixY(thetaRotY);
-			glm::mat4 matRotZ = matrix::getRotMatrixZ(thetaRotZ);
 			//SOUTH
 			triangle south1{ { {p.x + w, p.y + h, p.z + d, 1.0f}, {p.x + w, p.y, p.z + d, 1.0f}, {p.x, p.y + h, p.z + d, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
 			triangle south2{ { {p.x, p.y + h, p.z + d, 1.0f},     {p.x + w, p.y, p.z + d, 1.0f}, {p.x, p.y, p.z + d, 1.0f} },        { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
-			south1 = south1 * matRotX; south1 = south1 * matRotY; south1 = south1 * matRotZ;
-			south2 = south2 * matRotX; south2 = south2 * matRotY; south2 = south2 * matRotZ;
 			triangles.push_back(south1);
 			triangles.push_back(south2);
 			//EAST
 			triangle east1{ { {p.x + w, p.y + h, p.z, 1.0f},     {p.x + w, p.y, p.z, 1.0f}, {p.x + w, p.y + h, p.z + d, 1.0f } },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
 			triangle east2{ { {p.x + w, p.y + h, p.z + d, 1.0f}, {p.x + w, p.y, p.z, 1.0f}, {p.x + w, p.y, p.z + d,    1.0f } },     { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
-			east1 = east1 * matRotX; east1 = east1 * matRotY; east1 = east1 * matRotZ;
-			east2 = east2 * matRotX; east2 = east2 * matRotY; east2 = east2 * matRotZ;
 			triangles.push_back(east1);
 			triangles.push_back(east2);
 			//NORTH
 			triangle north1{ { {p.x, p.y + h, p.z, 1.0f},     {p.x, p.y, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
 			triangle north2{ { {p.x + w, p.y + h, p.z, 1.0f}, {p.x, p.y, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f} },        { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
-			north1 = north1 * matRotX; north1 = north1 * matRotY; north1 = north1 * matRotZ;
-			north2 = north2 * matRotX; north2 = north2 * matRotY; north2 = north2 * matRotZ;
 			triangles.push_back(north1);
 			triangles.push_back(north2);
 			//WEST
 			triangle west1{ { {p.x, p.y + h, p.z + d, 1.0f}, {p.x, p.y, p.z + d, 1.0f}, {p.x, p.y + h, p.z, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
 			triangle west2{ { {p.x, p.y + h, p.z, 1.0f},     {p.x, p.y, p.z + d, 1.0f}, {p.x, p.y, p.z, 1.0f} },        { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
-			west1 = west1 * matRotX; west1 = west1 * matRotY; west1 = west1 * matRotZ;
-			west2 = west2 * matRotX; west2 = west2 * matRotY; west2 = west2 * matRotZ;
 			triangles.push_back(west1);
 			triangles.push_back(west2);
 			//TOP
 			triangle top1{ { {p.x, p.y + h, p.z + d, 1.0f},     {p.x, p.y + h, p.z, 1.0f}, {p.x + w, p.y + h, p.z + d, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
 			triangle top2{ { {p.x + w, p.y + h, p.z + d, 1.0f}, {p.x, p.y + h, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f} },        { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 1.0f} } };
-			top1 = top1 * matRotX; top1 = top1 * matRotY; top1 = top1 * matRotZ;
-			top2 = top2 * matRotX; top2 = top2 * matRotY; top2 = top2 * matRotZ;
 			triangles.push_back(top1);
 			triangles.push_back(top2);
 			//BOTTOM
 			triangle bottom1{ { {p.x, p.y, p.z + d, 1.0f}, {p.x + w, p.y, p.z + d, 1.0f}, {p.x, p.y, p.z, 1.0f} },    { {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
 			triangle bottom2{ { {p.x, p.y, p.z, 1.0f}, {p.x + w, p.y, p.z + d, 1.0f}, {p.x + w, p.y, p.z, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
-			bottom1 = bottom1 * matRotX; bottom1 = bottom1 * matRotY; bottom1 = bottom1 * matRotZ;
-			bottom2 = bottom2 * matRotX; bottom2 = bottom2 * matRotY; bottom2 = bottom2 * matRotZ;
 			triangles.push_back(bottom1);
 			triangles.push_back(bottom2);
 		}
@@ -312,49 +294,34 @@ typedef struct cube : public shape
 
 		inline void toTriangles() override {
 			float s = size / 2.0f;
-			glm::mat4 matRotX = matrix::getRotMatrixX(thetaRotX);
-			glm::mat4 matRotY = matrix::getRotMatrixY(thetaRotY);
-			glm::mat4 matRotZ = matrix::getRotMatrixZ(thetaRotZ);
 			//RIGHT
 			triangle east1{ { {p.x + s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y + s, p.z - s, 1.0f}, {p.x + s, p.y - s, p.z - s, 1.0f} } };
 			triangle east2{ { {p.x + s, p.y - s, p.z + s, 1.0f}, {p.x + s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z - s, 1.0f} } };
-			east1 = east1 * matRotX; east1 = east1 * matRotY; east1 = east1 * matRotZ;
-			east2 = east2 * matRotX; east2 = east2 * matRotY; east2 = east2 * matRotZ;
 			triangles.push_back(east1);
 			triangles.push_back(east2);
 			//LEFT
 			triangle west1{ { {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z + s, 1.0f} } };
 			triangle west2{ { {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z + s, 1.0f}, {p.x - s, p.y - s, p.z + s, 1.0f} } };
-			west1 = west1 * matRotX; west1 = west1 * matRotY; west1 = west1 * matRotZ;
-			west2 = west2 * matRotX; west2 = west2 * matRotY; west2 = west2 * matRotZ;
 			triangles.push_back(west1);
 			triangles.push_back(west2);
 			//TOP
 			triangle top1{ { {p.x - s, p.y + s, p.z + s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f}, {p.x + s, p.y + s, p.z + s, 1.0f} } };
 			triangle top2{ { {p.x + s, p.y + s, p.z + s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f}, {p.x + s, p.y + s, p.z - s, 1.0f} } };
-			top1 = top1 * matRotX; top1 = top1 * matRotY; top1 = top1 * matRotZ;
-			top2 = top2 * matRotX; top2 = top2 * matRotY; top2 = top2 * matRotZ;
 			triangles.push_back(top1);
 			triangles.push_back(top2);
 			//BOTTOM
 			triangle bottom1{ { {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y - s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z + s, 1.0f} } };
 			triangle bottom2{ { {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x + s, p.y - s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z - s, 1.0f} } };
-			bottom1 = bottom1 * matRotX; bottom1 = bottom1 * matRotY; bottom1 = bottom1 * matRotZ;
-			bottom2 = bottom2 * matRotX; bottom2 = bottom2 * matRotY; bottom2 = bottom2 * matRotZ;
 			triangles.push_back(bottom1);
 			triangles.push_back(bottom2);
 			//BACK
 			triangle back1{ { {p.x + s, p.y - s, p.z - s, 1.0f}, {p.x + s, p.y + s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f} } };
 			triangle back2{ { {p.x + s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f}, {p.x - s, p.y - s, p.z - s, 1.0f} } };
-			back1 = back1 * matRotX; back1 = back1 * matRotY; back1 = back1 * matRotZ;
-			back2 = back2 * matRotX; back2 = back2 * matRotY; back2 = back2 * matRotZ;
 			triangles.push_back(back1);
 			triangles.push_back(back2);
 			//FRONT
 			triangle front1{ { {p.x - s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z + s, 1.0f} } };
 			triangle front2{ { {p.x - s, p.y - s, p.z + s, 1.0f}, {p.x - s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z + s, 1.0f} } };
-			front1 = front1 * matRotX; front1 = front1 * matRotY; front1 = front1 * matRotZ;
-			front2 = front2 * matRotX; front2 = front2 * matRotY; front2 = front2 * matRotZ;
 			triangles.push_back(front1);
 			triangles.push_back(front2);
 		}
@@ -393,7 +360,8 @@ typedef struct model {
 		bool removeFlag = false;
 		bool isCovered = false;
 		boundingbox bbox;
-		glm::mat4 modelMatrix;
+		glm::mat4 modelMatrix = glm::mat4(1.0f);
+		glm::mat4 rotationMatrix = glm::mat4(1.0f);
 
 		model() {}
 
@@ -405,6 +373,7 @@ typedef struct model {
 		{
 			modelMesh.tris = shape.triangles;
 			modelMesh.shape = shape.type;
+			rotationMatrix = shape.rotationMatrix;
 		}
 
 		virtual void render(ArtificeShaderProgram* shader, GLuint textureId)

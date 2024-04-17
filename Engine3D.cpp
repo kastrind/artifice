@@ -183,6 +183,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		mtx.lock();
 		glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
 		modelMatrix = glm::translate(modelMatrix, model.position);
+		modelMatrix = modelMatrix * model.rotationMatrix;
 		model.modelMatrix = modelMatrix;
 
 		model.inFocus = false;
@@ -537,6 +538,22 @@ void Engine3D::edit(float elapsedTime)
 			editingWidth += 0.1f;
 			std::cout << "width: " << editingWidth << std::endl;
 
+		// increases/decreases height
+		} else if (editOptions[editOptionIndex] == "height" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+			editingHeight = std::max(editingHeight - 0.1f, 0.1f);
+			std::cout << "height: " << editingHeight << std::endl;
+		} else if (editOptions[editOptionIndex] == "height" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+			editingHeight += 0.1f;
+			std::cout << "height: " << editingHeight << std::endl;
+
+		// increases/decreases depth
+		} else if (editOptions[editOptionIndex] == "depth" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+			editingDepth = std::max(editingDepth - 0.1f, 0.1f);
+			std::cout << "depth: " << editingDepth << std::endl;
+		} else if (editOptions[editOptionIndex] == "depth" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+			editingDepth += 0.1f;
+			std::cout << "depth: " << editingDepth << std::endl;
+
 		// increases/decreases X rotation
 		} else if (editOptions[editOptionIndex] == "rotationX" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
 			editingRotationX = std::max(editingRotationX - 0.1f, 0.0f);
@@ -544,10 +561,26 @@ void Engine3D::edit(float elapsedTime)
 		} else if (editOptions[editOptionIndex] == "rotationX" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
 			editingRotationX += 0.1f;
 			std::cout << "rotationX: " << editingRotationX << std::endl;
+
+		// increases/decreases Y rotation
+		} else if (editOptions[editOptionIndex] == "rotationY" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+			editingRotationY = std::max(editingRotationY - 0.1f, 0.0f);
+			std::cout << "rotationY: " << editingRotationY << std::endl;
+		} else if (editOptions[editOptionIndex] == "rotationY" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+			editingRotationY += 0.1f;
+			std::cout << "rotationY: " << editingRotationY << std::endl;
+
+		// increases/decreases Z rotation
+		} else if (editOptions[editOptionIndex] == "rotationZ" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+			editingRotationZ = std::max(editingRotationZ - 0.1f, 0.0f);
+			std::cout << "rotationZ: " << editingRotationZ << std::endl;
+		} else if (editOptions[editOptionIndex] == "rotationZ" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+			editingRotationZ += 0.1f;
+			std::cout << "rotationZ: " << editingRotationZ << std::endl;
 		}
 
 		if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
-			cube cube(std::max(editingWidth, std::max(editingHeight, editingDepth)), editingRotationX, 0, 0);
+			cube cube(std::max(editingWidth, std::max(editingHeight, editingDepth)), editingRotationX, editingRotationY, editingRotationZ);
 			glm::vec3 position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
 			cubeModel mdl(0, cubePointsCnt, "box", position, cube, true);
 			cubePointsCnt += mdl.modelMesh.tris.size() * 3;
