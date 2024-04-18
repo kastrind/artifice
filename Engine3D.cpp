@@ -577,12 +577,20 @@ void Engine3D::edit(float elapsedTime)
 		} else if (editOptions[editOptionIndex] == "rotationZ" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
 			editingRotationZ += 0.1f;
 			std::cout << "rotationZ: " << editingRotationZ << std::endl;
+
+		// toggles isSolid
+		} else if (editOptions[editOptionIndex] == "isSolid" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+			editingIsSolid = !editingIsSolid;
+			std::cout << "isSolid: " << editingIsSolid << std::endl;
+		} else if (editOptions[editOptionIndex] == "isSolid" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+			editingIsSolid = !editingIsSolid;
+			std::cout << "isSolid: " << editingIsSolid << std::endl;
 		}
 
 		if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
 			cube cube(std::max(editingWidth, std::max(editingHeight, editingDepth)), editingRotationX, editingRotationY, editingRotationZ);
 			glm::vec3 position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
-			cubeModel mdl(0, cubePointsCnt, "box", position, cube, true);
+			cubeModel mdl(0, cubePointsCnt, "box", position, cube, editingIsSolid);
 			cubePointsCnt += mdl.modelMesh.tris.size() * 3;
 			std::cout << "about to place model with sn = " << mdl.sn << std::endl;
 			mtx.lock();

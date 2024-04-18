@@ -166,6 +166,7 @@ class Engine3D
 		float editingRotationZ = 0.0f;
 		shapetype editingShape = shapetype::CUBE;
 		unsigned short edShapeInt = 1;
+		bool editingIsSolid = true;
 		std::shared_ptr<model> editingModel = nullptr;
 		std::shared_ptr<model> deletingModel = nullptr;
 		model modelInFocusTmp;
