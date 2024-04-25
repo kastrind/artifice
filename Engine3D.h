@@ -88,8 +88,11 @@ class Engine3D
 		//to render
 		std::vector<std::string> texturePaths;
 		std::map<std::string, GLuint> textureIdsMap;
+		std::vector<std::string> textureNames;
+
 		std::vector<std::string> cubemapPaths;
 		std::map<std::string, GLuint> cubemapIdsMap;
+		std::vector<std::string> cubemapNames;
 
 		//to update vertices
 		GLuint gCubeMapProgramID = 0;
@@ -164,6 +167,8 @@ class Engine3D
 		float editingRotationX = 0.0f;
 		float editingRotationY = 0.0f;
 		float editingRotationZ = 0.0f;
+		unsigned int editingTextureNameIndex = 0;
+		unsigned int editingCubemapNameIndex = 0;
 		shapetype editingShape = shapetype::CUBE;
 		unsigned short edShapeInt = 1;
 		bool editingIsSolid = true;

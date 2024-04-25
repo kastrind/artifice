@@ -578,6 +578,28 @@ void Engine3D::edit(float elapsedTime)
 			editingRotationZ += 0.1f;
 			std::cout << "rotationZ: " << editingRotationZ << std::endl;
 
+		// cycles through textures
+		} else if (editOptions[editOptionIndex] == "texture" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+			if (edShapeInt == shapetype::CUBE)
+			{
+				if (++editingCubemapNameIndex > cubemapNames.size() - 1) editingCubemapNameIndex = 0;
+				std::cout << "cubemap: " << cubemapNames[editingCubemapNameIndex] << std::endl;
+			}else
+			{
+				if (++editingTextureNameIndex > textureNames.size() - 1) editingTextureNameIndex = 0;
+				std::cout << "texture: " << textureNames[editingTextureNameIndex] << std::endl;
+			}
+		} else if (editOptions[editOptionIndex] == "texture" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+			if (edShapeInt == shapetype::CUBE)
+			{
+				if (--editingCubemapNameIndex > cubemapNames.size() - 1) editingCubemapNameIndex = cubemapNames.size() - 1;
+				std::cout << "cubemap: " << cubemapNames[editingCubemapNameIndex] << std::endl;
+			}else
+			{
+				if (--editingTextureNameIndex > textureNames.size() - 1) editingTextureNameIndex = textureNames.size() - 1;
+				std::cout << "texture: " << textureNames[editingTextureNameIndex] << std::endl;
+			}
+
 		// toggles isSolid
 		} else if (editOptions[editOptionIndex] == "isSolid" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
 			editingIsSolid = !editingIsSolid;
@@ -590,7 +612,7 @@ void Engine3D::edit(float elapsedTime)
 		if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
 			cube cube(std::max(editingWidth, std::max(editingHeight, editingDepth)), editingRotationX, editingRotationY, editingRotationZ);
 			glm::vec3 position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
-			cubeModel mdl(0, cubePointsCnt, "box", position, cube, editingIsSolid);
+			cubeModel mdl(0, cubePointsCnt, cubemapNames[editingCubemapNameIndex], position, cube, editingIsSolid);
 			cubePointsCnt += mdl.modelMesh.tris.size() * 3;
 			std::cout << "about to place model with sn = " << mdl.sn << std::endl;
 			mtx.lock();
@@ -1085,8 +1107,18 @@ bool Engine3D::initGL()
 		//generates and binds textures
 		loadTextures(textureIdsMap);
 
+		for (std::pair<const std::string, GLuint>& entry : textureIdsMap )
+		{
+			textureNames.push_back(entry.first);
+		}
+
 		//generates and binds cubemap
 		loadCubemaps(cubemapIdsMap);
+
+		for (std::pair<const std::string, GLuint>& entry : cubemapIdsMap )
+		{
+			cubemapNames.push_back(entry.first);
+		}
 		
 	}
 	return success;
