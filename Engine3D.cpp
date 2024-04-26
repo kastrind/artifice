@@ -483,6 +483,21 @@ void Engine3D::move(float elapsedTime)
 	}
 }
 
+void Engine3D::addModel(glm::vec3 position)
+{
+	cube cube(std::max(editingWidth, std::max(editingHeight, editingDepth)), editingRotationX, editingRotationY, editingRotationZ);
+	cubeModel mdl(0, cubePointsCnt, cubemapNames[editingCubemapNameIndex], position, cube, editingIsSolid);
+	cubePointsCnt += mdl.modelMesh.tris.size() * 3;
+	std::cout << "about to place model with sn = " << mdl.sn << std::endl;
+	mtx.lock();
+	if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
+	//ptrModelsToRender.push_back(std::make_shared<model>(mdl));
+	ptrModelsToRender.push_back(std::make_shared<cubeModel>(mdl));
+	editingModel = ptrModelsToRender.back();
+	std::cout << "placed model has sn = " << editingModel->sn << std::endl;
+	mtx.unlock();
+}
+
 
 void Engine3D::edit(float elapsedTime)
 {
@@ -580,7 +595,7 @@ void Engine3D::edit(float elapsedTime)
 
 		// cycles through textures
 		} else if (editOptions[editOptionIndex] == "texture" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
-			if (edShapeInt == shapetype::CUBE)
+			if (editingShape == shapetype::CUBE)
 			{
 				if (++editingCubemapNameIndex > cubemapNames.size() - 1) editingCubemapNameIndex = 0;
 				std::cout << "cubemap: " << cubemapNames[editingCubemapNameIndex] << std::endl;
@@ -590,7 +605,7 @@ void Engine3D::edit(float elapsedTime)
 				std::cout << "texture: " << textureNames[editingTextureNameIndex] << std::endl;
 			}
 		} else if (editOptions[editOptionIndex] == "texture" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
-			if (edShapeInt == shapetype::CUBE)
+			if (editingShape == shapetype::CUBE)
 			{
 				if (--editingCubemapNameIndex > cubemapNames.size() - 1) editingCubemapNameIndex = cubemapNames.size() - 1;
 				std::cout << "cubemap: " << cubemapNames[editingCubemapNameIndex] << std::endl;
@@ -610,18 +625,8 @@ void Engine3D::edit(float elapsedTime)
 		}
 
 		if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
-			cube cube(std::max(editingWidth, std::max(editingHeight, editingDepth)), editingRotationX, editingRotationY, editingRotationZ);
 			glm::vec3 position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
-			cubeModel mdl(0, cubePointsCnt, cubemapNames[editingCubemapNameIndex], position, cube, editingIsSolid);
-			cubePointsCnt += mdl.modelMesh.tris.size() * 3;
-			std::cout << "about to place model with sn = " << mdl.sn << std::endl;
-			mtx.lock();
-			if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
-			//ptrModelsToRender.push_back(std::make_shared<model>(mdl));
-			ptrModelsToRender.push_back(std::make_shared<cubeModel>(mdl));
-			editingModel = ptrModelsToRender.back();
-			std::cout << "placed model has sn = " << editingModel->sn << std::endl;
-			mtx.unlock();
+			addModel(position);
 			cameraSpeedFactor /= 100;
 			isEdited = true;
 		}

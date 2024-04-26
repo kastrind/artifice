@@ -218,6 +218,8 @@ class Engine3D
 
 		void edit(float elapsedTime);
 
+		void addModel(glm::vec3 position);
+
 		void captureInput();
 
 		std::string shapeTypeToString(shapetype s);
