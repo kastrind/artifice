@@ -218,7 +218,7 @@ class Engine3D
 
 		void edit(float elapsedTime);
 
-		void addModel(glm::vec3 position);
+		void addModel(shapetype type, glm::vec3 position);
 
 		void captureInput();
 

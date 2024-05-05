@@ -483,19 +483,45 @@ void Engine3D::move(float elapsedTime)
 	}
 }
 
-void Engine3D::addModel(glm::vec3 position)
+void Engine3D::addModel(shapetype type, glm::vec3 position)
 {
-	cube cube(std::max(editingWidth, std::max(editingHeight, editingDepth)), editingRotationX, editingRotationY, editingRotationZ);
-	cubeModel mdl(0, cubePointsCnt, cubemapNames[editingCubemapNameIndex], position, cube, editingIsSolid);
-	cubePointsCnt += mdl.modelMesh.tris.size() * 3;
-	std::cout << "about to place model with sn = " << mdl.sn << std::endl;
-	mtx.lock();
-	if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
-	//ptrModelsToRender.push_back(std::make_shared<model>(mdl));
-	ptrModelsToRender.push_back(std::make_shared<cubeModel>(mdl));
-	editingModel = ptrModelsToRender.back();
-	std::cout << "placed model has sn = " << editingModel->sn << std::endl;
-	mtx.unlock();
+	if (type == shapetype::CUBE)
+	{
+		cube cube(std::max(editingWidth, std::max(editingHeight, editingDepth)), editingRotationX, editingRotationY, editingRotationZ);
+		cubeModel mdl(0, cubePointsCnt, cubemapNames[editingCubemapNameIndex], position, cube, editingIsSolid);
+		cubePointsCnt += mdl.modelMesh.tris.size() * 3;
+		std::cout << "about to place model with sn = " << mdl.sn << std::endl;
+		mtx.lock();
+		if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
+		//ptrModelsToRender.push_back(std::make_shared<model>(mdl));
+		ptrModelsToRender.push_back(std::make_shared<cubeModel>(mdl));
+		editingModel = ptrModelsToRender.back();
+		std::cout << "placed model has sn = " << editingModel->sn << std::endl;
+		mtx.unlock();
+	} else
+	{
+		model m;
+		if (type == shapetype::RECTANGLE)
+		{
+			rectangle rectangle(editingWidth, editingHeight, editingRotationX, editingRotationY, editingRotationZ);
+			model mdl(0, modelPointsCnt, textureNames[editingTextureNameIndex], position, rectangle, editingIsSolid);
+			m = mdl;
+		}else if (type == shapetype::CUBOID)
+		{
+			cuboid cuboid(editingWidth, editingHeight, editingDepth, editingRotationX, editingRotationY, editingRotationZ);
+			model mdl(0, modelPointsCnt, textureNames[editingTextureNameIndex], position, cuboid, editingIsSolid);
+			m = mdl;
+		}
+		modelPointsCnt += m.modelMesh.tris.size() * 3;
+		std::cout << "about to place model with sn = " << m.sn << std::endl;
+		mtx.lock();
+		if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
+		//ptrModelsToRender.push_back(std::make_shared<model>(mdl));
+		ptrModelsToRender.push_back(std::make_shared<model>(m));
+		editingModel = ptrModelsToRender.back();
+		std::cout << "placed model has sn = " << editingModel->sn << std::endl;
+		mtx.unlock();
+	}
 }
 
 
@@ -626,7 +652,7 @@ void Engine3D::edit(float elapsedTime)
 
 		if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
 			glm::vec3 position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
-			addModel(position);
+			addModel(editingShape, position);
 			cameraSpeedFactor /= 100;
 			isEdited = true;
 		}
