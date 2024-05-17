@@ -759,9 +759,10 @@ void Engine3D::edit(float elapsedTime)
 			mtx.lock();
 			auto modelInFocus = *(modelsInFocus.begin());
 			deletingModel = modelInFocus;
+			std::cout << "model in focus to delete " << deletingModel->distance << std::endl;
 			mtx.unlock();
 
-		}else if (deletingModel != nullptr && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK]==false) {
+		}else if (deletingModel != nullptr && deletingModel->removeFlag==false && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK]==false) {
 			std::cout << "deleted!" << std::endl;
 			mtx.lock();
 			deletingModel->removeFlag = true;
@@ -769,28 +770,43 @@ void Engine3D::edit(float elapsedTime)
 			unsigned long lastModelSn = 0;
 			unsigned long lastCubeSn = 0;
 			//TODO AFTER PTR CUBES TO RENDER IS DONE
-			// for (i; i < modelsToRender.size(); i++)
-			// {
-			// 	if (modelsToRender[i].removeFlag) break;
-			// }
-			// std::cout << "removed model with index = " << i << " and sn = " << modelsToRender[i].sn << std::endl;
-			// cubePointsCnt -= deletingModel->modelMesh.tris.size() * 3;
-			// for (i+=1; i < modelsToRender.size(); i++)
-			// {
-			// 	if (deletingModel->modelMesh.shape == shapetype::CUBE && modelsToRender[i].modelMesh.shape == shapetype::CUBE)
-			// 	{
-			// 		std::cout << "index = " << i << " sn = " << modelsToRender[i].sn << " - " << deletingModel->modelMesh.tris.size() * 3 << std::endl;
-			// 		modelsToRender[i].sn -= deletingModel->modelMesh.tris.size() * 3;
-			// 	}else if (deletingModel->modelMesh.shape != shapetype::CUBE && modelsToRender[i].modelMesh.shape != shapetype::CUBE)
-			// 	{
-			// 		modelsToRender[i].sn -= deletingModel->modelMesh.tris.size() * 3;
-			// 	}
-			// }
-			// modelsToRender.erase(std::remove_if(modelsToRender.begin(), modelsToRender.end(), [](model m) { return m.removeFlag == true; }), modelsToRender.end());
+			for (i; i < ptrModelsToRender.size(); i++)
+			{
+				if (ptrModelsToRender[i]->removeFlag) break;
+			}
+			unsigned long removeIndex = i;
+			std::cout << "removing model with index = " << i << " and sn = " << ptrModelsToRender[i]->sn << std::endl;
+			if (deletingModel->modelMesh.shape == shapetype::CUBE)
+			{
+				std::cout << "model type to remove is cube" << std::endl;
+				//cubePointsCnt -= deletingModel->modelMesh.tris.size() * 3;
+			}else 
+			{
+				std::cout << "model type to remove is NOT cube" << std::endl;
+				//modelPointsCnt -= deletingModel->modelMesh.tris.size() * 3;
+			}
+			i+=1;
+			for (i; i < ptrModelsToRender.size(); i++)
+			{
+				if (deletingModel->modelMesh.shape == shapetype::CUBE && ptrModelsToRender[i]->modelMesh.shape == shapetype::CUBE)
+				{
+					std::cout << "index = " << i << " sn = " << ptrModelsToRender[i]->sn << " - " << deletingModel->modelMesh.tris.size() * 3 << std::endl;
+					//ptrModelsToRender[i]->sn -= deletingModel->modelMesh.tris.size() * 3;
+				}else if (deletingModel->modelMesh.shape != shapetype::CUBE && ptrModelsToRender[i]->modelMesh.shape != shapetype::CUBE)
+				{
+					//ptrModelsToRender[i]->sn -= deletingModel->modelMesh.tris.size() * 3;
+				}
+			}
+			//ptrModelsToRender[removeIndex].reset();
+			//ptrModelsToRender.erase(ptrModelsToRender.begin() + removeIndex);
+
+			//ptrModelsToRender.erase(std::remove_if(ptrModelsToRender.begin(), ptrModelsToRender.end(), [](std::shared_ptr<model> m) { return m->removeFlag == true; }), ptrModelsToRender.end());
 			
+			//deletingModel.reset();
+			//modelsInFocus.erase(modelsInFocus.begin());
 			mtx.unlock();
 			deletingModel = nullptr;
-			isEdited = true;
+			//isEdited = true;
 		}
 
 		
@@ -883,16 +899,13 @@ void Engine3D::updateVertices()
 
 	std::vector<GLfloat>* vdp = &vertexData;
 
-	mtx.lock();
-	std::vector<model> modelsToRenderCopy = modelsToRender;
-	mtx.unlock();
-
 	//populate vertex vectors with triangle vertex information for each model
 	for (auto &ptrModel : ptrModelsToRender)
-	//for (auto &model : modelsToRenderCopy)
 	{
 		if (!ptrModel) continue;
 		model& model = *ptrModel;
+
+		if (model.removeFlag) continue;
 
 		vdp = model.modelMesh.shape == shapetype::CUBE ? &cubeVertexData : &vertexData;
 
@@ -1008,10 +1021,6 @@ void Engine3D::render()
 	// textureShader->setVec3("viewPos", getCameraPos());
 	// textureShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
-	// mtx.lock();
-	// std::vector<model> modelsToRenderCopy = modelsToRender;
-	// mtx.unlock();
-
 	cubeMapShader.bind();
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
@@ -1028,6 +1037,9 @@ void Engine3D::render()
 		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
 		
 		model& model = *(*itr);
+				
+		if (model.removeFlag) continue;
+
 		model.render(&cubeMapShader, cubemapIdsMap[model.texture]);
 		cnt++;
 	}
@@ -1045,6 +1057,9 @@ void Engine3D::render()
 		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
 
 		model& model = *(*itr);
+
+		if (model.removeFlag) continue;
+
 		model.render(&textureShader, textureIdsMap[model.texture]);
 		cnt++;
 	}
