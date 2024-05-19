@@ -524,6 +524,67 @@ void Engine3D::addModel(shapetype type, glm::vec3 position)
 	}
 }
 
+void Engine3D::addModel(model& mdl)
+{
+	if (mdl.modelMesh.shape == shapetype::CUBE)
+	{
+		mdl.sn = cubePointsCnt;
+		cubePointsCnt += mdl.modelMesh.tris.size() * 3;
+		std::cout << "about to place model with sn = " << mdl.sn << std::endl;
+		mtx.lock();
+		if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
+		ptrModelsToRender.push_back(std::make_shared<cubeModel>(mdl));
+		editingModel = ptrModelsToRender.back();
+		std::cout << "placed model has sn = " << editingModel->sn << std::endl;
+		mtx.unlock();
+	} else
+	{
+		mdl.sn = modelPointsCnt;
+		modelPointsCnt += mdl.modelMesh.tris.size() * 3;
+		std::cout << "about to place model with sn = " << mdl.sn << std::endl;
+		mtx.lock();
+		if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
+		ptrModelsToRender.push_back(std::make_shared<model>(mdl));
+		editingModel = ptrModelsToRender.back();
+		std::cout << "placed model has sn = " << editingModel->sn << std::endl;
+		mtx.unlock();
+	}
+}
+
+void Engine3D::removeModel(std::shared_ptr<model> m)
+{
+	mtx.lock();
+	m->removeFlag = true;
+	unsigned long i = 0;
+	for (i; i < ptrModelsToRender.size(); i++)
+	{
+		if (ptrModelsToRender[i]->removeFlag) break;
+	}
+	unsigned long removeIndex = i;
+	std::cout << "removing model with index = " << i << " and sn = " << ptrModelsToRender[i]->sn << std::endl;
+	if (m->modelMesh.shape == shapetype::CUBE)
+	{
+		cubePointsCnt -= m->modelMesh.tris.size() * 3;
+	}else 
+	{
+		modelPointsCnt -= m->modelMesh.tris.size() * 3;
+	}
+	for (i+=1; i < ptrModelsToRender.size(); i++)
+	{
+		if ((m->modelMesh.shape == shapetype::CUBE && ptrModelsToRender[i]->modelMesh.shape == shapetype::CUBE) ||
+			(m->modelMesh.shape != shapetype::CUBE && ptrModelsToRender[i]->modelMesh.shape != shapetype::CUBE))
+		{
+			ptrModelsToRender[i]->sn -= m->modelMesh.tris.size() * 3;
+		}
+	}
+	ptrModelsToRender[removeIndex].reset();
+	ptrModelsToRender.erase(ptrModelsToRender.begin() + removeIndex);
+	m.reset();
+	modelsInFocus.clear();
+	finalModelsToRender.clear();
+	finalCubeModelsToRender.clear();
+	mtx.unlock();
+}
 
 void Engine3D::edit(float elapsedTime)
 {
@@ -700,17 +761,8 @@ void Engine3D::edit(float elapsedTime)
 			if (keysPressed[SupportedKeys::LEFT_CTRL] && modelInFocusTmp.inFocus) {
 				m.position = modelInFocusTmp.position + editingDepth * pos;
 				modelInFocusTmp.inFocus = false;
-				mtx.lock();
-				//model* m2 = &modelsToRender.back();
-				//cubePointsCnt -= m2->sn;
-				cubePointsCnt -= ptrModelsToRender.back()->sn;
-				//modelsToRender.pop_back();
-				ptrModelsToRender.pop_back();
-				m.sn = cubePointsCnt;
-				cubePointsCnt += m.modelMesh.tris.size() * 3;
-				//modelsToRender.push_back(m);
-				ptrModelsToRender.push_back(std::make_shared<model>(m));
-				mtx.unlock();
+				removeModel(ptrModelsToRender.back());
+				addModel(m);
 				isGlued = true;
 				std::cout << "glued placement" << std::endl;
 			}else {
@@ -720,7 +772,7 @@ void Engine3D::edit(float elapsedTime)
 
 			glm::vec3 initialPos = m.position;
 			std::cout << "dir X Y Z : " << dirX << ", " << dirY << ", " << dirZ << std::endl;
-			mtx.lock();
+			//mtx.lock();
 			//std::cout << "models size before: " << modelsToRender.size() << std::endl;
 			std::cout << "models size before: " << ptrModelsToRender.size() << std::endl;
 			for (unsigned int i = 0; i < collationWidth; i++) {
@@ -732,10 +784,10 @@ void Engine3D::edit(float elapsedTime)
 					if (heightAlongAxis == 'y') m.position.y += editingHeight;
 					else if (heightAlongAxis == 'x') m.position.x += dirX * editingWidth;
 					else if (heightAlongAxis == 'z') m.position.z += dirZ *  editingDepth;
-					m.sn = cubePointsCnt;
-					cubePointsCnt += m.modelMesh.tris.size() * 3;
-					//modelsToRender.push_back(m);
-					ptrModelsToRender.push_back(std::make_shared<cubeModel>(m));
+					//m.sn = cubePointsCnt;
+					//cubePointsCnt += m.modelMesh.tris.size() * 3;
+					//ptrModelsToRender.push_back(std::make_shared<cubeModel>(m));
+					addModel(m);
 				}
 				if (widthAlongAxis == 'z') m.position.z += dirZ * editingDepth;
 				else if (widthAlongAxis == 'x') m.position.x += dirX * editingWidth;
@@ -745,7 +797,7 @@ void Engine3D::edit(float elapsedTime)
 				else if (heightAlongAxis == 'x') m.position.x = initialPos.x - dirX * editingWidth;
 				else if (heightAlongAxis == 'z') m.position.z = initialPos.z - dirZ * editingDepth;
 			}
-			mtx.unlock();
+			//mtx.unlock();
 			//std::cout << "models size after: " << modelsToRender.size() << std::endl;
 			std::cout << "models size after: " << ptrModelsToRender.size() << std::endl;
 
@@ -759,76 +811,13 @@ void Engine3D::edit(float elapsedTime)
 			mtx.lock();
 			auto modelInFocus = *(modelsInFocus.begin());
 			deletingModel = modelInFocus;
-			std::cout << "model in focus to delete " << deletingModel->distance << std::endl;
 			mtx.unlock();
 
 		}else if (deletingModel != nullptr && deletingModel->removeFlag==false && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK]==false) {
-			std::cout << "deleted!" << std::endl;
-			mtx.lock();
-			deletingModel->removeFlag = true;
-			unsigned long i = 0;
-			unsigned long lastModelSn = 0;
-			unsigned long lastCubeSn = 0;
-			//TODO AFTER PTR CUBES TO RENDER IS DONE
-			for (i; i < ptrModelsToRender.size(); i++)
-			{
-				if (ptrModelsToRender[i]->removeFlag) break;
-			}
-			unsigned long removeIndex = i;
-			std::cout << "removing model with index = " << i << " and sn = " << ptrModelsToRender[i]->sn << std::endl;
-			if (deletingModel->modelMesh.shape == shapetype::CUBE)
-			{
-				std::cout << "model type to remove is cube" << std::endl;
-				//cubePointsCnt -= deletingModel->modelMesh.tris.size() * 3;
-			}else 
-			{
-				std::cout << "model type to remove is NOT cube" << std::endl;
-				//modelPointsCnt -= deletingModel->modelMesh.tris.size() * 3;
-			}
-			i+=1;
-			for (i; i < ptrModelsToRender.size(); i++)
-			{
-				if (deletingModel->modelMesh.shape == shapetype::CUBE && ptrModelsToRender[i]->modelMesh.shape == shapetype::CUBE)
-				{
-					std::cout << "index = " << i << " sn = " << ptrModelsToRender[i]->sn << " - " << deletingModel->modelMesh.tris.size() * 3 << std::endl;
-					//ptrModelsToRender[i]->sn -= deletingModel->modelMesh.tris.size() * 3;
-				}else if (deletingModel->modelMesh.shape != shapetype::CUBE && ptrModelsToRender[i]->modelMesh.shape != shapetype::CUBE)
-				{
-					//ptrModelsToRender[i]->sn -= deletingModel->modelMesh.tris.size() * 3;
-				}
-			}
-			//ptrModelsToRender[removeIndex].reset();
-			//ptrModelsToRender.erase(ptrModelsToRender.begin() + removeIndex);
-
-			//ptrModelsToRender.erase(std::remove_if(ptrModelsToRender.begin(), ptrModelsToRender.end(), [](std::shared_ptr<model> m) { return m->removeFlag == true; }), ptrModelsToRender.end());
-			
-			//deletingModel.reset();
-			//modelsInFocus.erase(modelsInFocus.begin());
-			mtx.unlock();
-			deletingModel = nullptr;
-			//isEdited = true;
+			removeModel(deletingModel);
+			deletingModel.reset();
+			isEdited = true;
 		}
-
-		
-		// if (modelsInFocus.size())
-		// {
-		// 	if (prevModelInFocus != *(modelsInFocus.begin()))
-		// 	{
-		// 		auto modelInFocus = *(modelsInFocus.begin());
-		// 		for (triangle& tri : modelInFocus->modelMesh.tris) 
-		// 		{
-		// 			tri.R = 0; tri.G = 192; tri.B = 0;
-		// 		}
-		// 		if (prevModelInFocus != nullptr)
-		// 		{
-		// 			for (triangle& tri : prevModelInFocus->modelMesh.tris)
-		// 			{
-		// 				tri.R = 255; tri.G = 255; tri.B = 255;
-		// 			}
-		// 		}
-		// 		//updateVerticesFlag = true;
-		// 	}
-		// }
 		updateVerticesFlag = isEdited;
 	}
 

@@ -220,6 +220,10 @@ class Engine3D
 
 		void addModel(shapetype type, glm::vec3 position);
 
+		void addModel(model& mdl);
+
+		void removeModel(std::shared_ptr<model> m);
+
 		void captureInput();
 
 		std::string shapeTypeToString(shapetype s);

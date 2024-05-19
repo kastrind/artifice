@@ -19,6 +19,8 @@ typedef enum
 	S,
 	A,
 	D,
+	C,
+	V,
 	MOUSE_LEFT,
 	MOUSE_RIGHT,
 	MOUSE_UP,

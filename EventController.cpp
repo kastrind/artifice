@@ -223,6 +223,14 @@ void EventController::decodeEvent(SDL_Event* e)
 		{
 			keysPressed[SupportedKeys::D] = true;
 		}
+		else if (e->key.keysym.sym == SDLK_c)
+		{
+			keysPressed[SupportedKeys::C] = true;
+		}
+		else if (e->key.keysym.sym == SDLK_v)
+		{
+			keysPressed[SupportedKeys::V] = true;
+		}
 		else if (e->key.keysym.sym == SDLK_LCTRL)
 		{
 			keysPressed[SupportedKeys::LEFT_CTRL] = true;
@@ -270,6 +278,14 @@ void EventController::decodeEvent(SDL_Event* e)
 		else if (e->key.keysym.sym == SDLK_d)
 		{
 			keysPressed[SupportedKeys::D] = false;
+		}
+		else if (e->key.keysym.sym == SDLK_c)
+		{
+			keysPressed[SupportedKeys::C] = false;
+		}
+		else if (e->key.keysym.sym == SDLK_v)
+		{
+			keysPressed[SupportedKeys::V] = false;
 		}
 		else if (e->key.keysym.sym == SDLK_LCTRL)
 		{
