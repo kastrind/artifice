@@ -1,6 +1,6 @@
 #SRCS specifies which files to compile as part of the project
-SRCS = main.cpp Initiator.cpp Level.cpp ShaderProgram.cpp ArtificeShaderProgram.cpp EventController.cpp Engine3D.cpp
-OBJS = main.o Initiator.o Level.o ShaderProgram.o ArtificeShaderProgram.o EventController.o Engine3D.o
+SRCS = main.cpp Initiator.cpp Level.cpp ShaderProgram.cpp ArtificeShaderProgram.cpp EventController.cpp Engine3D.cpp Engine3DEd.cpp
+OBJS = main.o Initiator.o Level.o ShaderProgram.o ArtificeShaderProgram.o EventController.o Engine3D.o Engine3DEd.o
 
 #CC specifies which compiler we're using
 CC = g++
@@ -45,7 +45,7 @@ event :
 	$(CC) -c EventController.cpp $(COMPILER_FLAGS)
 
 engine :
-	$(CC) -c Engine3D.cpp $(COMPILER_FLAGS)
+	$(CC) -c Engine3D.cpp Engine3DEd.cpp $(COMPILER_FLAGS)
 
 clean : 
 	rm *.o *.exe || true

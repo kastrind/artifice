@@ -11,6 +11,13 @@
 #include <iostream>
 
 
+typedef enum axis {
+	X,
+	Y,
+	Z
+} axis;
+
+
 typedef enum orientation {
 	NORTH,
 	EAST,
