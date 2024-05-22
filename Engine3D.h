@@ -174,6 +174,7 @@ class Engine3D
 		bool editingIsSolid = true;
 		std::shared_ptr<model> editingModel = nullptr;
 		std::shared_ptr<model> deletingModel = nullptr;
+		std::shared_ptr<model> copyingModel = nullptr;
 		model modelInFocusTmp;
 		unsigned long modelPointsCnt = 0;
 		unsigned long cubePointsCnt = 0;

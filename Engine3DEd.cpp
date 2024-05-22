@@ -47,7 +47,7 @@ void Engine3D::addModel(model& mdl)
 	{
 		mdl.sn = cubePointsCnt;
 		cubePointsCnt += mdl.modelMesh.tris.size() * 3;
-		std::cout << "about to place model with sn = " << mdl.sn << std::endl;
+		std::cout << "about to place cube model with sn = " << mdl.sn << std::endl;
 		mtx.lock();
 		if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
 		ptrModelsToRender.push_back(std::make_shared<cubeModel>(mdl));
@@ -226,11 +226,29 @@ void Engine3D::edit(float elapsedTime)
 		} else if (editOptions[editOptionIndex] == "isSolid" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
 			editingIsSolid = !editingIsSolid;
 			std::cout << "isSolid: " << editingIsSolid << std::endl;
+
+		} else if (keysPressed[SupportedKeys::C] && keysPressed[SupportedKeys::LEFT_CTRL]) {
+			mtx.lock();
+			auto modelInFocus = *(modelsInFocus.begin());
+			copyingModel = modelInFocus;
+			std::cout << "copying model: " << copyingModel->id << std::endl;
+			mtx.unlock();
 		}
 
 		if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
 			glm::vec3 position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
-			addModel(editingShape, position);
+			if (copyingModel == nullptr)
+			{
+				addModel(editingShape, position);
+				std::cout << "added model" << std::endl;
+			}else
+			{
+				model m = *(copyingModel);
+				m.position = position;
+				addModel(m);
+				std::cout << "pasted model: " << m.id << std::endl;
+				copyingModel.reset();			
+			}
 			cameraSpeedFactor /= 100;
 			isEdited = true;
 		}
