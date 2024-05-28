@@ -219,7 +219,7 @@ class Engine3D
 
 		void edit(float elapsedTime);
 
-		void addModel(shapetype type, glm::vec3 position);
+		void addModel(float editingWidth, float editingHeight, float editingDepth, float editingRotationX, float editingRotationY, float editingRotationZ, unsigned int editingCubemapNameIndex, unsigned int editingTextureNameIndex, bool editingIsSolid, shapetype type, glm::vec3 position);
 
 		void addModel(model& mdl);
 
@@ -230,5 +230,7 @@ class Engine3D
 		std::string shapeTypeToString(shapetype s);
 
 		void markCoveredModels();
+
+		int64_t getTimeSinceEpoch();
 
 };

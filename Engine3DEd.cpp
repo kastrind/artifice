@@ -1,13 +1,13 @@
 #include "Engine3D.h"
 
-void Engine3D::addModel(shapetype type, glm::vec3 position)
+void Engine3D::addModel(float editingWidth, float editingHeight, float editingDepth, float editingRotationX, float editingRotationY, float editingRotationZ, unsigned int editingCubemapNameIndex, unsigned int editingTextureNameIndex, bool editingIsSolid, shapetype editingShape, glm::vec3 position)
 {
-	if (type == shapetype::CUBE)
+	if (editingShape == shapetype::CUBE)
 	{
 		cube cube(std::max(editingWidth, std::max(editingHeight, editingDepth)), editingRotationX, editingRotationY, editingRotationZ);
-		cubeModel mdl(0, cubePointsCnt, cubemapNames[editingCubemapNameIndex], position, cube, editingIsSolid);
+		cubeModel mdl(getTimeSinceEpoch(), cubePointsCnt, cubemapNames[editingCubemapNameIndex], position, cube, editingIsSolid);
 		cubePointsCnt += mdl.modelMesh.tris.size() * 3;
-		std::cout << "about to place model with sn = " << mdl.sn << std::endl;
+		std::cout << "about to place model with id = " << mdl.id << std::endl;
 		mtx.lock();
 		if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
 		//ptrModelsToRender.push_back(std::make_shared<model>(mdl));
@@ -18,19 +18,19 @@ void Engine3D::addModel(shapetype type, glm::vec3 position)
 	} else
 	{
 		model m;
-		if (type == shapetype::RECTANGLE)
+		if (editingShape == shapetype::RECTANGLE)
 		{
 			rectangle rectangle(editingWidth, editingHeight, editingRotationX, editingRotationY, editingRotationZ);
-			model mdl(0, modelPointsCnt, textureNames[editingTextureNameIndex], position, rectangle, editingIsSolid);
+			model mdl(getTimeSinceEpoch(), modelPointsCnt, textureNames[editingTextureNameIndex], position, rectangle, editingIsSolid);
 			m = mdl;
-		}else if (type == shapetype::CUBOID)
+		}else if (editingShape == shapetype::CUBOID)
 		{
 			cuboid cuboid(editingWidth, editingHeight, editingDepth, editingRotationX, editingRotationY, editingRotationZ);
-			model mdl(0, modelPointsCnt, textureNames[editingTextureNameIndex], position, cuboid, editingIsSolid);
+			model mdl(getTimeSinceEpoch(), modelPointsCnt, textureNames[editingTextureNameIndex], position, cuboid, editingIsSolid);
 			m = mdl;
 		}
 		modelPointsCnt += m.modelMesh.tris.size() * 3;
-		std::cout << "about to place model with sn = " << m.sn << std::endl;
+		std::cout << "about to place model with id = " << m.id << std::endl;
 		mtx.lock();
 		if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
 		//ptrModelsToRender.push_back(std::make_shared<model>(mdl));
@@ -43,11 +43,12 @@ void Engine3D::addModel(shapetype type, glm::vec3 position)
 
 void Engine3D::addModel(model& mdl)
 {
+	mdl.id = getTimeSinceEpoch();
+	std::cout << "about to place cube model with id = " << mdl.id << std::endl;
 	if (mdl.modelMesh.shape == shapetype::CUBE)
 	{
 		mdl.sn = cubePointsCnt;
 		cubePointsCnt += mdl.modelMesh.tris.size() * 3;
-		std::cout << "about to place cube model with sn = " << mdl.sn << std::endl;
 		mtx.lock();
 		if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
 		ptrModelsToRender.push_back(std::make_shared<cubeModel>(mdl));
@@ -58,7 +59,6 @@ void Engine3D::addModel(model& mdl)
 	{
 		mdl.sn = modelPointsCnt;
 		modelPointsCnt += mdl.modelMesh.tris.size() * 3;
-		std::cout << "about to place model with sn = " << mdl.sn << std::endl;
 		mtx.lock();
 		if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
 		ptrModelsToRender.push_back(std::make_shared<model>(mdl));
@@ -239,14 +239,12 @@ void Engine3D::edit(float elapsedTime)
 			glm::vec3 position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
 			if (copyingModel == nullptr)
 			{
-				addModel(editingShape, position);
-				std::cout << "added model" << std::endl;
+				addModel(editingWidth, editingHeight, editingDepth, editingRotationX, editingRotationY, editingRotationZ, editingCubemapNameIndex, editingTextureNameIndex, editingIsSolid, editingShape, position);
 			}else
 			{
 				model m = *(copyingModel);
 				m.position = position;
 				addModel(m);
-				std::cout << "pasted model: " << m.id << std::endl;
 				copyingModel.reset();			
 			}
 			cameraSpeedFactor /= 100;
@@ -356,4 +354,9 @@ void Engine3D::edit(float elapsedTime)
 		updateVerticesFlag = isEdited;
 	}
 
+}
+
+int64_t Engine3D::getTimeSinceEpoch()
+{
+	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
