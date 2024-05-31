@@ -33,6 +33,7 @@ typedef enum
 	LEFT_CTRL,
 	LEFT_SHIFT,
 	LEFT_ALT,
+	SPACE,
 	ALL_KEYS
 } SupportedKeys;
 

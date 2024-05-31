@@ -224,8 +224,10 @@ typedef struct rectangle : public shape
 	private:
 
 		inline void toTriangles() override {
-			triangle tri1{ { {p.x, p.y, p.z, 1.0f}, {p.x, p.y + h, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 1.0f} } };
-			triangle tri2{ { {p.x, p.y, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
+			//triangle tri1{ { {p.x, p.y, p.z, 1.0f}, {p.x, p.y + h, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 1.0f} } };
+			//triangle tri2{ { {p.x, p.y, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
+			triangle tri1{ { {p.x + w, p.y + h, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f}, {p.x, p.y + h, p.z, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
+			triangle tri2{ { {p.x, p.y + h, p.z, 1.0f},     {p.x + w, p.y, p.z, 1.0f}, {p.x, p.y, p.z, 1.0f} },        { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
 			triangles.push_back(tri1);
 			triangles.push_back(tri2);
 		}

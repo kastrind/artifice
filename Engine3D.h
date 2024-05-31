@@ -43,6 +43,7 @@ class Engine3D
 				float fov = 90.0f, float dof = 20.0f,
 				float collidingDistance = 0.2f,
 				float gravitationalPull = 0.1f,
+				float jumpSpeedFactor = 5.0f,
 				float cameraSpeedFactor = 1.5f,
 				UserMode userMode = UserMode::PLAYER,
 				EventController* eventController = nullptr);
@@ -130,7 +131,9 @@ class Engine3D
 		bool collidesRight = false;
 		bool collidesLeft = false;
 
-		float gravitationalPull;		
+		float gravitationalPull;
+		float jumpSpeedFactor;
+		float jumpSpeed = 0;
 
 		UserMode userMode;
 

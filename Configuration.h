@@ -20,7 +20,9 @@ typedef struct Configuration
 
 	const std::string LEVELS_PATH = "levels";
 
-	const UserMode USER_MODE = UserMode::EDITOR;
+	//const UserMode USER_MODE = UserMode::EDITOR;
+	
+	const UserMode USER_MODE = UserMode::PLAYER;
 
 	const unsigned int SCREEN_WIDTH = 800;
 
@@ -37,6 +39,8 @@ typedef struct Configuration
 	const float COLLIDING_DISTANCE = 0.2f;
 
 	const float GRAVITATIONAL_PULL = 0.1f;
+
+	const float JUMP_SPEED_FACTOR = 5.0f;
 
 	const float CAMERA_SPEED_FACTOR = 1.5f;
 

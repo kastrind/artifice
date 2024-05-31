@@ -8,6 +8,7 @@ Engine3D::Engine3D(SDL_Window* gWindow,
 				   float fov, float dof,
 				   float collidingDistance,
 				   float gravitationalPull,
+				   float jumpSpeedFactor,
 				   float cameraSpeedFactor,
 				   UserMode userMode, EventController* ec)
 				   : gWindow(gWindow),
@@ -16,6 +17,7 @@ Engine3D::Engine3D(SDL_Window* gWindow,
 				   fov(fov), dof(dof),
 				   collidingDistance(collidingDistance),
 				   gravitationalPull(gravitationalPull),
+				   jumpSpeedFactor(jumpSpeedFactor),
 				   cameraSpeedFactor(cameraSpeedFactor),
 				   userMode(userMode), eventController(ec)
 {
@@ -431,6 +433,16 @@ void Engine3D::move(float elapsedTime)
 
 		} else if (keysPressed[SupportedKeys::D] && (hasLanded && !collides || userMode == UserMode::EDITOR)) {
 			cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		}
+
+		// jumping
+		if (keysPressed[SupportedKeys::SPACE] && hasLanded) {
+			jumpSpeed = gravitationalPull * jumpSpeedFactor;
+			cameraPos.y += elapsedTime * jumpSpeed;
+		}
+		if (!hasLanded & jumpSpeedFactor > 0) {
+			cameraPos.y += elapsedTime * jumpSpeed;
+			jumpSpeed -= jumpSpeed * elapsedTime;
 		}
 
 		//if in editor mode, arrows control track camera movement to the sides, above or below camera position

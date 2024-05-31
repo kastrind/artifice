@@ -29,6 +29,7 @@ int main( int argc, char* args[] )
 												cfg.NEAR, cfg.FAR, cfg.FOV, cfg.DOF,
 												cfg.COLLIDING_DISTANCE,
 												cfg.GRAVITATIONAL_PULL,
+												cfg.JUMP_SPEED_FACTOR,
 												cfg.CAMERA_SPEED_FACTOR,
 												cfg.USER_MODE, &eventController);
 

@@ -243,6 +243,10 @@ void EventController::decodeEvent(SDL_Event* e)
 		{
 			keysPressed[SupportedKeys::LEFT_ALT] = true;
 		}
+		else if (e->key.keysym.sym == SDLK_SPACE)
+		{
+			keysPressed[SupportedKeys::SPACE] = true;
+		}
 	}
 	//user releases a key
 	else if( e->type == SDL_KEYUP )
@@ -298,6 +302,10 @@ void EventController::decodeEvent(SDL_Event* e)
 		else if (e->key.keysym.sym == SDLK_LALT)
 		{
 			keysPressed[SupportedKeys::LEFT_ALT] = false;
+		}
+		else if (e->key.keysym.sym == SDLK_SPACE)
+		{
+			keysPressed[SupportedKeys::SPACE] = false;
 		}
 	}
 	//buffer mouse clicks
