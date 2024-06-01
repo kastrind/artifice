@@ -2,7 +2,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-Engine3D::Engine3D(SDL_Window* gWindow,
+Engine3D::Engine3D(
+				   SDL_Window* gWindow,
 				   int width, int height,
 				   float near, float far,
 				   float fov, float dof,
@@ -10,7 +11,8 @@ Engine3D::Engine3D(SDL_Window* gWindow,
 				   float gravitationalPull,
 				   float jumpSpeedFactor,
 				   float cameraSpeedFactor,
-				   UserMode userMode, EventController* ec)
+				   UserMode userMode, EventController* ec
+				   )
 				   : gWindow(gWindow),
 				   width(width), height(height),
 				   near(near), far(far),
@@ -94,8 +96,32 @@ void Engine3D::renderingThread()
 			return;
 		}
 	}
+
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+	// Setup Platform/Renderer backends
+	ImGui_ImplSDL2_InitForOpenGL(gWindow, gContext);
+	ImGui_ImplOpenGL3_Init();
+
 	while (isActive)
 	{
+
+		// (Where your code calls SDL_PollEvent())
+		//ImGui_ImplSDL2_ProcessEvent(&event); // Forward your event to backend
+
+		// (After event loop)
+		// Start the Dear ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
+		ImGui::NewFrame();
+		ImGui::ShowDemoWindow(); // Show demo window! :)
+
+
 		render();
 	}
 }
@@ -513,6 +539,11 @@ bool Engine3D::onUserDestroy()
 	cubeMapShader.freeProgram();
 	textureShader.freeProgram();
 
+	printf("Shutting down ImGui...\n");
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
+
 	return true;
 }
 
@@ -727,6 +758,10 @@ void Engine3D::render()
 	glBindVertexArray(0);
 	textureShader.unbind();
 	mtx.unlock();
+
+
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 	//update screen
 	SDL_GL_SwapWindow( gWindow );

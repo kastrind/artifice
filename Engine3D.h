@@ -1,5 +1,9 @@
 #pragma once
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_sdl2.h"
+#include "imgui/imgui_impl_opengl3.h"
+
 #define _USE_MATH_DEFINES
 #include <cmath>
 
@@ -37,7 +41,8 @@ class Engine3D
 {
 	public:
 
-		Engine3D(SDL_Window* gWindow,
+		Engine3D(
+				SDL_Window* gWindow,
 				int width = 320, int height = 240,
 				float near = 0.1f, float far = 1000.0f,
 				float fov = 90.0f, float dof = 20.0f,
@@ -46,7 +51,8 @@ class Engine3D
 				float jumpSpeedFactor = 5.0f,
 				float cameraSpeedFactor = 1.5f,
 				UserMode userMode = UserMode::PLAYER,
-				EventController* eventController = nullptr);
+				EventController* eventController = nullptr
+				);
 
 		std::thread startEngine();
 

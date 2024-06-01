@@ -26,7 +26,7 @@ class Initiator
 		//configuration
 		CFG cfg;
 
-		//the window we'll be rendering to
+		//the window we'll be rendering graphics to
 		SDL_Window* gWindow = NULL;
 
 		//window mouse barrier
