@@ -60,72 +60,6 @@ std::thread Engine3D::startEngine()
 	return t;
 }
 
-std::thread Engine3D::startRendering()
-{
-	//start thread
-	std::thread t = std::thread(&Engine3D::renderingThread, this);
-
-	return t;
-}
-
-void Engine3D::renderingThread()
-{
-	//create context
-	printf( "Creating OpenGL context...\n" );
-	gContext = SDL_GL_CreateContext( gWindow );
-	if( gContext == NULL )
-	{
-		printf( "OpenGL context could not be created! SDL Error: %s\n", SDL_GetError() );
-		return;
-	}
-	else
-	{
-		//initialize GLEW
-		printf( "Initializing GLEW...\n" );
-		glewExperimental = GL_TRUE; 
-		GLenum glewError = glewInit();
-		if( glewError != GLEW_OK )
-		{
-			printf( "Error initializing GLEW! %s\n", glewGetErrorString( glewError ) );
-			return;
-		}
-
-		if( !initGL() )
-		{
-			printf( "Unable to initialize OpenGL!\n" );
-			return;
-		}
-	}
-
-	// Setup Dear ImGui context
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-
-	// Setup Platform/Renderer backends
-	ImGui_ImplSDL2_InitForOpenGL(gWindow, gContext);
-	ImGui_ImplOpenGL3_Init();
-
-	while (isActive)
-	{
-
-		// (Where your code calls SDL_PollEvent())
-		//ImGui_ImplSDL2_ProcessEvent(&event); // Forward your event to backend
-
-		// (After event loop)
-		// Start the Dear ImGui frame
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
-		ImGui::NewFrame();
-		ImGui::ShowDemoWindow(); // Show demo window! :)
-
-
-		render();
-	}
-}
-
 void Engine3D::engineThread()
 {
 	//create user resources as part of this thread
@@ -163,6 +97,443 @@ void Engine3D::engineThread()
 		//user denied destroy for some reason, so continue running
 		isActive = true;
 	}
+}
+
+std::thread Engine3D::startRendering()
+{
+	//start thread
+	std::thread t = std::thread(&Engine3D::renderingThread, this);
+
+	return t;
+}
+
+void Engine3D::renderingThread()
+{
+	//create context
+	printf( "Creating OpenGL context...\n" );
+	gContext = SDL_GL_CreateContext( gWindow );
+	if( gContext == NULL )
+	{
+		printf( "OpenGL context could not be created! SDL Error: %s\n", SDL_GetError() );
+		return;
+	}
+	else
+	{
+		//initialize GLEW
+		printf( "Initializing GLEW...\n" );
+		glewExperimental = GL_TRUE; 
+		GLenum glewError = glewInit();
+		if( glewError != GLEW_OK )
+		{
+			printf( "Error initializing GLEW! %s\n", glewGetErrorString( glewError ) );
+			return;
+		}
+		//initialize OpenGL
+		printf( "Initializing OpenGL shaders, arrays, buffers, textures, cubemaps...\n" );
+		if( !initGL() )
+		{
+			printf( "Unable to initialize OpenGL!\n" );
+			return;
+		}
+		//initialize ImGui
+		if (!initUI() )
+		{
+			printf( "Unable to initialize ImGui!\n" );
+			return;
+		}
+	}
+
+	while (isActive)
+	{
+		render();
+	}
+}
+
+bool Engine3D::initGL()
+{
+	bool success = true;
+
+	printf( "Loading shader programs...\n" );
+	if (!cubeMapShader.loadProgram("shaders/cubemap.glvs", "shaders/cubemap.glfs"))
+	{
+		printf( "Unable to load cubemap shader!\n" );
+		success = false;
+	}
+	else if(!textureShader.loadProgram("shaders/texture.glvs", "shaders/texture.glfs"))
+	{
+		printf( "Unable to load cubemap shader!\n" );
+		success = false;
+	}
+	else
+	{
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS); 
+
+		gCubeMapProgramID = cubeMapShader.getProgramID();
+		gTextureProgramID = textureShader.getProgramID();
+		
+		//create VAOs
+		glGenVertexArrays(1, &gVAO);
+		glGenVertexArrays(1, &gCubeVAO);
+
+		//create VBOs
+		glGenBuffers( 1, &gVBO );
+		glGenBuffers( 1, &gCubeVBO );
+
+		//create IBO
+		glGenBuffers( 1, &gIBO );
+		glGenBuffers( 1, &gCubeIBO );
+
+		//update buffers with the new vertices
+		updateVertices();
+
+		//initialize clear color
+		glClearColor( 0.f, 0.f, 0.f, 1.f );
+
+		//generates and binds textures
+		loadTextures(textureIdsMap);
+
+		for (std::pair<const std::string, GLuint>& entry : textureIdsMap )
+		{
+			textureNames.push_back(entry.first);
+		}
+
+		//generates and binds cubemap
+		loadCubemaps(cubemapIdsMap);
+
+		for (std::pair<const std::string, GLuint>& entry : cubemapIdsMap )
+		{
+			cubemapNames.push_back(entry.first);
+		}
+		
+	}
+	return success;
+}
+
+void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap)
+{
+	std::string texturesPath = cfg.ASSETS_PATH + std::string("\\textures");
+	std::string filename;
+	for (const auto & entry : std::filesystem::directory_iterator(texturesPath))
+	{
+		if (entry.is_regular_file())
+		{
+			if (entry.path().filename().has_extension()) {
+				filename = entry.path().filename().replace_extension("").string();
+			} else {
+				filename = entry.path().filename().string();
+			}
+
+			textureIdsMap[filename] = -1;
+			//declare texture
+			glGenTextures(1, &textureIdsMap[filename]);
+			//bind texture
+			glBindTexture(GL_TEXTURE_2D, textureIdsMap[filename]);
+
+			//set the texture wrapping/filtering options (on the currently bound texture object)
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			//load image
+			int width, height, nrChannels;
+			unsigned char *data = stbi_load(entry.path().string().c_str(), &width, &height, &nrChannels, 0);
+			if (data)
+			{
+				//generate texture
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+				glGenerateMipmap(GL_TEXTURE_2D);
+			} else {
+				std::cout << "Failed to load texture " << filename << std::endl;
+			}
+			//free image memory
+			stbi_image_free(data);
+		}
+	}
+	//activate shader
+	textureShader.bind();
+	//set the uniforms
+	for (const auto& kv : textureIdsMap) {
+		glUniform1i(glGetUniformLocation(textureShader.getProgramID(), std::string("texture" + std::to_string(kv.second)).c_str()), 0);
+	}
+}
+
+void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap)
+{
+    std::string cubemapsPath = cfg.ASSETS_PATH + std::string("\\cubemaps");
+	std::string filename;
+	std::string name;
+    for (const auto & entry : std::filesystem::directory_iterator(cubemapsPath))
+	{
+		if (entry.is_directory())
+		{
+			name = entry.path().filename().string();
+
+			cubemapIdsMap[name] = -1;
+			glGenTextures(1, &cubemapIdsMap[name]);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapIdsMap[name]);
+
+			for (const auto & face : std::filesystem::directory_iterator(entry))
+			{
+				if (face.is_regular_file())
+				{
+					if (face.path().filename().has_extension()) {
+						filename = face.path().filename().replace_extension("").string();
+					} else {
+						filename = face.path().filename().string();
+					}
+
+					int width, height, nrChannels;
+					int i = 0;
+					if (cubemapFaceIndexMap[filename] >= 0)
+					{
+						unsigned char *data = stbi_load(face.path().string().c_str(), &width, &height, &nrChannels, 0);
+						if (data)
+						{
+							glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + cubemapFaceIndexMap[filename], 
+											0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+							);
+							stbi_image_free(data);
+						}
+						else
+						{
+							std::cout << "Cubemap texture failed to load at path: " << face.path() << std::endl;
+							stbi_image_free(data);
+						}
+					}
+					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+					cubeMapShader.bind();
+					glUniform1i(glGetUniformLocation(cubeMapShader.getProgramID(), std::string("cubemap" + std::to_string(cubemapIdsMap[name])).c_str()), 0);
+				}
+			}
+		}
+	}
+}
+
+bool Engine3D::initUI()
+{
+	bool success = false;
+
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+	// Setup Platform/Renderer backends
+	success = ImGui_ImplSDL2_InitForOpenGL(gWindow, gContext);
+	if (!success) return success;
+	success = ImGui_ImplOpenGL3_Init();
+	return success;
+}
+
+void Engine3D::render()
+{
+	if (updateVerticesFlag) updateVertices();
+	//if (finalCubeModelsToRender.size() == 0) return;
+
+	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	//clear color buffer
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	cubeMapShader.bind();
+	cubeMapShader.setMat4("projection", getProjectionMatrix());
+	cubeMapShader.setMat4("view", getViewMatrix());
+	//lighting
+	cubeMapShader.setVec3("lightPos", getLightPos());
+	cubeMapShader.setVec3("viewPos", getCameraPos());
+	cubeMapShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+	cubeMapShader.unbind();
+
+	textureShader.bind();
+	textureShader.setMat4("projection", getProjectionMatrix());
+	textureShader.setMat4("view", getViewMatrix());
+	textureShader.unbind();
+	// //lighting
+	// textureShader->setVec3("lightPos", getLightPos());
+	// textureShader->setVec3("viewPos", getCameraPos());
+	// textureShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+
+	cubeMapShader.bind();
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
+	glBindVertexArray(gCubeVAO);
+	glActiveTexture(GL_TEXTURE0);
+	int cnt = 0;
+	mtx.lock();
+	//std::cout << "about to render " << finalCubeModelsToRender.size() << " out of " << ptrModelsToRender.size() << " models" << std::endl;
+	
+	//for(const auto& model : ptrModelsToRender)
+	for (auto itr = finalCubeModelsToRender.begin(); itr != finalCubeModelsToRender.end(); itr++)
+	{
+		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
+		
+		model& model = *(*itr);
+				
+		if (model.removeFlag) continue;
+
+		model.render(&cubeMapShader, cubemapIdsMap[model.texture]);
+		cnt++;
+	}
+	glBindVertexArray(0);
+	cubeMapShader.unbind();
+
+	textureShader.bind();
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIBO);
+	glBindVertexArray(gVAO);
+	glActiveTexture(GL_TEXTURE0);
+	for (auto itr = finalModelsToRender.begin(); itr != finalModelsToRender.end(); itr++)
+	{
+		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
+
+		model& model = *(*itr);
+
+		if (model.removeFlag) continue;
+
+		model.render(&textureShader, textureIdsMap[model.texture]);
+		cnt++;
+	}
+	glBindVertexArray(0);
+	textureShader.unbind();
+	mtx.unlock();
+
+	renderUI();
+
+	//update screen
+	SDL_GL_SwapWindow( gWindow );
+}
+
+void Engine3D::updateVertices()
+{
+	std::cout << "Updating vertices" << std::endl;
+	std::vector<GLfloat> vertexData;
+	std::vector<GLuint> indexData;
+	GLuint indexCounter = 0;
+	std::vector<GLfloat> cubeVertexData;
+	std::vector<GLuint> cubeIndexData;
+	GLuint cubeIndexCounter = 0;
+
+	std::vector<GLfloat>* vdp = &vertexData;
+
+	//populate vertex vectors with triangle vertex information for each model
+	for (auto &ptrModel : ptrModelsToRender)
+	{
+		if (!ptrModel) continue;
+		model& model = *ptrModel;
+
+		if (model.removeFlag) continue;
+
+		vdp = model.modelMesh.shape == shapetype::CUBE ? &cubeVertexData : &vertexData;
+
+		for (auto &tri : model.modelMesh.tris)
+		{
+			glm::vec3 line1 = tri.p[1] - tri.p[0];
+			glm::vec3 line2 = tri.p[2] - tri.p[0];
+			glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
+
+			for (int i = 0; i < 3; i++)
+			{
+				vdp->push_back(tri.p[i].x);
+				vdp->push_back(tri.p[i].y);
+				vdp->push_back(tri.p[i].z);
+				vdp->push_back(normal.x);
+				vdp->push_back(normal.y);
+				vdp->push_back(normal.z);
+				vdp->push_back((float)tri.R/255.0f);
+				vdp->push_back((float)tri.G/255.0f);
+				vdp->push_back((float)tri.B/255.0f);
+				vdp->push_back(tri.t[i].x);
+				vdp->push_back(tri.t[i].y);
+				if (model.modelMesh.shape != shapetype::CUBE)
+				{
+					indexData.push_back(indexCounter++);
+				}
+				else
+				{
+					cubeIndexData.push_back(cubeIndexCounter++);
+				}
+			}
+		}
+	}
+
+	// std::cout << "  vertex data size: " << vertexData.size() << std::endl;
+	// std::cout << "  index data size: " << indexData.size() << std::endl;
+	// std::cout << "  cube vertex data size: " << cubeVertexData.size() << std::endl;
+	// std::cout << "  cube index data size: " << cubeIndexData.size() << std::endl;
+
+	//update VBO
+	glBindVertexArray(gVAO);
+	glBindBuffer( GL_ARRAY_BUFFER, gVBO );
+	glBufferData( GL_ARRAY_BUFFER, vertexData.size() * sizeof(GL_FLOAT), vertexData.data(), GL_STATIC_DRAW );
+
+	//position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)0);
+	glEnableVertexAttribArray(0);
+	//normal attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(1);
+	//color attribute
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(6 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(2);
+	//texture coord attribute
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(9 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(3);
+
+	//update IBO
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gIBO );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GL_UNSIGNED_INT), indexData.data(), GL_STATIC_DRAW );
+
+	//update cubeVBO
+	glBindVertexArray(gCubeVAO);
+	glBindBuffer( GL_ARRAY_BUFFER, gCubeVBO );
+	glBufferData( GL_ARRAY_BUFFER, cubeVertexData.size() * sizeof(GL_FLOAT), cubeVertexData.data(), GL_STATIC_DRAW );
+
+	//position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)0);
+	glEnableVertexAttribArray(0);
+	//normal attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(1);
+	//color attribute
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(6 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(2);
+	//texture coord attribute
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(9 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(3);
+
+	//update cubeIBO
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gCubeIBO );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, cubeIndexData.size() * sizeof(GL_UNSIGNED_INT), cubeIndexData.data(), GL_STATIC_DRAW );
+
+	updateVerticesFlag = false;
+
+	std::cout << "Updated vertices" << std::endl;
+}
+
+void Engine3D::renderUI()
+{
+	//(after event loop)
+	//start the Dear ImGui frame
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplSDL2_NewFrame();
+	ImGui::NewFrame();
+	//ImGui::ShowDemoWindow(); // Show demo window! :)
+	//display a piece of text directly on the screen
+	ImGui::SetNextWindowPos(ImVec2(width/2, height/2));
+	ImGui::SetNextWindowSize(ImVec2(0, 0));
+	ImGui::Begin("InvisibleWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs);
+	ImGui::Text(".");
+	ImGui::End();
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 bool Engine3D::onUserCreate()
@@ -375,6 +746,13 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	return true;
 }
 
+void Engine3D::captureInput()
+{
+	//listen for input
+	std::memcpy(prevKeysPressed, keysPressed, SupportedKeys::ALL_KEYS * sizeof(bool));
+	std::memcpy(keysPressed, eventController->getKeysPressed(), SupportedKeys::ALL_KEYS * sizeof(bool));
+}
+
 void Engine3D::markCoveredModels()
 {
 	for (auto &ptrCube1 : ptrModelsToRender)
@@ -579,201 +957,6 @@ glm::mat4 Engine3D::getViewMatrix() const
 	return viewMatrix;
 }
 
-void Engine3D::updateVertices()
-{
-	std::cout << "Updating vertices" << std::endl;
-	std::vector<GLfloat> vertexData;
-	std::vector<GLuint> indexData;
-	GLuint indexCounter = 0;
-	std::vector<GLfloat> cubeVertexData;
-	std::vector<GLuint> cubeIndexData;
-	GLuint cubeIndexCounter = 0;
-
-	std::vector<GLfloat>* vdp = &vertexData;
-
-	//populate vertex vectors with triangle vertex information for each model
-	for (auto &ptrModel : ptrModelsToRender)
-	{
-		if (!ptrModel) continue;
-		model& model = *ptrModel;
-
-		if (model.removeFlag) continue;
-
-		vdp = model.modelMesh.shape == shapetype::CUBE ? &cubeVertexData : &vertexData;
-
-		for (auto &tri : model.modelMesh.tris)
-		{
-			glm::vec3 line1 = tri.p[1] - tri.p[0];
-			glm::vec3 line2 = tri.p[2] - tri.p[0];
-			glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
-
-			for (int i = 0; i < 3; i++)
-			{
-				vdp->push_back(tri.p[i].x);
-				vdp->push_back(tri.p[i].y);
-				vdp->push_back(tri.p[i].z);
-				vdp->push_back(normal.x);
-				vdp->push_back(normal.y);
-				vdp->push_back(normal.z);
-				vdp->push_back((float)tri.R/255.0f);
-				vdp->push_back((float)tri.G/255.0f);
-				vdp->push_back((float)tri.B/255.0f);
-				vdp->push_back(tri.t[i].x);
-				vdp->push_back(tri.t[i].y);
-				if (model.modelMesh.shape != shapetype::CUBE)
-				{
-					indexData.push_back(indexCounter++);
-				}
-				else
-				{
-					cubeIndexData.push_back(cubeIndexCounter++);
-				}
-			}
-		}
-	}
-
-	// std::cout << "  vertex data size: " << vertexData.size() << std::endl;
-	// std::cout << "  index data size: " << indexData.size() << std::endl;
-	// std::cout << "  cube vertex data size: " << cubeVertexData.size() << std::endl;
-	// std::cout << "  cube index data size: " << cubeIndexData.size() << std::endl;
-
-	//update VBO
-	glBindVertexArray(gVAO);
-	glBindBuffer( GL_ARRAY_BUFFER, gVBO );
-	glBufferData( GL_ARRAY_BUFFER, vertexData.size() * sizeof(GL_FLOAT), vertexData.data(), GL_STATIC_DRAW );
-
-	//position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)0);
-	glEnableVertexAttribArray(0);
-	//normal attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GL_FLOAT)));
-	glEnableVertexAttribArray(1);
-	//color attribute
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(6 * sizeof(GL_FLOAT)));
-	glEnableVertexAttribArray(2);
-	//texture coord attribute
-	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(9 * sizeof(GL_FLOAT)));
-	glEnableVertexAttribArray(3);
-
-	//update IBO
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gIBO );
-	glBufferData( GL_ELEMENT_ARRAY_BUFFER, indexData.size() * sizeof(GL_UNSIGNED_INT), indexData.data(), GL_STATIC_DRAW );
-
-	//update cubeVBO
-	glBindVertexArray(gCubeVAO);
-	glBindBuffer( GL_ARRAY_BUFFER, gCubeVBO );
-	glBufferData( GL_ARRAY_BUFFER, cubeVertexData.size() * sizeof(GL_FLOAT), cubeVertexData.data(), GL_STATIC_DRAW );
-
-	//position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)0);
-	glEnableVertexAttribArray(0);
-	//normal attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GL_FLOAT)));
-	glEnableVertexAttribArray(1);
-	//color attribute
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(6 * sizeof(GL_FLOAT)));
-	glEnableVertexAttribArray(2);
-	//texture coord attribute
-	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(9 * sizeof(GL_FLOAT)));
-	glEnableVertexAttribArray(3);
-
-	//update cubeIBO
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gCubeIBO );
-	glBufferData( GL_ELEMENT_ARRAY_BUFFER, cubeIndexData.size() * sizeof(GL_UNSIGNED_INT), cubeIndexData.data(), GL_STATIC_DRAW );
-
-	updateVerticesFlag = false;
-
-	std::cout << "Updated vertices" << std::endl;
-}
-
-void Engine3D::render()
-{
-	if (updateVerticesFlag) updateVertices();
-	//if (finalCubeModelsToRender.size() == 0) return;
-
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	//clear color buffer
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	cubeMapShader.bind();
-	cubeMapShader.setMat4("projection", getProjectionMatrix());
-	cubeMapShader.setMat4("view", getViewMatrix());
-	//lighting
-	cubeMapShader.setVec3("lightPos", getLightPos());
-	cubeMapShader.setVec3("viewPos", getCameraPos());
-	cubeMapShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-	cubeMapShader.unbind();
-
-	textureShader.bind();
-	textureShader.setMat4("projection", getProjectionMatrix());
-	textureShader.setMat4("view", getViewMatrix());
-	textureShader.unbind();
-	// //lighting
-	// textureShader->setVec3("lightPos", getLightPos());
-	// textureShader->setVec3("viewPos", getCameraPos());
-	// textureShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-
-	cubeMapShader.bind();
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
-	glBindVertexArray(gCubeVAO);
-	glActiveTexture(GL_TEXTURE0);
-	int cnt = 0;
-	mtx.lock();
-	//std::cout << "about to render " << finalCubeModelsToRender.size() << " out of " << ptrModelsToRender.size() << " models" << std::endl;
-	
-	//for(const auto& model : ptrModelsToRender)
-	for (auto itr = finalCubeModelsToRender.begin(); itr != finalCubeModelsToRender.end(); itr++)
-	{
-		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
-		
-		model& model = *(*itr);
-				
-		if (model.removeFlag) continue;
-
-		model.render(&cubeMapShader, cubemapIdsMap[model.texture]);
-		cnt++;
-	}
-	glBindVertexArray(0);
-	cubeMapShader.unbind();
-
-	textureShader.bind();
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIBO);
-	glBindVertexArray(gVAO);
-	glActiveTexture(GL_TEXTURE0);
-	for (auto itr = finalModelsToRender.begin(); itr != finalModelsToRender.end(); itr++)
-	{
-		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
-
-		model& model = *(*itr);
-
-		if (model.removeFlag) continue;
-
-		model.render(&textureShader, textureIdsMap[model.texture]);
-		cnt++;
-	}
-	glBindVertexArray(0);
-	textureShader.unbind();
-	mtx.unlock();
-
-
-	ImGui::Render();
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-	//update screen
-	SDL_GL_SwapWindow( gWindow );
-}
-
-void Engine3D::captureInput()
-{
-	//listen for input
-	std::memcpy(prevKeysPressed, keysPressed, SupportedKeys::ALL_KEYS * sizeof(bool));
-	std::memcpy(keysPressed, eventController->getKeysPressed(), SupportedKeys::ALL_KEYS * sizeof(bool));
-}
-
 void Engine3D::setLevel(Level* level)
 {
 	for (model& m : level->models)
@@ -789,183 +972,4 @@ void Engine3D::setLevel(Level* level)
 	}
 	modelPointsCnt = level->modelPointsCnt;
 	cubePointsCnt = level->cubePointsCnt;
-}
-
-std::string Engine3D::shapeTypeToString(shapetype s)
-{
-	switch (s) {
-		case shapetype::RECTANGLE:
-			return "rectangle";
-		case shapetype::CUBOID:
-			return "cuboid";
-		case shapetype::CUBE:
-			return "cube";
-		default:
-			return "";
-	}
-}
-
-bool Engine3D::initGL()
-{
-	bool success = true;
-
-	printf( "Loading shader programs...\n" );
-	if (!cubeMapShader.loadProgram("shaders/cubemap.glvs", "shaders/cubemap.glfs"))
-	{
-		printf( "Unable to load cubemap shader!\n" );
-		success = false;
-	}
-	else if(!textureShader.loadProgram("shaders/texture.glvs", "shaders/texture.glfs"))
-	{
-		printf( "Unable to load cubemap shader!\n" );
-		success = false;
-	}
-	else
-	{
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS); 
-
-		gCubeMapProgramID = cubeMapShader.getProgramID();
-		gTextureProgramID = textureShader.getProgramID();
-		
-		//create VAOs
-		glGenVertexArrays(1, &gVAO);
-		glGenVertexArrays(1, &gCubeVAO);
-
-		//create VBOs
-		glGenBuffers( 1, &gVBO );
-		glGenBuffers( 1, &gCubeVBO );
-
-		//create IBO
-		glGenBuffers( 1, &gIBO );
-		glGenBuffers( 1, &gCubeIBO );
-
-		//update buffers with the new vertices
-		updateVertices();
-
-		//initialize clear color
-		glClearColor( 0.f, 0.f, 0.f, 1.f );
-
-		//generates and binds textures
-		loadTextures(textureIdsMap);
-
-		for (std::pair<const std::string, GLuint>& entry : textureIdsMap )
-		{
-			textureNames.push_back(entry.first);
-		}
-
-		//generates and binds cubemap
-		loadCubemaps(cubemapIdsMap);
-
-		for (std::pair<const std::string, GLuint>& entry : cubemapIdsMap )
-		{
-			cubemapNames.push_back(entry.first);
-		}
-		
-	}
-	return success;
-}
-
-void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap)
-{
-	std::string texturesPath = cfg.ASSETS_PATH + std::string("\\textures");
-	std::string filename;
-	for (const auto & entry : std::filesystem::directory_iterator(texturesPath))
-	{
-		if (entry.is_regular_file())
-		{
-			if (entry.path().filename().has_extension()) {
-				filename = entry.path().filename().replace_extension("").string();
-			} else {
-				filename = entry.path().filename().string();
-			}
-
-			textureIdsMap[filename] = -1;
-			//declare texture
-			glGenTextures(1, &textureIdsMap[filename]);
-			//bind texture
-			glBindTexture(GL_TEXTURE_2D, textureIdsMap[filename]);
-
-			//set the texture wrapping/filtering options (on the currently bound texture object)
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			//load image
-			int width, height, nrChannels;
-			unsigned char *data = stbi_load(entry.path().string().c_str(), &width, &height, &nrChannels, 0);
-			if (data)
-			{
-				//generate texture
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-				glGenerateMipmap(GL_TEXTURE_2D);
-			} else {
-				std::cout << "Failed to load texture " << filename << std::endl;
-			}
-			//free image memory
-			stbi_image_free(data);
-		}
-	}
-	//activate shader
-	textureShader.bind();
-	//set the uniforms
-	for (const auto& kv : textureIdsMap) {
-		glUniform1i(glGetUniformLocation(textureShader.getProgramID(), std::string("texture" + std::to_string(kv.second)).c_str()), 0);
-	}
-}
-
-void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap)
-{
-    std::string cubemapsPath = cfg.ASSETS_PATH + std::string("\\cubemaps");
-	std::string filename;
-	std::string name;
-    for (const auto & entry : std::filesystem::directory_iterator(cubemapsPath))
-	{
-		if (entry.is_directory())
-		{
-			name = entry.path().filename().string();
-
-			cubemapIdsMap[name] = -1;
-			glGenTextures(1, &cubemapIdsMap[name]);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapIdsMap[name]);
-
-			for (const auto & face : std::filesystem::directory_iterator(entry))
-			{
-				if (face.is_regular_file())
-				{
-					if (face.path().filename().has_extension()) {
-						filename = face.path().filename().replace_extension("").string();
-					} else {
-						filename = face.path().filename().string();
-					}
-
-					int width, height, nrChannels;
-					int i = 0;
-					if (cubemapFaceIndexMap[filename] >= 0)
-					{
-						unsigned char *data = stbi_load(face.path().string().c_str(), &width, &height, &nrChannels, 0);
-						if (data)
-						{
-							glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + cubemapFaceIndexMap[filename], 
-											0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
-							);
-							stbi_image_free(data);
-						}
-						else
-						{
-							std::cout << "Cubemap texture failed to load at path: " << face.path() << std::endl;
-							stbi_image_free(data);
-						}
-					}
-					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-					cubeMapShader.bind();
-					glUniform1i(glGetUniformLocation(cubeMapShader.getProgramID(), std::string("cubemap" + std::to_string(cubemapIdsMap[name])).c_str()), 0);
-				}
-			}
-		}
-	}
 }

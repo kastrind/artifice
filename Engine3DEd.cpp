@@ -360,3 +360,17 @@ int64_t Engine3D::getTimeSinceEpoch()
 {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
+
+std::string Engine3D::shapeTypeToString(shapetype s)
+{
+	switch (s) {
+		case shapetype::RECTANGLE:
+			return "rectangle";
+		case shapetype::CUBOID:
+			return "cuboid";
+		case shapetype::CUBE:
+			return "cube";
+		default:
+			return "";
+	}
+}

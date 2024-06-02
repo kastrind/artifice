@@ -41,6 +41,8 @@ class Engine3D
 {
 	public:
 
+		std::atomic<bool> isActive;
+
 		Engine3D(
 				SDL_Window* gWindow,
 				int width = 320, int height = 240,
@@ -56,13 +58,11 @@ class Engine3D
 
 		std::thread startEngine();
 
-		std::thread startRendering();
-
 		bool onUserCreate();
 
 		bool onUserUpdate(float elapsedTime);
 
-		virtual bool onUserDestroy();
+		bool onUserDestroy();
 
 		glm::mat4 getProjectionMatrix() const;
 
@@ -77,8 +77,6 @@ class Engine3D
 		glm::mat4 getViewMatrix() const;
 
 		void setLevel(Level* level);
-
-		std::atomic<bool> isActive;
 
 	private:
 
@@ -210,23 +208,34 @@ class Engine3D
 				
 		std::thread rendererThread;
 
+		void engineThread();
+
+		std::thread startRendering();
+
+		void renderingThread();
+
 		bool initGL();
 
 		void loadTextures(std::map<std::string, GLuint>& textureIdsMap);
 
 		void loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap);
 
-		void updateVertices();
-
-		void engineThread();
-
-		void renderingThread();
+		bool initUI();
 
 		void render();
 
+		void updateVertices();
+
+		void renderUI();
+
+		void captureInput();
+
+		void markCoveredModels();
+
 		void move(float elapsedTime);
 
-		void edit(float elapsedTime);
+
+		//editor user mode specific
 
 		void addModel(float editingWidth, float editingHeight, float editingDepth, float editingRotationX, float editingRotationY, float editingRotationZ, unsigned int editingCubemapNameIndex, unsigned int editingTextureNameIndex, bool editingIsSolid, shapetype type, glm::vec3 position);
 
@@ -234,12 +243,10 @@ class Engine3D
 
 		void removeModel(std::shared_ptr<model> m);
 
-		void captureInput();
-
-		std::string shapeTypeToString(shapetype s);
-
-		void markCoveredModels();
+		void edit(float elapsedTime);
 
 		int64_t getTimeSinceEpoch();
+
+		std::string shapeTypeToString(shapetype s);
 
 };
