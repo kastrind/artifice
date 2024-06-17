@@ -76,6 +76,8 @@ class Engine3D
 
 		glm::mat4 getViewMatrix() const;
 
+		glm::mat4 getViewMatrixNoTranslation() const;
+
 		void setLevel(Level* level);
 
 	private:
@@ -89,6 +91,7 @@ class Engine3D
 		//shader programs
 		ArtificeShaderProgram textureShader;
 		ArtificeShaderProgram cubeMapShader;
+		ArtificeShaderProgram skyBoxShader;
 
 		//to render
 		std::vector<std::string> texturePaths;
@@ -101,6 +104,7 @@ class Engine3D
 
 		//to update vertices
 		GLuint gCubeMapProgramID = 0;
+		GLuint gSkyBoxProgramID = 0;
 		GLuint gTextureProgramID = 0;
 		GLuint gVBO = 0;
 		GLuint gIBO = 0;
