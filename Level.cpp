@@ -28,6 +28,7 @@ void Level::load(std::string levelPath)
         std::string shape, texture;
 		bool isSolid;
 	    float width, height, depth, rotationX, rotationY, rotationZ, positionX, positionY, positionZ;
+		bool existsSkyBox = false;
 
 		std::cout << " line: " << line << std::endl;
 
@@ -66,23 +67,27 @@ void Level::load(std::string levelPath)
                 if (shape == "rectangle")
 				{
 					rectangle rectangle(width, height, rotationX, rotationY, rotationZ);
-					model model(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), rectangle, isSolid);
-					modelPointsCnt += model.modelMesh.tris.size() * 3;
-					models.push_back(model);
+					model m(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), rectangle, isSolid);
+					modelPointsCnt += m.modelMesh.tris.size() * 3;
+					models.push_back(std::make_shared<model>(m));
 				}
 				else if (shape == "cuboid")
 				{
 					cuboid cuboid(width, height, depth, rotationX, rotationY, rotationZ);
-					model model(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), cuboid, isSolid);
-					modelPointsCnt += model.modelMesh.tris.size() * 3;
-					models.push_back(model);
+					model m(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), cuboid, isSolid);
+					modelPointsCnt += m.modelMesh.tris.size() * 3;
+					models.push_back(std::make_shared<model>(m));
 				}
-				else if (shape == "cube")
+				else if (shape == "cube" || shape == "skyBox" || shape == "skybox")
 				{
 					cube cube(std::max(width, std::max(height, depth)), rotationX, rotationY, rotationZ);
-					cubeModel cubeModel(id, cubePointsCnt, texture, glm::vec3(positionX, positionY, positionZ), cube, isSolid);
-					cubePointsCnt += cubeModel.modelMesh.tris.size() * 3;
-					models.push_back(cubeModel);
+					cubeModel cubeMdl(id, cubePointsCnt, texture, glm::vec3(positionX, positionY, positionZ), cube, isSolid);
+					cubeMdl.isSkyBox = (shape == "skyBox" || shape == "skybox") == true;
+					cubeMdl.isActiveSkyBox = (!existsSkyBox && cubeMdl.isSkyBox); // only the first skyBox is active
+					existsSkyBox = existsSkyBox || cubeMdl.isSkyBox;
+					if (cubeMdl.isSkyBox) {std::cout << "skybox!" << std::endl;}
+					cubePointsCnt += cubeMdl.modelMesh.tris.size() * 3;
+					models.push_back(std::make_shared<cubeModel>(cubeMdl));
 				}
 			}
 		}

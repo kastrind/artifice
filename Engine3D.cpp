@@ -351,14 +351,14 @@ void Engine3D::render()
 	//clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// cubeMapShader.bind();
-	// cubeMapShader.setMat4("projection", getProjectionMatrix());
-	// cubeMapShader.setMat4("view", getViewMatrix());
-	// //lighting
-	// cubeMapShader.setVec3("lightPos", getLightPos());
-	// cubeMapShader.setVec3("viewPos", getCameraPos());
-	// cubeMapShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-	// cubeMapShader.unbind();
+	cubeMapShader.bind();
+	cubeMapShader.setMat4("projection", getProjectionMatrix());
+	cubeMapShader.setMat4("view", getViewMatrix());
+	//lighting
+	cubeMapShader.setVec3("lightPos", getLightPos());
+	cubeMapShader.setVec3("viewPos", getCameraPos());
+	cubeMapShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+	cubeMapShader.unbind();
 
 	textureShader.bind();
 	textureShader.setMat4("projection", getProjectionMatrix());
@@ -375,15 +375,15 @@ void Engine3D::render()
 	// textureShader->setVec3("viewPos", getCameraPos());
 	// textureShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
+int cnt = 0;
 
-	/*
 	cubeMapShader.bind();
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
 	glBindVertexArray(gCubeVAO);
 	glActiveTexture(GL_TEXTURE0);
-	int cnt = 0;
+	//int cnt = 0;
 	mtx.lock();
 	//std::cout << "about to render " << finalCubeModelsToRender.size() << " out of " << ptrModelsToRender.size() << " models" << std::endl;
 	
@@ -392,19 +392,20 @@ void Engine3D::render()
 	{
 		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
 		
-		model& model = *(*itr);
+		cubeModel& cm = dynamic_cast<cubeModel &>(*(*itr));
 				
-		if (model.removeFlag) continue;
+		if (cm.removeFlag) continue;
 
-		model.render(&cubeMapShader, cubemapIdsMap[model.texture]);
+		if (cm.isSkyBox) continue;
+
+		cm.render(&cubeMapShader, cubemapIdsMap[cm.texture]);
 		cnt++;
 	}
 	glBindVertexArray(0);
 	cubeMapShader.unbind();
-	*/
 
 
-	int cnt = 0;
+
 	
 	textureShader.bind();
 	glEnable(GL_CULL_FACE);
@@ -425,6 +426,7 @@ void Engine3D::render()
 	}
 	glBindVertexArray(0);
 	textureShader.unbind();
+
 	//mtx.unlock();
 	
 
@@ -440,7 +442,6 @@ void Engine3D::render()
 
 	skyBoxShader.bind();
 	glDisable(GL_CULL_FACE);
-	glCullFace(GL_NONE);
 	glDepthFunc(GL_LEQUAL);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
 	glBindVertexArray(gCubeVAO);
@@ -454,16 +455,20 @@ void Engine3D::render()
 	{
 		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
 		
-		model& model = *(*itr);
+		cubeModel& cm = dynamic_cast<cubeModel &>(*(*itr));
 				
-		if (model.removeFlag) continue;
+		if (cm.removeFlag) continue;
 
-		model.render(&skyBoxShader, cubemapIdsMap[model.texture]);
-		std::cout << model.id << model.inFocus << model.isCovered << model.isInDOF << model.isInFOV << std::endl;
+		if (!(cm.isSkyBox && cm.isActiveSkyBox)) continue;
+
+		cm.render(&skyBoxShader, cubemapIdsMap[cm.texture]);
+		//std::cout << model.id << model.inFocus << model.isCovered << model.isInDOF << model.isInFOV << std::endl;
 		cnt++;
 	}
 	glBindVertexArray(0);
 	skyBoxShader.unbind();
+
+	mtx.unlock();
 
 	renderUI();
 
@@ -656,6 +661,18 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		bool checkAgainForFOV = true;
 		float minX = 1.0f, maxX = -1.0f, minY = 1.0f, maxY = -1.0f, minZ = 100000.0f, maxZ = -100000.0f;
 
+		if (model.modelMesh.shape == shapetype::CUBE)
+		{
+			cubeModel& cube = dynamic_cast<cubeModel &>(model);
+			if (cube.isSkyBox)
+			{
+				model.isInDOF = true;
+				model.isInFOV = true;
+				model.isCovered = false;
+				mtx.unlock();
+				continue;
+			}
+		}
 		mtx.unlock();
 
 		modelDistance = dof;
@@ -732,12 +749,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		//mark out-of-FOV models to avoid needless rendering
 		model.isInFOV = ((model.bbox.minX > 0 && model.bbox.minX < 1) || (model.bbox.maxX > 0 && model.bbox.maxX < 1)) && ((model.bbox.minY > 0 && model.bbox.minY < 1) || (model.bbox.maxY > 0 && model.bbox.maxY < 1));
 
-		model.isInFOV = true;
-
 		//mark out-of-DOF models to avoid needless rendering
 		model.isInDOF = modelDistance < dof;
-
-		model.isInDOF = true;
 
 		//detect if colliding with the model
 		if (model.isSolid && modelDistance <= collidingDistance * 1.5f)
@@ -788,9 +801,9 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 	
 	//mark covered models to avoid needless rendering
-	// mtx.lock();
-	// markCoveredModels();
-	// mtx.unlock();
+	mtx.lock();
+	markCoveredModels();
+	mtx.unlock();
 
 	mtx.lock();
 	for (auto &ptrModel : ptrModelsToRender)
@@ -806,7 +819,6 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			else finalModelsToRender.erase(ptrModel);
 		}
 	}
-	std::cout << "final cube model to render: " << (*(*finalCubeModelsToRender.begin())).id << std::endl;
 	//std::cout << "final models to render: " << finalCubeModelsToRender.size() << std::endl;
 	mtx.unlock();
 
@@ -1035,11 +1047,14 @@ glm::mat4 Engine3D::getViewMatrixNoTranslation() const
 
 void Engine3D::setLevel(Level* level)
 {
-	for (model& m : level->models)
+	for (auto &ptrModel : level->models)
 	{
+		model& m = *ptrModel;
+
 		if (m.modelMesh.shape == shapetype::CUBE)
 		{
-			ptrModelsToRender.push_back(std::make_shared<cubeModel>(m));
+			cubeModel& cm = dynamic_cast<cubeModel &>(m);
+			ptrModelsToRender.push_back(std::make_shared<cubeModel>(cm));
 		}
 		else
 		{

@@ -344,7 +344,8 @@ typedef struct mesh
 	std::vector<triangle> tris;
 } mesh;
 
-typedef struct boundingbox {
+typedef struct boundingbox
+{
 	float minX = 0.0f; float maxX = 0.0f;
 	float minY = 0.0f; float maxY = 0.0f;
 	float minZ = 0.0f; float maxZ = 0.0f;
@@ -401,6 +402,9 @@ typedef struct cubeModel : public model {
 
 	public:
 
+		bool isSkyBox = false;
+		bool isActiveSkyBox = false;
+
 		cubeModel(unsigned long id, unsigned long sn, std::string texture, glm::vec3 position, shape& shape, bool isSolid = true)
 		: model(id, sn, texture, position, shape, isSolid) {}
 
@@ -408,9 +412,9 @@ typedef struct cubeModel : public model {
 
 		void render(ArtificeShaderProgram* cubeMapShader, GLuint textureId) override
 		{
-			// std::cout << "rendering cubeModel" << std::endl;
+			//std::cout << "rendering cubeModel" << std::endl;
 			glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
-			cubeMapShader->setMat4("model", this->modelMatrix);
+			if (!isSkyBox) { cubeMapShader->setMat4("model", this->modelMatrix); }
 			glDrawElements(GL_TRIANGLES, this->modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)((this->sn) * sizeof(GL_UNSIGNED_INT)));
 		}
 

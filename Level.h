@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <memory>
 #include "Constructs3D.h"
 
 class Level
@@ -17,7 +18,7 @@ class Level
 		{
 		}
 
-		std::vector<model> models;
+		std::vector<std::shared_ptr<model>> models;
 
 		unsigned long modelPointsCnt = 0;
 
