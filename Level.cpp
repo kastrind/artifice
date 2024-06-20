@@ -13,6 +13,8 @@ void Level::load(std::string levelPath)
 		return;
 	}
 
+	bool existsSkyBox = false;
+
 	while (!f.eof())
 	{
 		char line[256];
@@ -28,7 +30,6 @@ void Level::load(std::string levelPath)
         std::string shape, texture;
 		bool isSolid;
 	    float width, height, depth, rotationX, rotationY, rotationZ, positionX, positionY, positionZ;
-		bool existsSkyBox = false;
 
 		std::cout << " line: " << line << std::endl;
 
@@ -85,7 +86,6 @@ void Level::load(std::string levelPath)
 					cubeMdl.isSkyBox = (shape == "skyBox" || shape == "skybox") == true;
 					cubeMdl.isActiveSkyBox = (!existsSkyBox && cubeMdl.isSkyBox); // only the first skyBox is active
 					existsSkyBox = existsSkyBox || cubeMdl.isSkyBox;
-					if (cubeMdl.isSkyBox) {std::cout << "skybox!" << std::endl;}
 					cubePointsCnt += cubeMdl.modelMesh.tris.size() * 3;
 					models.push_back(std::make_shared<cubeModel>(cubeMdl));
 				}

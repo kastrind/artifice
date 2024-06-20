@@ -375,19 +375,14 @@ void Engine3D::render()
 	// textureShader->setVec3("viewPos", getCameraPos());
 	// textureShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
-int cnt = 0;
-
+	//render cubemaps
 	cubeMapShader.bind();
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
 	glBindVertexArray(gCubeVAO);
 	glActiveTexture(GL_TEXTURE0);
-	//int cnt = 0;
 	mtx.lock();
-	//std::cout << "about to render " << finalCubeModelsToRender.size() << " out of " << ptrModelsToRender.size() << " models" << std::endl;
-	
-	//for(const auto& model : ptrModelsToRender)
 	for (auto itr = finalCubeModelsToRender.begin(); itr != finalCubeModelsToRender.end(); itr++)
 	{
 		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
@@ -396,17 +391,20 @@ int cnt = 0;
 				
 		if (cm.removeFlag) continue;
 
-		if (cm.isSkyBox) continue;
+		if (cm.isSkyBox) {
+			if (cm.isActiveSkyBox)
+			{
+				finalSkyBoxToRender = std::make_shared<cubeModel>(cm);
+			}
+			continue;
+		}
 
 		cm.render(&cubeMapShader, cubemapIdsMap[cm.texture]);
-		cnt++;
 	}
 	glBindVertexArray(0);
 	cubeMapShader.unbind();
 
-
-
-	
+	//render other models
 	textureShader.bind();
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
@@ -422,48 +420,21 @@ int cnt = 0;
 		if (model.removeFlag) continue;
 
 		model.render(&textureShader, textureIdsMap[model.texture]);
-		cnt++;
 	}
 	glBindVertexArray(0);
 	textureShader.unbind();
 
-	//mtx.unlock();
-	
-
-
-
-
-
-
-
-
-
-
-
+	//render active skybox
 	skyBoxShader.bind();
 	glDisable(GL_CULL_FACE);
 	glDepthFunc(GL_LEQUAL);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
 	glBindVertexArray(gCubeVAO);
 	glActiveTexture(GL_TEXTURE0);
-	//int cnt = 0;
-	//mtx.lock();
-	//std::cout << "about to render " << finalCubeModelsToRender.size() << " out of " << ptrModelsToRender.size() << " models" << std::endl;
-	
-	//for(const auto& model : ptrModelsToRender)
-	for (auto itr = finalCubeModelsToRender.begin(); itr != finalCubeModelsToRender.end(); itr++)
+	if (finalSkyBoxToRender != nullptr)
 	{
-		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
-		
-		cubeModel& cm = dynamic_cast<cubeModel &>(*(*itr));
-				
-		if (cm.removeFlag) continue;
-
-		if (!(cm.isSkyBox && cm.isActiveSkyBox)) continue;
-
+		cubeModel& cm = *finalSkyBoxToRender;
 		cm.render(&skyBoxShader, cubemapIdsMap[cm.texture]);
-		//std::cout << model.id << model.inFocus << model.isCovered << model.isInDOF << model.isInFOV << std::endl;
-		cnt++;
 	}
 	glBindVertexArray(0);
 	skyBoxShader.unbind();
@@ -471,11 +442,6 @@ int cnt = 0;
 	mtx.unlock();
 
 	renderUI();
-
-
-
-
-
 
 	//update screen
 	SDL_GL_SwapWindow( gWindow );
@@ -642,8 +608,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 	mtx.unlock();
 
-	//for each model to raster
-	//for (auto &model : modelsToRender)
+	//for each model to render
 	for (auto &ptrModel : ptrModelsToRender)
 	{
 		if (!ptrModel) continue;
@@ -661,6 +626,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		bool checkAgainForFOV = true;
 		float minX = 1.0f, maxX = -1.0f, minY = 1.0f, maxY = -1.0f, minZ = 100000.0f, maxZ = -100000.0f;
 
+		//if cube is skybox, then do not process further
 		if (model.modelMesh.shape == shapetype::CUBE)
 		{
 			cubeModel& cube = dynamic_cast<cubeModel &>(model);

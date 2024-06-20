@@ -163,6 +163,7 @@ class Engine3D
 		std::set<std::shared_ptr<model>, ModelDistanceComparator> modelsInFocus;
 		std::shared_ptr<model> prevModelInFocus = nullptr;
 
+		std::shared_ptr<cubeModel> finalSkyBoxToRender = nullptr;
 		std::set<std::shared_ptr<model>> finalCubeModelsToRender;
 		std::set<std::shared_ptr<model>> finalModelsToRender;
 
