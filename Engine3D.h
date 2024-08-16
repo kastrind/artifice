@@ -194,6 +194,8 @@ class Engine3D
 		bool keysPressed[SupportedKeys::ALL_KEYS];
 		bool prevKeysPressed[SupportedKeys::ALL_KEYS];
 
+		std::shared_ptr<Level> level = nullptr;
+
 		//camera
 		glm::vec3 cameraPos;
 

@@ -2,8 +2,26 @@
 #include <fstream>
 #include <sstream>
 
+void Level::save()
+{
+	printf( "Saving level %s\n",  levelPath.c_str() );
+
+	std::ofstream f(levelPath);
+	if (!f.is_open())
+	{
+		printf( "Failed to save level!\n" );
+		return;
+	}
+	else
+	{
+		f << "TEST!" << std::endl;
+		f.close();
+	}
+}
+
 void Level::load(std::string levelPath)
 {
+	this->levelPath = levelPath;
 	printf( "Loading level %s\n",  levelPath.c_str() );
 
 	std::ifstream f(levelPath);
@@ -21,15 +39,15 @@ void Level::load(std::string levelPath)
 		f.getline(line, 256);
 
 		std::stringstream s;
-    	std::string streamstring;
+		std::string streamstring;
 		
 		s << line;
 		s >> streamstring;
 
 		unsigned long id;
-        std::string shape, texture;
+		std::string shape, texture;
 		bool isSolid;
-	    float width, height, depth, rotationX, rotationY, rotationZ, positionX, positionY, positionZ;
+		float width, height, depth, rotationX, rotationY, rotationZ, positionX, positionY, positionZ;
 
 		std::cout << " line: " << line << std::endl;
 
@@ -65,7 +83,7 @@ void Level::load(std::string levelPath)
 				positionZ = std::stof(tokens[12]);
 				//std::cout << "shape: " << shape << ", tex: " << texture << ", w: " << width << ", h: " << height << ", d: " << depth << ", rX: " << rotationX << ", rY: " << rotationY << ", rZ: " << rotationZ << ", pX: " << positionX << ", pY: " << positionY << ", pZ: " << positionZ << std::endl;
 
-                if (shape == "rectangle")
+				if (shape == "rectangle")
 				{
 					rectangle rectangle(width, height, rotationX, rotationY, rotationZ);
 					model m(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), rectangle, isSolid);

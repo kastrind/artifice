@@ -20,11 +20,15 @@ class Level
 
 		std::vector<std::shared_ptr<model>> models;
 
+		std::string levelPath;
+
 		unsigned long modelPointsCnt = 0;
 
 		unsigned long cubePointsCnt = 0;
 
 		void load(std::string levelPath);
+
+		void save();
 
 	private:
 

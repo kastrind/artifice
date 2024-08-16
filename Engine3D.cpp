@@ -1029,4 +1029,5 @@ void Engine3D::setLevel(Level* level)
 	}
 	modelPointsCnt = level->modelPointsCnt;
 	cubePointsCnt = level->cubePointsCnt;
+	this->level = std::make_shared<Level>(*level);
 }
