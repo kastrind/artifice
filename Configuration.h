@@ -20,9 +20,9 @@ typedef struct Configuration
 
 	const std::string LEVELS_PATH = "levels";
 
-	//const UserMode USER_MODE = UserMode::EDITOR;
+	const UserMode USER_MODE = UserMode::EDITOR;
 	
-	const UserMode USER_MODE = UserMode::PLAYER;
+	//const UserMode USER_MODE = UserMode::PLAYER;
 
 	const unsigned int SCREEN_WIDTH = 800;
 

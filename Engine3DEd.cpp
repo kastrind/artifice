@@ -233,6 +233,11 @@ void Engine3D::edit(float elapsedTime)
 			copyingModel = modelInFocus;
 			std::cout << "copying model: " << copyingModel->id << std::endl;
 			mtx.unlock();
+
+		} else if (prevKeysPressed[SupportedKeys::S] && keysPressed[SupportedKeys::S]==false && keysPressed[SupportedKeys::LEFT_CTRL]) {
+			mtx.lock();
+			std::cout << "SAVING!" << std::endl;
+			mtx.unlock();
 		}
 
 		if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
