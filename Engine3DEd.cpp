@@ -238,6 +238,9 @@ void Engine3D::edit(float elapsedTime)
 			mtx.lock();
 			std::cout << "SAVING!" << std::endl;
 			if (level) {
+				level->modelPointsCnt = modelPointsCnt;
+				level->cubePointsCnt = cubePointsCnt;
+				level->models = ptrModelsToRender;
 				level->save();
 			}
 			mtx.unlock();

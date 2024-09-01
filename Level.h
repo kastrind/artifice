@@ -28,7 +28,7 @@ class Level
 
 		void load(std::string levelPath);
 
-		void save();
+		void save(std::string levelPath = "");
 
 	private:
 
