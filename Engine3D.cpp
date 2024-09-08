@@ -172,6 +172,9 @@ bool Engine3D::initGL()
 	else
 	{
 		glEnable(GL_DEPTH_TEST);
+		glDepthMask(GL_TRUE);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glDepthFunc(GL_LESS); 
 
 		gCubeMapProgramID = cubeMapShader.getProgramID();
@@ -239,8 +242,10 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap)
 			//set the texture wrapping/filtering options (on the currently bound texture object)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			//load image
 			int width, height, nrChannels;
 			unsigned char *data = stbi_load(entry.path().string().c_str(), &width, &height, &nrChannels, 0);
@@ -307,8 +312,10 @@ void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap)
 							stbi_image_free(data);
 						}
 					}
-					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+					//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+					//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
@@ -375,6 +382,21 @@ void Engine3D::render()
 	// textureShader->setVec3("viewPos", getCameraPos());
 	// textureShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
+	//render active skybox
+	skyBoxShader.bind();
+	glDisable(GL_CULL_FACE);
+	glDepthFunc(GL_LEQUAL);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
+	glBindVertexArray(gCubeVAO);
+	glActiveTexture(GL_TEXTURE0);
+	if (finalSkyBoxToRender != nullptr)
+	{
+		cubeModel& cm = *finalSkyBoxToRender;
+		cm.render(&skyBoxShader, cubemapIdsMap[cm.texture]);
+	}
+	glBindVertexArray(0);
+	skyBoxShader.unbind();
+
 	//render cubemaps
 	cubeMapShader.bind();
 	glEnable(GL_CULL_FACE);
@@ -423,21 +445,6 @@ void Engine3D::render()
 	}
 	glBindVertexArray(0);
 	textureShader.unbind();
-
-	//render active skybox
-	skyBoxShader.bind();
-	glDisable(GL_CULL_FACE);
-	glDepthFunc(GL_LEQUAL);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
-	glBindVertexArray(gCubeVAO);
-	glActiveTexture(GL_TEXTURE0);
-	if (finalSkyBoxToRender != nullptr)
-	{
-		cubeModel& cm = *finalSkyBoxToRender;
-		cm.render(&skyBoxShader, cubemapIdsMap[cm.texture]);
-	}
-	glBindVertexArray(0);
-	skyBoxShader.unbind();
 
 	mtx.unlock();
 
@@ -767,9 +774,9 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 	
 	//mark covered models to avoid needless rendering
-	mtx.lock();
-	markCoveredModels();
-	mtx.unlock();
+	//mtx.lock();
+	//markCoveredModels();
+	//mtx.unlock();
 
 	mtx.lock();
 	for (auto &ptrModel : ptrModelsToRender)
