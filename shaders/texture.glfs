@@ -15,6 +15,16 @@ const vec3 transparentColor = vec3(1.0, 0.0, 1.0);
 // texture sampler
 uniform sampler2D texture1;
 
+uniform int frameIndex;
+uniform int frameRows;
+uniform int frameCols;
+
+vec2 frameSize = vec2(1.0f / frameCols, 1.0f / frameRows);
+int frameCol = frameIndex % frameCols;
+int frameRow = frameIndex / frameRows;
+vec2 offset = vec2(frameCol * frameSize.x, frameRow * frameSize.y);
+vec2 adjustedTexCoord = TexCoord * frameSize + offset;
+
 void main()
 {
 	// ambient
@@ -36,7 +46,7 @@ void main()
 
 	//vec3 finalColor = (ambient + diffuse + specular) * color;
 
-	vec4 textureColor = texture(texture1, TexCoord);
+	vec4 textureColor = texture(texture1, adjustedTexCoord);
 
 	//FragColor = textureColor * vec4(finalColor, 1.0f);
 

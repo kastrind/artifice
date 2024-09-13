@@ -359,6 +359,9 @@ typedef struct model {
 		unsigned long id;
 		unsigned long sn;
 		std::string texture;
+		unsigned short frameIndex = 0;
+		unsigned short frameRows = 1;
+		unsigned short frameCols = 1;
 		glm::vec3 position;
 		bool isSolid = true;
 		mesh modelMesh;
@@ -372,6 +375,7 @@ typedef struct model {
 		boundingbox bbox;
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		glm::mat4 rotationMatrix = glm::mat4(1.0f);
+
 
 		model() {}
 
@@ -391,6 +395,9 @@ typedef struct model {
 			// std::cout << "rendering model" << std::endl;
 			glBindTexture(GL_TEXTURE_2D, textureId);
 			shader->setMat4("model", this->modelMatrix);
+			shader->setInt("frameIndex", this->frameIndex);
+			shader->setInt("frameRows", this->frameRows);
+			shader->setInt("frameCols", this->frameCols);
 			glDrawElements(GL_TRIANGLES, this->modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(( this->sn ) * sizeof(GL_UNSIGNED_INT)));
 		}
 
