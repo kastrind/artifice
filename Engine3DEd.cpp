@@ -175,26 +175,26 @@ void Engine3D::edit(float elapsedTime)
 
 		// increases/decreases X rotation
 		} else if (editOptions[editOptionIndex] == "rotationX" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
-			editingRotationX = std::max(editingRotationX - 0.1f, 0.0f);
+			editingRotationX = std::max(editingRotationX - 0.1f, -1.57f);
 			std::cout << "rotationX: " << editingRotationX << std::endl;
 		} else if (editOptions[editOptionIndex] == "rotationX" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
-			editingRotationX += 0.1f;
+			editingRotationX = std::min(editingRotationX + 0.1f, 1.57f);
 			std::cout << "rotationX: " << editingRotationX << std::endl;
 
 		// increases/decreases Y rotation
 		} else if (editOptions[editOptionIndex] == "rotationY" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
-			editingRotationY = std::max(editingRotationY - 0.1f, 0.0f);
+			editingRotationY = std::max(editingRotationY - 0.1f, -1.57f);
 			std::cout << "rotationY: " << editingRotationY << std::endl;
 		} else if (editOptions[editOptionIndex] == "rotationY" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
-			editingRotationY += 0.1f;
+			editingRotationY = std::min(editingRotationY + 0.1f, 1.57f);
 			std::cout << "rotationY: " << editingRotationY << std::endl;
 
 		// increases/decreases Z rotation
 		} else if (editOptions[editOptionIndex] == "rotationZ" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
-			editingRotationZ = std::max(editingRotationZ - 0.1f, 0.0f);
+			editingRotationZ = std::max(editingRotationZ - 0.1f, -1.57f);
 			std::cout << "rotationZ: " << editingRotationZ << std::endl;
 		} else if (editOptions[editOptionIndex] == "rotationZ" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
-			editingRotationZ += 0.1f;
+			editingRotationZ = std::min(editingRotationZ + 0.1f, 1.57f);
 			std::cout << "rotationZ: " << editingRotationZ << std::endl;
 
 		// cycles through textures
@@ -241,6 +241,7 @@ void Engine3D::edit(float elapsedTime)
 				level->modelPointsCnt = modelPointsCnt;
 				level->cubePointsCnt = cubePointsCnt;
 				level->models = ptrModelsToRender;
+				level->playerPosition = cameraPos;
 				level->save();
 			}
 			mtx.unlock();

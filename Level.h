@@ -16,6 +16,7 @@ class Level
 
 		Level()
 		{
+			playerPosition = glm::vec3(0.0f, 0.0f, 3.0f);
 		}
 
 		std::vector<std::shared_ptr<model>> models;
@@ -25,6 +26,8 @@ class Level
 		unsigned long modelPointsCnt = 0;
 
 		unsigned long cubePointsCnt = 0;
+
+		glm::vec3 playerPosition;
 
 		void load(std::string levelPath);
 

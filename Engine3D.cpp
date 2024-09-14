@@ -239,16 +239,11 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap)
 			//bind texture
 			glBindTexture(GL_TEXTURE_2D, textureIdsMap[filename]);
 
-			//set the texture wrapping/filtering options (on the currently bound texture object)
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //to achieve transparency
-			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); //to achieve transparency
 			//load image
 			int width, height, nrChannels;
 			unsigned char *data = stbi_load(entry.path().string().c_str(), &width, &height, &nrChannels, 0);
+			// if first pixel is pure magenta, then texture is considered to have transparency
+			bool hasTransparency = (int)data[0] == 255 && (int)data[1] == 0 && (int)data[2] == 255;
 			if (data)
 			{
 				//generate texture
@@ -257,8 +252,20 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap)
 			} else {
 				std::cout << "Failed to load texture " << filename << std::endl;
 			}
+
 			//free image memory
 			stbi_image_free(data);
+
+			//set the texture wrapping/filtering options (on the currently bound texture object)
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			if (hasTransparency) { //to achieve transparency
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			} else { //filter texture
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			}
 		}
 	}
 	//activate shader
@@ -272,60 +279,61 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap)
 
 void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap)
 {
-    std::string cubemapsPath = cfg.ASSETS_PATH + std::string("\\cubemaps");
+	std::string cubemapsDirNames[2] = {std::string("cubemaps"), std::string("skyboxes")};
 	std::string filename;
 	std::string name;
-    for (const auto & entry : std::filesystem::directory_iterator(cubemapsPath))
-	{
-		if (entry.is_directory())
+	for (std::string cubemapsDirName : cubemapsDirNames) {
+		std::string cubemapsPath = cfg.ASSETS_PATH + std::string("\\") + cubemapsDirName;
+		for (const auto & entry : std::filesystem::directory_iterator(cubemapsPath))
 		{
-			name = entry.path().filename().string();
-
-			cubemapIdsMap[name] = -1;
-			glGenTextures(1, &cubemapIdsMap[name]);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapIdsMap[name]);
-
-			for (const auto & face : std::filesystem::directory_iterator(entry))
+			if (entry.is_directory())
 			{
-				if (face.is_regular_file())
-				{
-					if (face.path().filename().has_extension()) {
-						filename = face.path().filename().replace_extension("").string();
-					} else {
-						filename = face.path().filename().string();
-					}
+				name = entry.path().filename().string();
 
-					int width, height, nrChannels;
-					int i = 0;
-					if (cubemapFaceIndexMap[filename] >= 0)
+				cubemapIdsMap[name] = -1;
+				glGenTextures(1, &cubemapIdsMap[name]);
+				glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapIdsMap[name]);
+
+				for (const auto & face : std::filesystem::directory_iterator(entry))
+				{
+					if (face.is_regular_file())
 					{
-						unsigned char *data = stbi_load(face.path().string().c_str(), &width, &height, &nrChannels, 0);
-						if (data)
-						{
-							glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + cubemapFaceIndexMap[filename], 
-											0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
-							);
-							stbi_image_free(data);
+						if (face.path().filename().has_extension()) {
+							filename = face.path().filename().replace_extension("").string();
+						} else {
+							filename = face.path().filename().string();
 						}
-						else
+
+						int width, height, nrChannels;
+						int i = 0;
+						if (cubemapFaceIndexMap[filename] >= 0)
 						{
-							std::cout << "Cubemap texture failed to load at path: " << face.path() << std::endl;
-							stbi_image_free(data);
+							unsigned char *data = stbi_load(face.path().string().c_str(), &width, &height, &nrChannels, 0);
+							if (data)
+							{
+								glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + cubemapFaceIndexMap[filename], 
+												0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+								);
+								stbi_image_free(data);
+							}
+							else
+							{
+								std::cout << "Cubemap texture failed to load at path: " << face.path() << std::endl;
+								stbi_image_free(data);
+							}
 						}
+						glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+						glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+						glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+						glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+						glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+						cubeMapShader.bind();
+						glUniform1i(glGetUniformLocation(cubeMapShader.getProgramID(), std::string("cubemap" + std::to_string(cubemapIdsMap[name])).c_str()), 0);
+						cubeMapShader.unbind();
+						skyBoxShader.bind();
+						glUniform1i(glGetUniformLocation(skyBoxShader.getProgramID(), std::string("skybox" + std::to_string(cubemapIdsMap[name])).c_str()), 0);
+						skyBoxShader.unbind();
 					}
-					//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //to achieve transparency
-					//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST); //to achieve transparency
-					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-					cubeMapShader.bind();
-					glUniform1i(glGetUniformLocation(cubeMapShader.getProgramID(), std::string("cubemap" + std::to_string(cubemapIdsMap[name])).c_str()), 0);
-					cubeMapShader.unbind();
-					skyBoxShader.bind();
-					glUniform1i(glGetUniformLocation(skyBoxShader.getProgramID(), std::string("skybox" + std::to_string(cubemapIdsMap[name])).c_str()), 0);
-					skyBoxShader.unbind();
 				}
 			}
 		}
@@ -784,7 +792,15 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	for (auto &ptrModel : ptrModelsToRender)
 	{
 		if (!ptrModel) continue;
-		if (!ptrModel->isCovered && ptrModel->isInDOF && ptrModel->isInFOV)
+
+		//move model
+		if (ptrModel->speed > 0) {
+			//ptrModel->position += ptrModel->speed * ptrModel->front * elapsedTime;
+			ptrModel->position += ptrModel->speed * glm::normalize(cameraPos - ptrModel->position) * elapsedTime;
+		}
+
+		//render if model is near, or not covered, in DOF and in FOV
+		if (ptrModel->distance <= 2.0f || (!ptrModel->isCovered && ptrModel->isInDOF && ptrModel->isInFOV))
 		{
 			if (ptrModel->modelMesh.shape == shapetype::CUBE) finalCubeModelsToRender.insert(ptrModel);
 			else finalModelsToRender.insert(ptrModel);
@@ -793,6 +809,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			if (ptrModel->modelMesh.shape == shapetype::CUBE) finalCubeModelsToRender.erase(ptrModel);
 			else finalModelsToRender.erase(ptrModel);
 		}
+
 	}
 	//std::cout << "final models to render: " << finalCubeModelsToRender.size() << std::endl;
 	mtx.unlock();
@@ -1038,5 +1055,6 @@ void Engine3D::setLevel(Level* level)
 	}
 	modelPointsCnt = level->modelPointsCnt;
 	cubePointsCnt = level->cubePointsCnt;
+	this->cameraPos = level->playerPosition;
 	this->level = std::make_shared<Level>(*level);
 }

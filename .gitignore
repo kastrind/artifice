@@ -1,3 +1,4 @@
 *.exe
 *.o
 *.tmp.cpp
+levels/level0*.lvl

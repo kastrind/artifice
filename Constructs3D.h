@@ -194,9 +194,9 @@ typedef struct shape
 
 		shape(float thetaRotationX = 0.0f, float thetaRotationY = 0.0f,float thetaRotationZ = 0.0f)
 		: thetaRotX(thetaRotationX), thetaRotY(thetaRotationY), thetaRotZ(thetaRotationZ) {
-			if (thetaRotX > 0.0f) rotationMatrix = glm::rotate(rotationMatrix, thetaRotX, glm::vec3(1.0f, 0.0f, 0.0f));
-			if (thetaRotY > 0.0f) rotationMatrix = glm::rotate(rotationMatrix, thetaRotY, glm::vec3(0.0f, 1.0f, 0.0f));
-			if (thetaRotZ > 0.0f) rotationMatrix = glm::rotate(rotationMatrix, thetaRotZ, glm::vec3(0.0f, 0.0f, 1.0f));
+			rotationMatrix = glm::rotate(rotationMatrix, thetaRotX, glm::vec3(1.0f, 0.0f, 0.0f));
+			rotationMatrix = glm::rotate(rotationMatrix, thetaRotY, glm::vec3(0.0f, 1.0f, 0.0f));
+			rotationMatrix = glm::rotate(rotationMatrix, thetaRotZ, glm::vec3(0.0f, 0.0f, 1.0f));
 		}
 
 		shape(shape& s) : thetaRotX(s.thetaRotX), thetaRotY(s.thetaRotY), thetaRotZ(s.thetaRotZ), triangles(s.triangles), rotationMatrix(s.rotationMatrix) {}
@@ -359,9 +359,6 @@ typedef struct model {
 		unsigned long id;
 		unsigned long sn;
 		std::string texture;
-		unsigned short frameIndex = 0;
-		unsigned short frameRows = 1;
-		unsigned short frameCols = 1;
 		glm::vec3 position;
 		bool isSolid = true;
 		mesh modelMesh;
@@ -375,6 +372,13 @@ typedef struct model {
 		boundingbox bbox;
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		glm::mat4 rotationMatrix = glm::mat4(1.0f);
+
+		unsigned short frameIndex = 0;
+		unsigned short frameRows = 1;
+		unsigned short frameCols = 1;
+
+		float speed = 0.0f;
+		glm::vec3 front = glm::vec3(0.0, 1.0, 0.0);
 
 
 		model() {}

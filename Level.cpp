@@ -17,6 +17,7 @@ void Level::save(std::string levelPath)
 	}
 	else
 	{
+		f << "player_position," << playerPosition.x << "," << playerPosition.y << "," << playerPosition.z << std::endl;
 		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ" << std::endl;
 
 		for (auto &ptrModel : models)
@@ -101,7 +102,7 @@ void Level::load(std::string levelPath)
 			unsigned int i = -1;
 			std::string tokens[NUM_ATTRIBUTES];
 			while(std::getline(ss, token, ',')) {
-				if (i == NUM_ATTRIBUTES - 1) break;
+				if (i == NUM_ATTRIBUTES - 1 || (i == 3 && tokens[0] == "player_position")) break;
 				tokens[++i] = token;
 			}
 			if (i == NUM_ATTRIBUTES - 1) {
@@ -144,6 +145,11 @@ void Level::load(std::string levelPath)
 					cubePointsCnt += cubeMdl.modelMesh.tris.size() * 3;
 					models.push_back(std::make_shared<cubeModel>(cubeMdl));
 				}
+			}else if (tokens[0] == "player_position") {
+				positionX = std::stof(tokens[1]);
+				positionY = std::stof(tokens[2]);
+				positionZ = std::stof(tokens[3]);
+				playerPosition = glm::vec3(positionX, positionY, positionZ);
 			}
 		}
 	}
