@@ -1,9 +1,13 @@
 #include "Initiator.h"
+#include <fstream>
+#include <sstream>
 
 bool Initiator::init()
 {
 	//initialization flag
 	bool success = true;
+
+	loadConfiguration();
 
 	//initialize SDL
 	printf( "Initializing SDL...\n" );
@@ -21,7 +25,7 @@ bool Initiator::init()
 
 		//create window
 		printf( "Creating window...\n" );
-		gWindow = SDL_CreateWindow( "Artifice Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
+		gWindow = SDL_CreateWindow( "Artifice Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, cfg->SCREEN_WIDTH, cfg->SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
 		//confine mouse cursor to the window and hide it
 		SDL_SetWindowMouseGrab(gWindow, SDL_TRUE);
 		SDL_SetWindowMouseRect(gWindow, &windowRect);
@@ -42,8 +46,59 @@ bool Initiator::init()
 		}
 	}
 
-    initiated = success;
+	initiated = success;
 	return success;
+}
+
+void Initiator::loadConfiguration()
+{
+	printf( "Loading Configuration...\n");
+
+	std::ifstream f("configuration.ini");
+	if (!f.is_open())
+	{
+		printf( "Failed to load configuration.ini!\n" );
+		return;
+	}
+
+	while (!f.eof())
+	{
+		char line[256];
+		f.getline(line, 256);
+
+		std::stringstream s;
+		std::string streamstring;
+		
+		s << line;
+		s >> streamstring;
+
+		//std::cout << " line: " << line << std::endl;
+
+		if (streamstring.c_str()[0] == '#')
+		{
+			//std::cout << "ignoring comment " << streamstring.c_str() << std::endl;
+			continue;
+		}
+		else
+		{
+			std::string linestring(line);
+			std::istringstream ss(linestring);
+			std::string token;
+			unsigned int i = -1;
+			std::string tokens[2];
+			while(std::getline(ss, token, '=')) {
+				if (i == 1) break;
+				tokens[++i] = token;
+			}
+			if (i == 1) {
+				if (tokens[0] == "USER_MODE") {
+					cfg->USER_MODE = tokens[1] == "EDITOR" ? UserMode::EDITOR : UserMode::PLAYER;
+					std::cout << "USER_MODE = " << cfg->USER_MODE << std::endl;
+				}
+			}
+		}
+	}
+	f.close();
 }
 
 void Initiator::close()

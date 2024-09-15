@@ -9,7 +9,7 @@ CFG cfg;
 int main( int argc, char* args[] )
 {
 
-	Initiator init(cfg);
+	Initiator init(&cfg);
 
 	//start up SDL and create window
 	if(!init())

@@ -13,18 +13,19 @@ class Initiator
 {
 	public:
 
-		Initiator(CFG& cfg) : cfg(cfg)
+		Initiator(CFG* cfg)
 		{
-			windowRect.x = cfg.SCREEN_WIDTH/4;
-			windowRect.y = cfg.SCREEN_HEIGHT/4;
-			windowRect.w = cfg.SCREEN_WIDTH/2;
-			windowRect.h = cfg.SCREEN_HEIGHT/2;
+			this->cfg = cfg;
+			windowRect.x = cfg->SCREEN_WIDTH/4;
+			windowRect.y = cfg->SCREEN_HEIGHT/4;
+			windowRect.w = cfg->SCREEN_WIDTH/2;
+			windowRect.h = cfg->SCREEN_HEIGHT/2;
 		}
 
 		bool initiated = false;
 
 		//configuration
-		CFG cfg;
+		CFG* cfg = nullptr;
 
 		//the window we'll be rendering graphics to
 		SDL_Window* gWindow = NULL;
@@ -33,9 +34,9 @@ class Initiator
 		SDL_Rect windowRect;
 
 		//overload function call operator
-    	bool operator()() {
-      		return init();
-    	}
+		bool operator()() {
+			return init();
+		}
 
 		//starts up SDL, creates window, and initializes OpenGL
 		bool init();
@@ -44,5 +45,7 @@ class Initiator
 		void close();
 
 	private:
+
+		void loadConfiguration();
 
 };

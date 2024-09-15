@@ -87,11 +87,11 @@ void Level::load(std::string levelPath)
 		bool isSolid;
 		float width, height, depth, rotationX, rotationY, rotationZ, positionX, positionY, positionZ;
 
-		std::cout << " line: " << line << std::endl;
+		//std::cout << " line: " << line << std::endl;
 
 		if (streamstring.c_str()[0] == '#')
 		{
-			std::cout << "ignoring comment " << streamstring.c_str() << std::endl;
+			//std::cout << "ignoring comment " << streamstring.c_str() << std::endl;
 			continue;
 		}
 		else
