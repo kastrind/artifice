@@ -11,6 +11,7 @@ uniform vec3 viewPos;
 uniform vec3 lightColor;
 
 const vec3 transparentColor = vec3(1.0, 0.0, 1.0);
+uniform int userMode;
 
 // texture sampler
 uniform sampler2D texture1;
@@ -50,7 +51,7 @@ void main()
 
 	//FragColor = textureColor * vec4(finalColor, 1.0f);
 
-	if (textureColor.rgb == transparentColor) {
+	if (userMode == 0 && textureColor.rgb == transparentColor) {
 		FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 	}else {
 		FragColor = textureColor * vec4(color, 1.0f);

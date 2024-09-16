@@ -7,6 +7,7 @@ bool Initiator::init()
 	//initialization flag
 	bool success = true;
 
+	//load configuration from file
 	loadConfiguration();
 
 	//initialize SDL

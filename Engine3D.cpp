@@ -272,6 +272,7 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap)
 	textureShader.bind();
 	//set the uniforms
 	glUniform1i(glGetUniformLocation(textureShader.getProgramID(), "frameIndex"), 0);
+	textureShader.setInt("userMode", (int)cfg.USER_MODE);
 	for (const auto& kv : textureIdsMap) {
 		glUniform1i(glGetUniformLocation(textureShader.getProgramID(), std::string("texture" + std::to_string(kv.second)).c_str()), 0);
 	}
