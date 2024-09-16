@@ -94,6 +94,37 @@ void Initiator::loadConfiguration()
 				if (tokens[0] == "USER_MODE") {
 					cfg->USER_MODE = tokens[1] == "EDITOR" ? UserMode::EDITOR : UserMode::PLAYER;
 					std::cout << "USER_MODE = " << cfg->USER_MODE << std::endl;
+				} else if (tokens[0] == "SCREEN_WIDTH") {
+					cfg->SCREEN_WIDTH = std::stoi(tokens[1]);
+					std::cout << "SCREEN_WIDTH = " << cfg->SCREEN_WIDTH << std::endl;
+				} else if (tokens[0] == "SCREEN_HEIGHT") {
+					cfg->SCREEN_HEIGHT = std::stoi(tokens[1]);
+					std::cout << "SCREEN_HEIGHT = " << cfg->SCREEN_HEIGHT << std::endl;
+				} else if (tokens[0] == "NEAR") {
+					cfg->NEAR = std::stof(tokens[1]);
+					std::cout << "NEAR = " << cfg->NEAR << std::endl;
+				} else if (tokens[0] == "FAR") {
+					cfg->FAR = std::stof(tokens[1]);
+					std::cout << "FAR = " << cfg->FAR << std::endl;
+				} else if (tokens[0] == "FOV") {
+					cfg->FOV = std::stoi(tokens[1]);
+					cfg->FOV_RADIANS = (float) cfg->FOV * cfg->M_PI_HALF * 2 / 180;
+					std::cout << "FOV = " << cfg->FOV << std::endl;
+				} else if (tokens[0] == "DOF") {
+					cfg->DOF = std::stof(tokens[1]);
+					std::cout << "DOF = " << cfg->DOF << std::endl;
+				} else if (tokens[0] == "COLLIDING_DISTANCE") {
+					cfg->COLLIDING_DISTANCE = std::stof(tokens[1]);
+					std::cout << "COLLIDING_DISTANCE = " << cfg->COLLIDING_DISTANCE << std::endl;
+				} else if (tokens[0] == "GRAVITATIONAL_PULL") {
+					cfg->GRAVITATIONAL_PULL = std::stof(tokens[1]);
+					std::cout << "GRAVITATIONAL_PULL = " << cfg->GRAVITATIONAL_PULL << std::endl;
+				} else if (tokens[0] == "JUMP_SPEED_FACTOR") {
+					cfg->JUMP_SPEED_FACTOR = std::stof(tokens[1]);
+					std::cout << "JUMP_SPEED_FACTOR = " << cfg->JUMP_SPEED_FACTOR << std::endl;
+				} else if (tokens[0] == "CAMERA_SPEED_FACTOR") {
+					cfg->CAMERA_SPEED_FACTOR = std::stof(tokens[1]);
+					std::cout << "CAMERA_SPEED_FACTOR = " << cfg->CAMERA_SPEED_FACTOR << std::endl;
 				}
 			}
 		}

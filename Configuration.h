@@ -21,32 +21,30 @@ typedef struct Configuration
 	const std::string LEVELS_PATH = "levels";
 
 	UserMode USER_MODE = UserMode::EDITOR;
-	
-	//const UserMode USER_MODE = UserMode::PLAYER;
 
-	const unsigned int SCREEN_WIDTH = 800;
+	unsigned int SCREEN_WIDTH = 800;
 
-	const unsigned int SCREEN_HEIGHT = 600;
+	unsigned int SCREEN_HEIGHT = 600;
 
-	const float NEAR = 0.01f;
+	float NEAR = 0.01f;
 
-	const float FAR = 100.0f;
+	float FAR = 100.0f;
 
-	const unsigned int FOV = 45; //field of view in degrees
+	unsigned int FOV = 45; //field of view in degrees
 
-	const float DOF = 20.0f; //depth of field
+	float DOF = 20.0f; //depth of field
 
-	const float COLLIDING_DISTANCE = 0.2f;
+	float COLLIDING_DISTANCE = 0.2f;
 
-	const float GRAVITATIONAL_PULL = 0.1f;
+	float GRAVITATIONAL_PULL = 0.1f;
 
-	const float JUMP_SPEED_FACTOR = 5.0f;
+	float JUMP_SPEED_FACTOR = 5.0f;
 
-	const float CAMERA_SPEED_FACTOR = 1.5f;
+	float CAMERA_SPEED_FACTOR = 1.5f;
 
 	//precomputed constants follow
 
-	const float FOV_RADIANS = (float) FOV * M_PI / 180;
+	float FOV_RADIANS = (float) FOV * M_PI / 180;
 
 	const float M_PI_HALF = M_PI / 2;
 
