@@ -96,6 +96,7 @@ class Engine3D
 		//to render
 		std::vector<std::string> texturePaths;
 		std::map<std::string, GLuint> textureIdsMap;
+		std::map<std::string, bool> textureTransparencyMap;
 		std::vector<std::string> textureNames;
 
 		std::vector<std::string> cubemapPaths;
@@ -160,12 +161,16 @@ class Engine3D
 		struct ModelDistanceComparator {
 			bool operator()(std::shared_ptr<model> a, std::shared_ptr<model> b) const { return a->distance < b->distance; };
 		};
+		struct ModelDescendingDistanceComparator {
+			bool operator()(std::shared_ptr<model> a, std::shared_ptr<model> b) const { return a->distance > b->distance; };
+		};
 		std::set<std::shared_ptr<model>, ModelDistanceComparator> modelsInFocus;
 		std::shared_ptr<model> prevModelInFocus = nullptr;
 
 		std::shared_ptr<cubeModel> finalSkyBoxToRender = nullptr;
 		std::set<std::shared_ptr<model>> finalCubeModelsToRender;
 		std::set<std::shared_ptr<model>> finalModelsToRender;
+		std::set<std::shared_ptr<model>, ModelDescendingDistanceComparator> finalTransparentModelsToRender;
 
 		//editor user mode specific
 		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX", "rotationY", "rotationZ", "texture", "isSolid", "collationHeight", "collationWidth"};

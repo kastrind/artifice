@@ -244,6 +244,7 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap)
 			unsigned char *data = stbi_load(entry.path().string().c_str(), &width, &height, &nrChannels, 0);
 			// if first pixel is pure magenta, then texture is considered to have transparency
 			bool hasTransparency = (int)data[0] == 255 && (int)data[1] == 0 && (int)data[2] == 255;
+			textureTransparencyMap[filename] = hasTransparency;
 			if (data)
 			{
 				//generate texture
@@ -451,8 +452,23 @@ void Engine3D::render()
 
 		if (model.removeFlag) continue;
 
+		if (model.texture.length() && textureTransparencyMap[model.texture]) {
+			finalTransparentModelsToRender.insert(*itr);
+			continue;	
+		}
+
 		model.render(&textureShader, textureIdsMap[model.texture]);
 	}
+
+	for (auto itr = finalTransparentModelsToRender.begin(); itr != finalTransparentModelsToRender.end(); itr++)
+	{
+		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
+
+		model& model = *(*itr);
+		model.render(&textureShader, textureIdsMap[model.texture]);
+	}
+	finalTransparentModelsToRender.clear();
+
 	glBindVertexArray(0);
 	textureShader.unbind();
 
