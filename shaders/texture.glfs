@@ -10,6 +10,12 @@ uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform vec3 lightColor;
 
+struct Light {
+	float intensity;
+	vec3 color;
+};
+uniform Light ambientLight;
+
 const vec3 transparentColor = vec3(1.0, 0.0, 1.0);
 uniform int userMode;
 
@@ -29,8 +35,7 @@ vec2 adjustedTexCoord = TexCoord * frameSize + offset;
 void main()
 {
 	// ambient
-	//float ambientStrength = 0.1;
-	//vec3 ambient = ambientStrength * lightColor;
+	vec3 ambient = ambientLight.intensity * ambientLight.color;
 
 	// diffuse 
 	//vec3 norm = normalize(normal);
@@ -46,6 +51,7 @@ void main()
 	//vec3 specular = specularStrength * spec * lightColor;
 
 	//vec3 finalColor = (ambient + diffuse + specular) * color;
+	vec3 finalColor = (ambient) * color;
 
 	vec4 textureColor = texture(texture1, adjustedTexCoord);
 
@@ -54,6 +60,6 @@ void main()
 	if (userMode == 0 && textureColor.rgb == transparentColor) {
 		FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 	}else {
-		FragColor = textureColor * vec4(color, 1.0f);
+		FragColor = textureColor * vec4(finalColor, 1.0f);
 	}
 }

@@ -10,6 +10,12 @@ uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform vec3 lightColor;
 
+struct Light {
+	float intensity;
+	vec3 color;
+};
+uniform Light ambientLight;
+
 const vec3 transparentColor = vec3(1.0, 0.0, 1.0);
 
 uniform samplerCube cubemap; // cubemap texture sampler
@@ -17,8 +23,7 @@ uniform samplerCube cubemap; // cubemap texture sampler
 void main()
 {
 	// ambient
-	//float ambientStrength = 0.1;
-	//vec3 ambient = ambientStrength * lightColor;
+	vec3 ambient = ambientLight.intensity * ambientLight.color;
 
 	// diffuse 
 	//vec3 norm = normalize(normal);
@@ -35,6 +40,8 @@ void main()
 
 	//vec3 finalColor = (ambient + diffuse + specular) * color;
 
+	vec3 finalColor = (ambient) * color;
+
 	vec4 textureColor = texture(cubemap, normalize(FragPos));
 
 	//FragColor = textureColor * vec4(finalColor, 1.0f);
@@ -43,7 +50,7 @@ void main()
 		//FragColor = vec4(textureColor.rgb, 0.0);
 		FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 	} else {
-		FragColor = textureColor * vec4(color, 1.0f);
+		FragColor = textureColor * vec4(finalColor, 1.0f);
 	}
 }
 

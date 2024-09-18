@@ -18,6 +18,7 @@
 #include "ArtificeShaderProgram.h"
 #include "Configuration.h"
 #include "Constructs3D.h"
+#include "Light.h"
 #include "Level.h"
 #include "EventController.h"
 
@@ -173,6 +174,10 @@ class Engine3D
 		std::set<std::shared_ptr<model>> finalModelsToRender;
 		std::set<std::shared_ptr<model>, ModelDescendingDistanceComparator> finalTransparentModelsToRender;
 
+		glm::vec3 lightPos;
+
+		Light ambientLight;
+
 		//editor user mode specific
 		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX", "rotationY", "rotationZ", "texture", "isSolid", "collationHeight", "collationWidth"};
 		unsigned short editOptionIndex = 0;
@@ -212,8 +217,6 @@ class Engine3D
 		glm::vec3 cameraRight;
 
 		float cameraSpeedFactor;
-
-		glm::vec3 lightPos;
 
 		glm::mat4 viewMatrix;
 

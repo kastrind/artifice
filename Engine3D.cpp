@@ -373,25 +373,28 @@ void Engine3D::render()
 	cubeMapShader.setMat4("projection", getProjectionMatrix());
 	cubeMapShader.setMat4("view", getViewMatrix());
 	//lighting
-	cubeMapShader.setVec3("lightPos", getLightPos());
-	cubeMapShader.setVec3("viewPos", getCameraPos());
-	cubeMapShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+	// cubeMapShader.setVec3("lightPos", getLightPos());
+	// cubeMapShader.setVec3("viewPos", getCameraPos());
+	// cubeMapShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+	cubeMapShader.setFloat("ambientLight.intensity", ambientLight.intensity);
+	cubeMapShader.setVec3("ambientLight.color", ambientLight.color);
 	cubeMapShader.unbind();
 
 	textureShader.bind();
 	textureShader.setMat4("projection", getProjectionMatrix());
 	textureShader.setMat4("view", getViewMatrix());
+	//lighting
+	// textureShader->setVec3("lightPos", getLightPos());
+	// textureShader->setVec3("viewPos", getCameraPos());
+	// textureShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+	textureShader.setFloat("ambientLight.intensity", ambientLight.intensity);
+	textureShader.setVec3("ambientLight.color", ambientLight.color);
 	textureShader.unbind();
 
 	skyBoxShader.bind();
 	skyBoxShader.setMat4("projection", getProjectionMatrix());
 	skyBoxShader.setMat4("view", getViewMatrixNoTranslation());
 	skyBoxShader.unbind();
-
-	// //lighting
-	// textureShader->setVec3("lightPos", getLightPos());
-	// textureShader->setVec3("viewPos", getCameraPos());
-	// textureShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
 	//render active skybox
 	skyBoxShader.bind();
@@ -1087,5 +1090,6 @@ void Engine3D::setLevel(Level* level)
 	modelPointsCnt = level->modelPointsCnt;
 	cubePointsCnt = level->cubePointsCnt;
 	this->cameraPos = level->playerPosition;
+	this->ambientLight = level->ambientLight;
 	this->level = std::make_shared<Level>(*level);
 }

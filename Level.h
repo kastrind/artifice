@@ -7,6 +7,7 @@
 #include <vector>
 #include <memory>
 #include "Constructs3D.h"
+#include "Light.h"
 
 class Level
 {
@@ -28,6 +29,8 @@ class Level
 		unsigned long cubePointsCnt = 0;
 
 		glm::vec3 playerPosition;
+
+		Light ambientLight;
 
 		void load(std::string levelPath);
 
