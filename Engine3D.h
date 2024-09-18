@@ -143,6 +143,7 @@ class Engine3D
 		float gravitationalPull;
 		float jumpSpeedFactor;
 		float jumpSpeed = 0;
+		glm::vec3 cameraFrontOnJump;
 
 		UserMode userMode;
 

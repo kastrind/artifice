@@ -793,7 +793,9 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 		if (model.isSolid && modelDistance < collidingDistance * 0.5f)
 		{
+			float camY = cameraPos.y; // to be able to fall if collided in the air
 			cameraPos = prevCameraPos;
+			cameraPos.y = camY;
 		}
 	}
 	lightPos = cameraFront;
@@ -833,7 +835,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 	edit(elapsedTime);
 
-	// std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
+	//std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
 	return true;
 }
 
@@ -897,7 +899,7 @@ void Engine3D::move(float elapsedTime)
 			cameraFront.y = 0;
 			cameraPos += cameraSpeed * cameraFront;
 
-		} else if (keysPressed[SupportedKeys::W] && (!hasLanded || userMode == UserMode::EDITOR)) {
+		} else if (keysPressed[SupportedKeys::W] && (/*!hasLanded ||*/ userMode == UserMode::EDITOR)) {
 			cameraPos += cameraSpeed * cameraFront;
 
 		} else if (keysPressed[SupportedKeys::S] && hasLanded && collides && canSlide) {
@@ -908,7 +910,7 @@ void Engine3D::move(float elapsedTime)
 			cameraFront.y = 0;
 			cameraPos -= cameraSpeed * cameraFront;
 
-		} else if (keysPressed[SupportedKeys::S] && (!hasLanded || userMode == UserMode::EDITOR)) {
+		} else if (keysPressed[SupportedKeys::S] && (/*!hasLanded ||*/ userMode == UserMode::EDITOR)) {
 			cameraPos -= cameraSpeed * cameraFront;
 		}
 		if (keysPressed[SupportedKeys::A] && hasLanded && collides && !collidesLeft) {
@@ -930,15 +932,27 @@ void Engine3D::move(float elapsedTime)
 			cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 		}
 
-		// jumping
+		//jumping
 		if (keysPressed[SupportedKeys::SPACE] && hasLanded) {
 			jumpSpeed = gravitationalPull * jumpSpeedFactor;
 			cameraPos.y += elapsedTime * jumpSpeed;
+			if (keysPressed[SupportedKeys::W] && !collides) { //if jumped while moving forward
+				cameraFrontOnJump = cameraFront;
+				cameraFrontOnJump.y = 0;
+			}else {
+				cameraFrontOnJump = glm::vec3(0, 0, 0);
+			}
 		}
-		if (!hasLanded & jumpSpeedFactor > 0) {
+		//keep elevating if in the air and there is jump speed
+		if (!hasLanded && jumpSpeed > 0) {
 			cameraPos.y += elapsedTime * jumpSpeed;
 			jumpSpeed -= jumpSpeed * elapsedTime;
+			if (!collides) { //if not colliding, move forward too
+				cameraFront.y = 0;
+				cameraPos += 0.5f * cameraSpeed * cameraFrontOnJump;
+			}
 		}
+		//std::cout << "jumpSpeed" << jumpSpeed << std::endl;
 
 		//if in editor mode, arrows control track camera movement to the sides, above or below camera position
 		if (userMode == UserMode::EDITOR)
