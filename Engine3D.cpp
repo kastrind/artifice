@@ -369,28 +369,31 @@ void Engine3D::render()
 	//clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	//set cubemap shader uniforms
 	cubeMapShader.bind();
 	cubeMapShader.setMat4("projection", getProjectionMatrix());
 	cubeMapShader.setMat4("view", getViewMatrix());
-	//lighting
-	// cubeMapShader.setVec3("lightPos", getLightPos());
-	// cubeMapShader.setVec3("viewPos", getCameraPos());
-	// cubeMapShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+	//cubemap lighting
+	cubeMapShader.setVec3("light.position", -glm::vec3(1.0f, 10.0f, 1.0f));
+	cubeMapShader.setVec3("light.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
+	cubeMapShader.setVec3("viewPos", getCameraPos());
 	cubeMapShader.setFloat("ambientLight.intensity", ambientLight.intensity);
 	cubeMapShader.setVec3("ambientLight.color", ambientLight.color);
 	cubeMapShader.unbind();
 
+	//set texture shader uniforms
 	textureShader.bind();
 	textureShader.setMat4("projection", getProjectionMatrix());
 	textureShader.setMat4("view", getViewMatrix());
-	//lighting
-	// textureShader->setVec3("lightPos", getLightPos());
-	// textureShader->setVec3("viewPos", getCameraPos());
-	// textureShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+	//texture lighting
+	textureShader.setVec3("light.position", -glm::vec3(1.0f, 10.0f, 1.0f));
+	textureShader.setVec3("light.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
+	textureShader.setVec3("viewPos", getCameraPos());
 	textureShader.setFloat("ambientLight.intensity", ambientLight.intensity);
 	textureShader.setVec3("ambientLight.color", ambientLight.color);
 	textureShader.unbind();
 
+	//set skybox shader uniforms
 	skyBoxShader.bind();
 	skyBoxShader.setMat4("projection", getProjectionMatrix());
 	skyBoxShader.setMat4("view", getViewMatrixNoTranslation());
@@ -801,7 +804,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			cameraPos.y = camY;
 		}
 	}
-	lightPos = cameraFront;
+	//lightPos = cameraFront;
 
 	
 	//mark covered models to avoid needless rendering

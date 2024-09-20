@@ -176,7 +176,7 @@ class Engine3D
 
 		glm::vec3 lightPos;
 
-		Light ambientLight;
+		AmbientLight ambientLight;
 
 		//editor user mode specific
 		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX", "rotationY", "rotationZ", "texture", "isSolid", "collationHeight", "collationWidth"};
