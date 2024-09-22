@@ -374,11 +374,12 @@ void Engine3D::render()
 	cubeMapShader.setMat4("projection", getProjectionMatrix());
 	cubeMapShader.setMat4("view", getViewMatrix());
 	//cubemap lighting
-	cubeMapShader.setVec3("light.position", -glm::vec3(1.0f, 10.0f, 1.0f));
-	cubeMapShader.setVec3("light.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
+	cubeMapShader.setVec3("light.position", light.position);
+	cubeMapShader.setVec3("light.color", light.color);
+	cubeMapShader.setFloat("light.ambientIntensity", light.ambientIntensity);
+	cubeMapShader.setFloat("light.diffuseIntensity", light.diffuseIntensity);
+	cubeMapShader.setFloat("light.specularIntensity", light.specularIntensity);
 	cubeMapShader.setVec3("viewPos", getCameraPos());
-	cubeMapShader.setFloat("ambientLight.intensity", ambientLight.intensity);
-	cubeMapShader.setVec3("ambientLight.color", ambientLight.color);
 	cubeMapShader.unbind();
 
 	//set texture shader uniforms
@@ -386,11 +387,12 @@ void Engine3D::render()
 	textureShader.setMat4("projection", getProjectionMatrix());
 	textureShader.setMat4("view", getViewMatrix());
 	//texture lighting
-	textureShader.setVec3("light.position", -glm::vec3(1.0f, 10.0f, 1.0f));
-	textureShader.setVec3("light.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
+	textureShader.setVec3("light.position", light.position);
+	textureShader.setVec3("light.color", light.color);
+	textureShader.setFloat("light.ambientIntensity", light.ambientIntensity);
+	textureShader.setFloat("light.diffuseIntensity", light.diffuseIntensity);
+	textureShader.setFloat("light.specularIntensity", light.specularIntensity);
 	textureShader.setVec3("viewPos", getCameraPos());
-	textureShader.setFloat("ambientLight.intensity", ambientLight.intensity);
-	textureShader.setVec3("ambientLight.color", ambientLight.color);
 	textureShader.unbind();
 
 	//set skybox shader uniforms
@@ -1093,6 +1095,6 @@ void Engine3D::setLevel(Level* level)
 	modelPointsCnt = level->modelPointsCnt;
 	cubePointsCnt = level->cubePointsCnt;
 	this->cameraPos = level->playerPosition;
-	this->ambientLight = level->ambientLight;
+	this->light = level->light;
 	this->level = std::make_shared<Level>(*level);
 }

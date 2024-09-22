@@ -3,24 +3,18 @@
 
 #include <glm/glm.hpp>
 
-typedef struct AmbientLight {
-
-	public:
-
-		float intensity = 1.0f;
-
-		glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
-
-} AmbientLight;
-
-typedef struct Light {
+class Light {
 
 	public:
 
 		glm::vec3 position;
 
-		glm::vec3 diffuse;
+		glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
 
-		glm::vec3 specular;
+		float ambientIntensity = 0.2f;
 
-} Light;
+		float diffuseIntensity = 0.5f;
+
+		float specularIntensity = 0.9f;
+
+};

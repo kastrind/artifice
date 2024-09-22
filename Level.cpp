@@ -150,9 +150,12 @@ void Level::load(std::string levelPath)
 				positionY = std::stof(tokens[2]);
 				positionZ = std::stof(tokens[3]);
 				playerPosition = glm::vec3(positionX, positionY, positionZ);
-			}else if (tokens[0] == "ambient_light") {
-				ambientLight.intensity = std::stof(tokens[1]);
-				ambientLight.color = glm::vec3(std::stoi(tokens[2])/255.0f, std::stoi(tokens[3])/255.0f, std::stoi(tokens[4])/255.0f);
+			}else if (tokens[0] == "light") {
+				light.position = glm::vec3(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3]));
+				light.color = glm::vec3(std::stoi(tokens[4])/255.0f, std::stoi(tokens[5])/255.0f, std::stoi(tokens[6])/255.0f);
+				light.ambientIntensity = std::stof(tokens[7]);
+				light.diffuseIntensity = std::stof(tokens[8]);
+				light.specularIntensity = std::stof(tokens[9]);
 			}
 		}
 	}

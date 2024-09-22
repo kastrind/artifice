@@ -30,7 +30,7 @@ class Level
 
 		glm::vec3 playerPosition;
 
-		AmbientLight ambientLight;
+		Light light;
 
 		void load(std::string levelPath);
 
