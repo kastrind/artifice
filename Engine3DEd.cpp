@@ -234,10 +234,11 @@ void Engine3D::edit(float elapsedTime)
 			std::cout << "copying model: " << copyingModel->id << std::endl;
 			mtx.unlock();
 
-		} else if (prevKeysPressed[SupportedKeys::S] && keysPressed[SupportedKeys::S] == false && prevKeysPressed[SupportedKeys::LEFT_CTRL]) {
+		} else if (prevKeysPressed[SupportedKeys::S] && keysPressed[SupportedKeys::S] == false && keysPressed[SupportedKeys::LEFT_CTRL]) {
 			mtx.lock();
 			std::cout << "SAVING!" << std::endl;
 			if (level) {
+				level->light = light;
 				level->modelPointsCnt = modelPointsCnt;
 				level->cubePointsCnt = cubePointsCnt;
 				level->models = ptrModelsToRender;

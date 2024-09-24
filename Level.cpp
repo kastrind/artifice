@@ -17,7 +17,10 @@ void Level::save(std::string levelPath)
 	}
 	else
 	{
+		f << "# player position positionX positionY positionZ" << std::endl;
 		f << "player_position," << playerPosition.x << "," << playerPosition.y << "," << playerPosition.z << std::endl;
+		f << "# light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity" << std::endl;
+		f << "light," << light.position.x << "," << light.position.y << "," << light.position.z << "," << light.color.r * 255 << "," << light.color.g * 255 << "," << light.color.b * 255 << "," << light.ambientIntensity << "," << light.diffuseIntensity << "," << light.specularIntensity << std::endl;
 		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ" << std::endl;
 
 		for (auto &ptrModel : models)
