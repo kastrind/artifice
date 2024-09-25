@@ -6,9 +6,7 @@ in vec3 normal;
 in vec3 color;
 in vec2 TexCoord;
 
-uniform vec3 lightPos;
 uniform vec3 viewPos;
-uniform vec3 lightColor;
 
 struct Light {
 	vec3 position;
@@ -19,11 +17,19 @@ struct Light {
 };
 uniform Light light;
 
-const vec3 transparentColor = vec3(1.0, 0.0, 1.0);
-uniform int userMode;
+struct Material {
+	sampler2D lightmap;
+	bool existsLightmap;
+	float shininess;
+};
+uniform Material material;
 
 // texture sampler
-uniform sampler2D texture1;
+uniform sampler2D diffuseTexture;
+uniform sampler2D lightmap;
+
+const vec3 transparentColor = vec3(1.0, 0.0, 1.0);
+uniform int userMode;
 
 uniform int frameIndex;
 uniform int frameRows;
@@ -50,11 +56,12 @@ void main()
 	vec3 viewDir = normalize(-viewPos + FragPos);
 	vec3 reflectDir = reflect(-lightDir, norm);
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-	vec3 specular = spec * light.specularIntensity * light.color;
+	//vec3 specular = spec * light.specularIntensity * light.color;
+	vec3 specular = spec * light.specularIntensity * light.color * (material.existsLightmap ? texture(material.lightmap, adjustedTexCoord).rgb : vec3(1.0, 1.0, 1.0));
 
 	vec3 finalColor = (ambient + diffuse + specular) * color;
 
-	vec4 textureColor = texture(texture1, adjustedTexCoord);
+	vec4 textureColor = texture(diffuseTexture, adjustedTexCoord);
 
 	if (userMode == 0 && textureColor.rgb == transparentColor) {
 		FragColor = vec4(0.0, 0.0, 0.0, 0.0);

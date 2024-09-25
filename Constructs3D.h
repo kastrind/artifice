@@ -394,10 +394,23 @@ typedef struct model {
 			rotationMatrix = shape.rotationMatrix;
 		}
 
-		virtual void render(ArtificeShaderProgram* shader, GLuint textureId)
+		virtual void render(ArtificeShaderProgram* shader, GLuint textureId, long lightmapId)
 		{
 			// std::cout << "rendering model" << std::endl;
+			shader->setInt("diffuseTexture", 0);
+			shader->setInt("material.lightmap", 1);
+			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, textureId);
+			if (lightmapId > -1)
+			{
+				shader->setBool("material.existsLightmap", true);
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, lightmapId);
+			}else {
+				shader->setBool("material.existsLightmap", false);
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, 0);
+			}
 			shader->setMat4("model", this->modelMatrix);
 			shader->setInt("frameIndex", this->frameIndex);
 			shader->setInt("frameRows", this->frameRows);
@@ -421,7 +434,7 @@ typedef struct cubeModel : public model {
 
 		cubeModel(model& m) : model(m) {}
 
-		void render(ArtificeShaderProgram* cubeMapShader, GLuint textureId) override
+		void render(ArtificeShaderProgram* cubeMapShader, GLuint textureId, long lightmapId) override
 		{
 			//std::cout << "rendering cubeModel" << std::endl;
 			glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);

@@ -200,7 +200,10 @@ bool Engine3D::initGL()
 		glClearColor( 0.f, 0.f, 0.f, 1.f );
 
 		//generates and binds textures
-		loadTextures(textureIdsMap);
+		loadTextures("texture", textureIdsMap);
+
+		//generates and binds lightmaps
+		loadTextures("lightmap", lightmapIdsMap);
 
 		for (std::pair<const std::string, GLuint>& entry : textureIdsMap )
 		{
@@ -219,9 +222,14 @@ bool Engine3D::initGL()
 	return success;
 }
 
-void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap)
+void Engine3D::loadTextures(std::string assetType, std::map<std::string, GLuint>& textureIdsMap)
 {
-	std::string texturesPath = cfg.ASSETS_PATH + std::string("\\textures");
+	if (assetType != "texture" && assetType != "lightmap")
+	{
+		std::cout << "Failed to load asset type " << assetType << ". Asset type not recognized. Supported asset types are \"texture\" and \"lightmap\"." << std::endl;
+		return;
+	}
+	std::string texturesPath = cfg.ASSETS_PATH + std::string("\\") + assetType + std::string("s");
 	std::string filename;
 	for (const auto & entry : std::filesystem::directory_iterator(texturesPath))
 	{
@@ -238,6 +246,8 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap)
 			glGenTextures(1, &textureIdsMap[filename]);
 			//bind texture
 			glBindTexture(GL_TEXTURE_2D, textureIdsMap[filename]);
+			if (assetType == "lightmap") { lightmapExistenceMap[filename] = true; }
+			else { lightmapExistenceMap[filename] = false; }
 
 			//load image
 			int width, height, nrChannels;
@@ -251,7 +261,7 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap)
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 				glGenerateMipmap(GL_TEXTURE_2D);
 			} else {
-				std::cout << "Failed to load texture " << filename << std::endl;
+				std::cout << "Failed to load " << assetType << " " << filename << std::endl;
 			}
 
 			//free image memory
@@ -272,11 +282,9 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap)
 	//activate shader
 	textureShader.bind();
 	//set the uniforms
-	glUniform1i(glGetUniformLocation(textureShader.getProgramID(), "frameIndex"), 0);
+	textureShader.setInt("frameIndex", 0);
 	textureShader.setInt("userMode", (int)cfg.USER_MODE);
-	for (const auto& kv : textureIdsMap) {
-		glUniform1i(glGetUniformLocation(textureShader.getProgramID(), std::string("texture" + std::to_string(kv.second)).c_str()), 0);
-	}
+	textureShader.unbind();
 }
 
 void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap)
@@ -330,10 +338,10 @@ void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap)
 						glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 						glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 						cubeMapShader.bind();
-						glUniform1i(glGetUniformLocation(cubeMapShader.getProgramID(), std::string("cubemap" + std::to_string(cubemapIdsMap[name])).c_str()), 0);
+						//glUniform1i(glGetUniformLocation(cubeMapShader.getProgramID(), std::string("cubemap" + std::to_string(cubemapIdsMap[name])).c_str()), 0);
 						cubeMapShader.unbind();
 						skyBoxShader.bind();
-						glUniform1i(glGetUniformLocation(skyBoxShader.getProgramID(), std::string("skybox" + std::to_string(cubemapIdsMap[name])).c_str()), 0);
+						//glUniform1i(glGetUniformLocation(skyBoxShader.getProgramID(), std::string("skybox" + std::to_string(cubemapIdsMap[name])).c_str()), 0);
 						skyBoxShader.unbind();
 					}
 				}
@@ -411,7 +419,7 @@ void Engine3D::render()
 	if (finalSkyBoxToRender != nullptr)
 	{
 		cubeModel& cm = *finalSkyBoxToRender;
-		cm.render(&skyBoxShader, cubemapIdsMap[cm.texture]);
+		cm.render(&skyBoxShader, cubemapIdsMap[cm.texture], 0);//TODO!
 	}
 	glBindVertexArray(0);
 	skyBoxShader.unbind();
@@ -440,7 +448,7 @@ void Engine3D::render()
 			continue;
 		}
 
-		cm.render(&cubeMapShader, cubemapIdsMap[cm.texture]);
+		cm.render(&cubeMapShader, cubemapIdsMap[cm.texture], 0);//TODO!
 	}
 	glBindVertexArray(0);
 	cubeMapShader.unbind();
@@ -451,7 +459,6 @@ void Engine3D::render()
 	glCullFace(GL_FRONT);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIBO);
 	glBindVertexArray(gVAO);
-	glActiveTexture(GL_TEXTURE0);
 	for (auto itr = finalModelsToRender.begin(); itr != finalModelsToRender.end(); itr++)
 	{
 		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
@@ -460,12 +467,11 @@ void Engine3D::render()
 
 		if (model.removeFlag) continue;
 
-		if (model.texture.length() && textureTransparencyMap[model.texture]) {
+		if (model.texture.length() && textureTransparencyMap[model.texture]==true) {
 			finalTransparentModelsToRender.insert(*itr);
-			continue;	
+			continue;
 		}
-
-		model.render(&textureShader, textureIdsMap[model.texture]);
+		model.render(&textureShader, textureIdsMap[model.texture], (lightmapExistenceMap[model.texture]==true ? lightmapIdsMap[model.texture] : -1));
 	}
 
 	for (auto itr = finalTransparentModelsToRender.begin(); itr != finalTransparentModelsToRender.end(); itr++)
@@ -473,7 +479,8 @@ void Engine3D::render()
 		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
 
 		model& model = *(*itr);
-		model.render(&textureShader, textureIdsMap[model.texture]);
+
+		model.render(&textureShader, textureIdsMap[model.texture], (lightmapExistenceMap[model.texture]==true ? lightmapIdsMap[model.texture] : -1));
 	}
 	finalTransparentModelsToRender.clear();
 
