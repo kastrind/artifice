@@ -98,12 +98,12 @@ class Engine3D
 		std::vector<std::string> texturePaths;
 		std::map<std::string, GLuint> textureIdsMap;
 		std::map<std::string, GLuint> lightmapIdsMap;
-		std::map<std::string, bool> lightmapExistenceMap;
 		std::map<std::string, bool> textureTransparencyMap;
 		std::vector<std::string> textureNames;
 
 		std::vector<std::string> cubemapPaths;
 		std::map<std::string, GLuint> cubemapIdsMap;
+		std::map<std::string, GLuint> cubeLightmapIdsMap;
 		std::vector<std::string> cubemapNames;
 
 		//to update vertices
@@ -234,9 +234,9 @@ class Engine3D
 
 		bool initGL();
 
-		void loadTextures(std::string assetType, std::map<std::string, GLuint>& textureIdsMap);
+		void loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::map<std::string, GLuint>& lightmapIdsMap);
 
-		void loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap);
+		void loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::map<std::string, GLuint>& cubeLightmapIdsMap);
 
 		bool initUI();
 

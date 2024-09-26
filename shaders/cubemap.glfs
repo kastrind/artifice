@@ -6,9 +6,7 @@ in vec3 color;
 in vec3 FragPos;
 in vec3 FragPos2;
 
-uniform vec3 lightPos;
 uniform vec3 viewPos;
-uniform vec3 lightColor;
 
 struct Light {
 	vec3 position;
@@ -19,9 +17,16 @@ struct Light {
 };
 uniform Light light;
 
-const vec3 transparentColor = vec3(1.0, 0.0, 1.0);
+struct Material {
+	samplerCube lightmap;
+	bool existsLightmap;
+	float shininess;
+};
+uniform Material material;
 
 uniform samplerCube cubemap; // cubemap texture sampler
+
+const vec3 transparentColor = vec3(1.0, 0.0, 1.0);
 
 void main()
 {
@@ -38,7 +43,7 @@ void main()
 	vec3 viewDir = normalize(-viewPos + FragPos2);
 	vec3 reflectDir = reflect(-lightDir, norm);
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-	vec3 specular = spec * light.specularIntensity * light.color;
+	vec3 specular = spec * light.specularIntensity * light.color * (material.existsLightmap ? texture(material.lightmap, normalize(FragPos)).rgb : vec3(1.0, 1.0, 1.0));
 
 	vec3 finalColor = (ambient + diffuse + specular) * color;
 
