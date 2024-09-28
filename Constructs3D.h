@@ -394,16 +394,22 @@ typedef struct model {
 			rotationMatrix = shape.rotationMatrix;
 		}
 
-		virtual void render(ArtificeShaderProgram* shader, GLuint textureId, GLuint lightmapId)
+		virtual void render(ArtificeShaderProgram* shader, GLuint textureId, GLuint lightmapId, GLuint normalmapId)
 		{
 			// std::cout << "rendering model" << std::endl;
 			shader->setInt("diffuseTexture", 0);
 			shader->setInt("material.lightmap", 1);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, textureId);
+			
 			shader->setBool("material.existsLightmap", lightmapId > 0);
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, lightmapId);
+
+			shader->setBool("material.existsNormalmap", normalmapId > 0);
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, normalmapId);
+
 
 			shader->setMat4("model", this->modelMatrix);
 			shader->setInt("frameIndex", this->frameIndex);
@@ -428,16 +434,22 @@ typedef struct cubeModel : public model {
 
 		cubeModel(model& m) : model(m) {}
 
-		void render(ArtificeShaderProgram* cubeMapShader, GLuint textureId, GLuint lightmapId) override
+		void render(ArtificeShaderProgram* cubeMapShader, GLuint textureId, GLuint lightmapId, GLuint normalmapId) override
 		{
 			//std::cout << "rendering cubeModel" << std::endl;
 			cubeMapShader->setInt("cubemap", 0);
 			cubeMapShader->setInt("material.lightmap", 1);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+
 			cubeMapShader->setBool("material.existsLightmap", lightmapId > 0);
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_CUBE_MAP, lightmapId);
+
+			cubeMapShader->setBool("material.existsNormalmap", normalmapId > 0);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, normalmapId);
+
 			if (!isSkyBox) { cubeMapShader->setMat4("model", this->modelMatrix); }
 			glDrawElements(GL_TRIANGLES, this->modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)((this->sn) * sizeof(GL_UNSIGNED_INT)));
 		}

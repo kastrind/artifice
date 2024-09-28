@@ -20,6 +20,8 @@ uniform Light light;
 struct Material {
 	sampler2D lightmap;
 	bool existsLightmap;
+	sampler2D normalmap;
+	bool existsNormalmap;
 	float shininess;
 };
 uniform Material material;
@@ -46,8 +48,17 @@ void main()
 	// ambient
 	vec3 ambient = light.ambientIntensity * light.color;
 
-	// diffuse 
-	vec3 norm = normalize(normal);
+	// diffuse
+	vec3 norm;
+	if (!material.existsNormalmap) {
+		norm = normalize(normal);
+	}else {
+		// obtain normal from normal map in range [0,1]
+		norm = texture(material.normalmap, adjustedTexCoord).rgb;
+		// transform normal vector to range [-1,1]
+		norm = normalize(normal * 2.0 - 1.0);
+	}
+
 	vec3 lightDir = normalize(-light.position + FragPos);
 	float diff = max(dot(norm, lightDir), 0.0);
 	vec3 diffuse = diff * light.diffuseIntensity * light.color;
