@@ -37,7 +37,7 @@ bool Initiator::init()
 
 		//create window
 		printf( "Creating window...\n" );
-		gWindow = SDL_CreateWindow( "Artifice Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, cfg->SCREEN_WIDTH, cfg->SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
+		gWindow = SDL_CreateWindow( (cfg->NAME + " " + cfg->VERSION).c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, cfg->SCREEN_WIDTH, cfg->SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
 		//confine mouse cursor to the window and hide it
 		SDL_SetWindowMouseGrab(gWindow, SDL_TRUE);
 		SDL_SetWindowMouseRect(gWindow, &windowRect);
