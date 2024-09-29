@@ -119,6 +119,8 @@ void Engine3D::renderingThread()
 	}
 	else
 	{
+		// Enable multisampling
+		if (cfg.ANTIALIASING) { glEnable(GL_MULTISAMPLE); }
 		//initialize GLEW
 		printf( "Initializing GLEW...\n" );
 		glewExperimental = GL_TRUE; 

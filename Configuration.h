@@ -26,6 +26,8 @@ typedef struct Configuration
 
 	unsigned int SCREEN_HEIGHT = 600;
 
+	bool ANTIALIASING = true;
+
 	float NEAR = 0.01f;
 
 	float FAR = 100.0f;

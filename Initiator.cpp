@@ -24,6 +24,17 @@ bool Initiator::init()
 		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 1 );
 		SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 
+		if (cfg->ANTIALIASING)
+		{
+			// Set the number of samples for multisampling (e.g., 4 samples)
+			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+
+			// Set the depth and stencil buffers (optional but common)
+			SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+			SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+		}
+
 		//create window
 		printf( "Creating window...\n" );
 		gWindow = SDL_CreateWindow( "Artifice Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, cfg->SCREEN_WIDTH, cfg->SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
@@ -101,6 +112,9 @@ void Initiator::loadConfiguration()
 				} else if (tokens[0] == "SCREEN_HEIGHT") {
 					cfg->SCREEN_HEIGHT = std::stoi(tokens[1]);
 					std::cout << "SCREEN_HEIGHT = " << cfg->SCREEN_HEIGHT << std::endl;
+ 				} else if (tokens[0] == "ANTIALIASING") {
+					cfg->ANTIALIASING = tokens[1] == "true";
+					std::cout << "ANTIALIASING = " << cfg->ANTIALIASING << std::endl;
 				} else if (tokens[0] == "NEAR") {
 					cfg->NEAR = std::stof(tokens[1]);
 					std::cout << "NEAR = " << cfg->NEAR << std::endl;
