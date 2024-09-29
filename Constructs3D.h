@@ -108,6 +108,8 @@ typedef struct triangle
 
 	float luminance = 0.0f;
 
+	glm::vec3 tang;
+
 	inline triangle operator+(const glm::vec4& in) {
 		triangle out;
 		out.luminance = luminance; out.R = R; out.G = G; out.B = B;
@@ -178,6 +180,19 @@ typedef struct triangle
 		//return (ABC_area == PBC_area + PAC_area + PAB_area);
 		return std::abs(ABC_area - PBC_area - PAC_area - PAB_area) < 0.01f;
 	}
+
+	glm::vec3 calcTangent() {
+		glm::vec3 edge1 = p[1] - p[0];
+		glm::vec3 edge2 = p[2] - p[0];
+		glm::vec2 deltaUV1 = t[1] - t[0];
+		glm::vec2 deltaUV2 = t[2] - t[0];
+		float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+		tang.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+		tang.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+		tang.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+		return tang;
+	}
+
 } triangle;
 
 typedef struct shape
@@ -228,6 +243,7 @@ typedef struct rectangle : public shape
 			//triangle tri2{ { {p.x, p.y, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
 			triangle tri1{ { {p.x + w, p.y + h, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f}, {p.x, p.y + h, p.z, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
 			triangle tri2{ { {p.x, p.y + h, p.z, 1.0f},     {p.x + w, p.y, p.z, 1.0f}, {p.x, p.y, p.z, 1.0f} },        { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
+			tri1.calcTangent(); tri2.calcTangent();
 			triangles.push_back(tri1);
 			triangles.push_back(tri2);
 		}
@@ -254,31 +270,37 @@ typedef struct cuboid : public shape
 			//SOUTH
 			triangle south1{ { {p.x + w, p.y + h, p.z + d, 1.0f}, {p.x + w, p.y, p.z + d, 1.0f}, {p.x, p.y + h, p.z + d, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
 			triangle south2{ { {p.x, p.y + h, p.z + d, 1.0f},     {p.x + w, p.y, p.z + d, 1.0f}, {p.x, p.y, p.z + d, 1.0f} },        { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
+			south1.calcTangent(); south2.calcTangent();
 			triangles.push_back(south1);
 			triangles.push_back(south2);
 			//EAST
 			triangle east1{ { {p.x + w, p.y + h, p.z, 1.0f},     {p.x + w, p.y, p.z, 1.0f}, {p.x + w, p.y + h, p.z + d, 1.0f } },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
 			triangle east2{ { {p.x + w, p.y + h, p.z + d, 1.0f}, {p.x + w, p.y, p.z, 1.0f}, {p.x + w, p.y, p.z + d,    1.0f } },     { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
+			east1.calcTangent(); east2.calcTangent();
 			triangles.push_back(east1);
 			triangles.push_back(east2);
 			//NORTH
 			triangle north1{ { {p.x, p.y + h, p.z, 1.0f},     {p.x, p.y, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
 			triangle north2{ { {p.x + w, p.y + h, p.z, 1.0f}, {p.x, p.y, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f} },        { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
+			north1.calcTangent(); north2.calcTangent();
 			triangles.push_back(north1);
 			triangles.push_back(north2);
 			//WEST
 			triangle west1{ { {p.x, p.y + h, p.z + d, 1.0f}, {p.x, p.y, p.z + d, 1.0f}, {p.x, p.y + h, p.z, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
 			triangle west2{ { {p.x, p.y + h, p.z, 1.0f},     {p.x, p.y, p.z + d, 1.0f}, {p.x, p.y, p.z, 1.0f} },        { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
+			west1.calcTangent(); west2.calcTangent();
 			triangles.push_back(west1);
 			triangles.push_back(west2);
 			//TOP
 			triangle top1{ { {p.x, p.y + h, p.z + d, 1.0f},     {p.x, p.y + h, p.z, 1.0f}, {p.x + w, p.y + h, p.z + d, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
 			triangle top2{ { {p.x + w, p.y + h, p.z + d, 1.0f}, {p.x, p.y + h, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f} },        { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 1.0f} } };
+			top1.calcTangent(); top2.calcTangent();
 			triangles.push_back(top1);
 			triangles.push_back(top2);
 			//BOTTOM
 			triangle bottom1{ { {p.x, p.y, p.z + d, 1.0f}, {p.x + w, p.y, p.z + d, 1.0f}, {p.x, p.y, p.z, 1.0f} },    { {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
 			triangle bottom2{ { {p.x, p.y, p.z, 1.0f}, {p.x + w, p.y, p.z + d, 1.0f}, {p.x + w, p.y, p.z, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
+			bottom1.calcTangent(); bottom2.calcTangent();
 			triangles.push_back(bottom1);
 			triangles.push_back(bottom2);
 		}
@@ -306,31 +328,37 @@ typedef struct cube : public shape
 			//RIGHT
 			triangle east1{ { {p.x + s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y + s, p.z - s, 1.0f}, {p.x + s, p.y - s, p.z - s, 1.0f} } };
 			triangle east2{ { {p.x + s, p.y - s, p.z + s, 1.0f}, {p.x + s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z - s, 1.0f} } };
+			east1.calcTangent(); east2.calcTangent();
 			triangles.push_back(east1);
 			triangles.push_back(east2);
 			//LEFT
 			triangle west1{ { {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z + s, 1.0f} } };
 			triangle west2{ { {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z + s, 1.0f}, {p.x - s, p.y - s, p.z + s, 1.0f} } };
+			west1.calcTangent(); west2.calcTangent();
 			triangles.push_back(west1);
 			triangles.push_back(west2);
 			//TOP
 			triangle top1{ { {p.x - s, p.y + s, p.z + s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f}, {p.x + s, p.y + s, p.z + s, 1.0f} } };
 			triangle top2{ { {p.x + s, p.y + s, p.z + s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f}, {p.x + s, p.y + s, p.z - s, 1.0f} } };
+			top1.calcTangent(); top2.calcTangent();
 			triangles.push_back(top1);
 			triangles.push_back(top2);
 			//BOTTOM
 			triangle bottom1{ { {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y - s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z + s, 1.0f} } };
 			triangle bottom2{ { {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x + s, p.y - s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z - s, 1.0f} } };
+			bottom1.calcTangent(); bottom2.calcTangent();
 			triangles.push_back(bottom1);
 			triangles.push_back(bottom2);
 			//BACK
 			triangle back1{ { {p.x + s, p.y - s, p.z - s, 1.0f}, {p.x + s, p.y + s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f} } };
 			triangle back2{ { {p.x + s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f}, {p.x - s, p.y - s, p.z - s, 1.0f} } };
+			back1.calcTangent(); back2.calcTangent();
 			triangles.push_back(back1);
 			triangles.push_back(back2);
 			//FRONT
 			triangle front1{ { {p.x - s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z + s, 1.0f} } };
 			triangle front2{ { {p.x - s, p.y - s, p.z + s, 1.0f}, {p.x - s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z + s, 1.0f} } };
+			front1.calcTangent(); front2.calcTangent();
 			triangles.push_back(front1);
 			triangles.push_back(front2);
 		}

@@ -516,7 +516,9 @@ void Engine3D::updateVertices()
 		{
 			glm::vec3 line1 = tri.p[1] - tri.p[0];
 			glm::vec3 line2 = tri.p[2] - tri.p[0];
-			glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
+			//glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
+			glm::vec3 normal = glm::cross(line1, line2);
+			tri.tang = tri.calcTangent();
 
 			for (int i = 0; i < 3; i++)
 			{
@@ -531,6 +533,9 @@ void Engine3D::updateVertices()
 				vdp->push_back((float)tri.B/255.0f);
 				vdp->push_back(tri.t[i].x);
 				vdp->push_back(tri.t[i].y);
+				vdp->push_back(tri.tang.x);
+				vdp->push_back(tri.tang.y);
+				vdp->push_back(tri.tang.z);
 				if (model.modelMesh.shape != shapetype::CUBE)
 				{
 					indexData.push_back(indexCounter++);
@@ -554,17 +559,20 @@ void Engine3D::updateVertices()
 	glBufferData( GL_ARRAY_BUFFER, vertexData.size() * sizeof(GL_FLOAT), vertexData.data(), GL_STATIC_DRAW );
 
 	//position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(GL_FLOAT), (void*)0);
 	glEnableVertexAttribArray(0);
 	//normal attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GL_FLOAT)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GL_FLOAT)));
 	glEnableVertexAttribArray(1);
 	//color attribute
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(6 * sizeof(GL_FLOAT)));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(GL_FLOAT), (void*)(6 * sizeof(GL_FLOAT)));
 	glEnableVertexAttribArray(2);
 	//texture coord attribute
-	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(9 * sizeof(GL_FLOAT)));
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 14 * sizeof(GL_FLOAT), (void*)(9 * sizeof(GL_FLOAT)));
 	glEnableVertexAttribArray(3);
+	//tangent attribute
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(GL_FLOAT), (void*)(11 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(4);
 
 	//update IBO
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gIBO );
@@ -576,17 +584,20 @@ void Engine3D::updateVertices()
 	glBufferData( GL_ARRAY_BUFFER, cubeVertexData.size() * sizeof(GL_FLOAT), cubeVertexData.data(), GL_STATIC_DRAW );
 
 	//position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(GL_FLOAT), (void*)0);
 	glEnableVertexAttribArray(0);
 	//normal attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GL_FLOAT)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GL_FLOAT)));
 	glEnableVertexAttribArray(1);
 	//color attribute
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(6 * sizeof(GL_FLOAT)));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(GL_FLOAT), (void*)(6 * sizeof(GL_FLOAT)));
 	glEnableVertexAttribArray(2);
 	//texture coord attribute
-	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(GL_FLOAT), (void*)(9 * sizeof(GL_FLOAT)));
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 14 * sizeof(GL_FLOAT), (void*)(9 * sizeof(GL_FLOAT)));
 	glEnableVertexAttribArray(3);
+	//tangent attribute
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(GL_FLOAT), (void*)(11 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(4);
 
 	//update cubeIBO
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, gCubeIBO );
