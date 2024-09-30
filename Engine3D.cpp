@@ -345,6 +345,11 @@ void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::m
 			}
 		}
 	}
+	//activate shader
+	cubeMapShader.bind();
+	//set the uniforms
+	cubeMapShader.setInt("userMode", (int)cfg.USER_MODE);
+	cubeMapShader.unbind();
 }
 
 bool Engine3D::initUI()
