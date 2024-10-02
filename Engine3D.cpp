@@ -201,16 +201,16 @@ bool Engine3D::initGL()
 		//initialize clear color
 		glClearColor( 0.f, 0.f, 0.f, 1.f );
 
-		//generates and binds textures and lightmaps
-		loadTextures(textureIdsMap, lightmapIdsMap, normalmapIdsMap);
+		//generates and binds textures, lightmaps, normalmaps and parallax maps (displacementmaps)
+		loadTextures(textureIdsMap, lightmapIdsMap, normalmapIdsMap, displacementmapIdsMap);
 
 		for (std::pair<const std::string, GLuint>& entry : textureIdsMap )
 		{
 			textureNames.push_back(entry.first);
 		}
 
-		//generates and binds cubemaps, skyboxes and cube lightmaps
-		loadCubemaps(cubemapIdsMap, cubeLightmapIdsMap, cubeNormalmapIdsMap);
+		//generates and binds cubemaps, skyboxes, cube lightmaps, cube normalmaps and cube parallaxmaps (displacementmaps)
+		loadCubemaps(cubemapIdsMap, cubeLightmapIdsMap, cubeNormalmapIdsMap, cubeDisplacementmapIdsMap);
 
 		for (std::pair<const std::string, GLuint>& entry : cubemapIdsMap )
 		{
@@ -221,15 +221,16 @@ bool Engine3D::initGL()
 	return success;
 }
 
-void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::map<std::string, GLuint>& lightmapIdsMap, std::map<std::string, GLuint>& normalmapIdsMap)
+void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::map<std::string, GLuint>& lightmapIdsMap, std::map<std::string, GLuint>& normalmapIdsMap, std::map<std::string, GLuint>& displacementmapIdsMap)
 {
-	std::string textureDirNames[3] = {std::string("textures"), std::string("lightmaps"), std::string("normalmaps")};
+	std::string textureDirNames[4] = {std::string("textures"), std::string("lightmaps"), std::string("normalmaps"), std::string("displacementmaps")};
 	std::string filename;
 	unsigned short i = 0;
 	std::map<std::string, GLuint>* idsMap;
 	for (std::string textureDirName : textureDirNames) {
 		if (++i==2) { idsMap = &lightmapIdsMap; }
 		else if (i==3) { idsMap = &normalmapIdsMap; }
+		else if (i==4) { idsMap = &displacementmapIdsMap; }
 		else { idsMap = &textureIdsMap; }
 		std::string texturesPath = cfg.ASSETS_PATH + std::string("\\") + textureDirName;
 		for (const auto & entry : std::filesystem::directory_iterator(texturesPath))
@@ -286,9 +287,9 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::m
 	textureShader.unbind();
 }
 
-void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::map<std::string, GLuint>& cubeLightmapIdsMap, std::map<std::string, GLuint>& cubeNormalmapIdsMap)
+void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::map<std::string, GLuint>& cubeLightmapIdsMap, std::map<std::string, GLuint>& cubeNormalmapIdsMap, std::map<std::string, GLuint>& cubeDisplacementmapIdsMap)
 {
-	std::string cubemapsDirNames[4] = {std::string("cubemaps"), std::string("skyboxes"), std::string("cubelightmaps"), std::string("cubenormalmaps")};
+	std::string cubemapsDirNames[5] = {std::string("cubemaps"), std::string("skyboxes"), std::string("cubelightmaps"), std::string("cubenormalmaps"), std::string("cubeDisplacementmaps")};
 	std::string filename;
 	std::string name;
 	unsigned short i = 0;
@@ -296,6 +297,7 @@ void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::m
 	for (std::string cubemapsDirName : cubemapsDirNames) {
 		if (++i == 3) { idsMap = &cubeLightmapIdsMap; }
 		else if (i==4) { idsMap = &cubeNormalmapIdsMap; }
+		else if (i==5) { idsMap = &cubeDisplacementmapIdsMap; }
 		else { idsMap = &cubemapIdsMap; }
 		std::string cubemapsPath = cfg.ASSETS_PATH + std::string("\\") + cubemapsDirName;
 		for (const auto & entry : std::filesystem::directory_iterator(cubemapsPath))
@@ -420,7 +422,7 @@ void Engine3D::render()
 	if (finalSkyBoxToRender != nullptr)
 	{
 		cubeModel& cm = *finalSkyBoxToRender;
-		cm.render(&skyBoxShader, cubemapIdsMap[cm.texture], 0, 0);
+		cm.render(&skyBoxShader, cubemapIdsMap[cm.texture], 0, 0, 0);
 	}
 	glBindVertexArray(0);
 	skyBoxShader.unbind();
@@ -448,7 +450,7 @@ void Engine3D::render()
 			continue;
 		}
 
-		cm.render(&cubeMapShader, cubemapIdsMap[cm.texture], cubeLightmapIdsMap[cm.texture], cubeNormalmapIdsMap[cm.texture]);
+		cm.render(&cubeMapShader, cubemapIdsMap[cm.texture], cubeLightmapIdsMap[cm.texture], cubeNormalmapIdsMap[cm.texture], cubeDisplacementmapIdsMap[cm.texture]);
 	}
 	glBindVertexArray(0);
 	cubeMapShader.unbind();
@@ -471,7 +473,7 @@ void Engine3D::render()
 			finalTransparentModelsToRender.insert(*itr);
 			continue;
 		}
-		model.render(&textureShader, textureIdsMap[model.texture], lightmapIdsMap[model.texture], normalmapIdsMap[model.texture]);
+		model.render(&textureShader, textureIdsMap[model.texture], lightmapIdsMap[model.texture], normalmapIdsMap[model.texture], displacementmapIdsMap[model.texture]);
 	}
 
 	for (auto itr = finalTransparentModelsToRender.begin(); itr != finalTransparentModelsToRender.end(); itr++)
@@ -480,7 +482,7 @@ void Engine3D::render()
 
 		model& model = *(*itr);
 
-		model.render(&textureShader, textureIdsMap[model.texture], lightmapIdsMap[model.texture], normalmapIdsMap[model.texture]);
+		model.render(&textureShader, textureIdsMap[model.texture], lightmapIdsMap[model.texture], normalmapIdsMap[model.texture], displacementmapIdsMap[model.texture]);
 	}
 	finalTransparentModelsToRender.clear();
 
