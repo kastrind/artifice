@@ -78,6 +78,7 @@ vec2 DisplacementMapping(vec2 texCoords, vec3 viewDir)
 
 const vec3 transparentColor = vec3(1.0, 0.0, 1.0);
 uniform int userMode;
+uniform bool phongLighting;
 
 uniform int frameIndex;
 uniform int frameRows;
@@ -92,7 +93,10 @@ vec2 adjustedTexCoord = TexCoord * frameSize + offset;
 void main()
 {
 	// ambient
-	vec3 ambient = light.ambientIntensity * light.color;
+	vec3 ambient = vec3(1.0, 1.0, 1.0);
+	if (phongLighting) {
+		ambient = light.ambientIntensity * light.color;
+	}
 
 	vec3 lightDir;
 	vec3 viewDir;
@@ -100,8 +104,8 @@ void main()
 
 	if (!material.existsNormalmap && !material.existsDisplacementmap) {
 		normal = surfaceNormal;
-		lightDir = normalize(-light.position + FragPos);
-		viewDir = normalize(-viewPos + FragPos);
+		lightDir = normalize(light.position - FragPos);
+		viewDir = normalize(viewPos - FragPos);
 
 	}else {
 		// obtain normal from normal map in range [0,1]
@@ -116,14 +120,19 @@ void main()
 		adjustedTexCoord = DisplacementMapping(adjustedTexCoord, viewDir);
 	}
 
-	// diffuse
-	float diff = max(dot(-lightDir, normal), 0.0);
-	vec3 diffuse = diff * light.diffuseIntensity * light.color;
+	vec3 diffuse = vec3(0.0, 0.0, 0.0);
+	vec3 specular = vec3(0.0, 0.0, 0.0);
 
-	// specular
-	vec3 reflectDir = reflect(-lightDir, normal);
-	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-	vec3 specular = spec * light.specularIntensity * light.color * (material.existsLightmap ? texture(material.lightmap, adjustedTexCoord).rgb : vec3(1.0, 1.0, 1.0));
+	if (phongLighting) {
+		// diffuse
+		float diff = max(dot(-lightDir, normal), 0.0);
+		diffuse = diff * light.diffuseIntensity * light.color;
+
+		// specular
+		vec3 reflectDir = reflect(-lightDir, normal);
+		float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+		specular = spec * light.specularIntensity * light.color * (material.existsLightmap ? texture(material.lightmap, adjustedTexCoord).rgb : vec3(1.0, 1.0, 1.0));
+	}
 
 	vec3 textureColor = texture(material.diffuseTexture, adjustedTexCoord).rgb;
 

@@ -28,6 +28,14 @@ typedef struct Configuration
 
 	bool ANTIALIASING = true;
 
+	bool PHONG_LIGHTING = true;
+
+	bool LIGHT_MAPPING = true;
+
+	bool NORMAL_MAPPING = true;
+
+	bool DISPLACEMENT_MAPPING = true;
+
 	float NEAR = 0.01f;
 
 	float FAR = 100.0f;

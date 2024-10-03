@@ -35,9 +35,10 @@ void main()
 	TexCoord = inTexCoord;
 
 	mat3 normalMatrix = transpose(inverse(mat3(model)));
-	vec3 T = normalize(normalMatrix * inTangent);
 	vec3 N = normalize(normalMatrix * inNormal);
 	surfaceNormal = N;
+
+	vec3 T = normalize(normalMatrix * inTangent);
 	T = normalize(T - dot(T, N) * N);
 	vec3 B = cross(N, T);
 

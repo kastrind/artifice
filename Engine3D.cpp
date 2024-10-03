@@ -228,9 +228,9 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::m
 	unsigned short i = 0;
 	std::map<std::string, GLuint>* idsMap;
 	for (std::string textureDirName : textureDirNames) {
-		if (++i==2) { idsMap = &lightmapIdsMap; }
-		else if (i==3) { idsMap = &normalmapIdsMap; }
-		else if (i==4) { idsMap = &displacementmapIdsMap; }
+		if (++i==2)    { if (!cfg.LIGHT_MAPPING)        { continue; } idsMap = &lightmapIdsMap; }
+		else if (i==3) { if (!cfg.NORMAL_MAPPING)       { continue; } idsMap = &normalmapIdsMap; }
+		else if (i==4) { if (!cfg.DISPLACEMENT_MAPPING) { continue; } idsMap = &displacementmapIdsMap; }
 		else { idsMap = &textureIdsMap; }
 		std::string texturesPath = cfg.ASSETS_PATH + std::string("\\") + textureDirName;
 		for (const auto & entry : std::filesystem::directory_iterator(texturesPath))
@@ -284,6 +284,7 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::m
 	//set the uniforms
 	textureShader.setInt("frameIndex", 0);
 	textureShader.setInt("userMode", (int)cfg.USER_MODE);
+	textureShader.setBool("phongLighting", cfg.PHONG_LIGHTING);
 	textureShader.unbind();
 }
 
@@ -295,9 +296,9 @@ void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::m
 	unsigned short i = 0;
 	std::map<std::string, GLuint>* idsMap;
 	for (std::string cubemapsDirName : cubemapsDirNames) {
-		if (++i == 3) { idsMap = &cubeLightmapIdsMap; }
-		else if (i==4) { idsMap = &cubeNormalmapIdsMap; }
-		else if (i==5) { idsMap = &cubeDisplacementmapIdsMap; }
+		if (++i == 3)  { if (!cfg.LIGHT_MAPPING)        { continue; } idsMap = &cubeLightmapIdsMap; }
+		else if (i==4) { if (!cfg.NORMAL_MAPPING)       { continue; } idsMap = &cubeNormalmapIdsMap; }
+		else if (i==5) { if (!cfg.DISPLACEMENT_MAPPING) { continue; } idsMap = &cubeDisplacementmapIdsMap; }
 		else { idsMap = &cubemapIdsMap; }
 		std::string cubemapsPath = cfg.ASSETS_PATH + std::string("\\") + cubemapsDirName;
 		for (const auto & entry : std::filesystem::directory_iterator(cubemapsPath))
@@ -351,6 +352,7 @@ void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::m
 	cubeMapShader.bind();
 	//set the uniforms
 	cubeMapShader.setInt("userMode", (int)cfg.USER_MODE);
+	cubeMapShader.setBool("phongLighting", cfg.PHONG_LIGHTING);
 	cubeMapShader.unbind();
 }
 

@@ -115,6 +115,18 @@ void Initiator::loadConfiguration()
  				} else if (tokens[0] == "ANTIALIASING") {
 					cfg->ANTIALIASING = tokens[1] == "true";
 					std::cout << "ANTIALIASING = " << cfg->ANTIALIASING << std::endl;
+ 				} else if (tokens[0] == "PHONG_LIGHTING") {
+					cfg->PHONG_LIGHTING = tokens[1] == "true";
+					std::cout << "PHONG_LIGHTING = " << cfg->PHONG_LIGHTING << std::endl;
+ 				} else if (tokens[0] == "LIGHT_MAPPING") {
+					cfg->LIGHT_MAPPING = tokens[1] == "true";
+					std::cout << "LIGHT_MAPPING = " << cfg->LIGHT_MAPPING << std::endl;
+ 				} else if (tokens[0] == "NORMAL_MAPPING") {
+					cfg->NORMAL_MAPPING = tokens[1] == "true";
+					std::cout << "NORMAL_MAPPING = " << cfg->NORMAL_MAPPING << std::endl;
+ 				} else if (tokens[0] == "DISPLACEMENT_MAPPING") {
+					cfg->DISPLACEMENT_MAPPING = tokens[1] == "true";
+					std::cout << "DISPLACEMENT_MAPPING = " << cfg->DISPLACEMENT_MAPPING << std::endl;
 				} else if (tokens[0] == "NEAR") {
 					cfg->NEAR = std::stof(tokens[1]);
 					std::cout << "NEAR = " << cfg->NEAR << std::endl;
