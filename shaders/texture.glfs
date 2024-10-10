@@ -12,7 +12,7 @@ in vec3 TangentFragPos;
 uniform vec3 viewPos;
 
 struct Light {
-	vec3 position;
+	vec3 direction;
 	vec3 color;
 	float ambientIntensity;
 	float diffuseIntensity;
@@ -104,7 +104,7 @@ void main()
 
 	if (!material.existsNormalmap && !material.existsDisplacementmap) {
 		normal = surfaceNormal;
-		lightDir = normalize(light.position - FragPos);
+		lightDir = normalize(-light.direction);
 		viewDir = normalize(viewPos - FragPos);
 
 	}else {

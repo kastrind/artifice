@@ -12,7 +12,7 @@ in vec3 TangentFragPos;
 uniform vec3 viewPos;
 
 struct Light {
-	vec3 position;
+	vec3 direction;
 	vec3 color;
 	float ambientIntensity;
 	float diffuseIntensity;
@@ -94,7 +94,7 @@ void main()
 
 	if (!material.existsNormalmap && !material.existsDisplacementmap) {
 		normal = surfaceNormal;
-		lightDir = normalize(light.position - FragPos);
+		lightDir = normalize(-light.direction);
 		viewDir = normalize(viewPos - FragPos);
 	}else {
 		//obtain normal from normal map in range [0,1]
@@ -116,7 +116,7 @@ void main()
 	if (phongLighting) {
 		// diffuse
 		float diff = max(dot(-lightDir, normal), 0.0);
-		diffuse = diff * light.diffuseIntensity * light.color;	
+		diffuse = diff * light.diffuseIntensity * light.color;
 
 		// specular
 		vec3 reflectDir = reflect(-lightDir, normal);

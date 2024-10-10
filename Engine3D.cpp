@@ -388,7 +388,7 @@ void Engine3D::render()
 	cubeMapShader.setMat4("projection", getProjectionMatrix());
 	cubeMapShader.setMat4("view", getViewMatrix());
 	//cubemap lighting
-	cubeMapShader.setVec3("light.position", light.position);
+	cubeMapShader.setVec3("light.direction", light.direction);
 	cubeMapShader.setVec3("light.color", light.color);
 	cubeMapShader.setFloat("light.ambientIntensity", light.ambientIntensity);
 	cubeMapShader.setFloat("light.diffuseIntensity", light.diffuseIntensity);
@@ -401,7 +401,7 @@ void Engine3D::render()
 	textureShader.setMat4("projection", getProjectionMatrix());
 	textureShader.setMat4("view", getViewMatrix());
 	//texture lighting
-	textureShader.setVec3("light.position", light.position);
+	textureShader.setVec3("light.direction", light.direction);
 	textureShader.setVec3("light.color", light.color);
 	textureShader.setFloat("light.ambientIntensity", light.ambientIntensity);
 	textureShader.setFloat("light.diffuseIntensity", light.diffuseIntensity);
