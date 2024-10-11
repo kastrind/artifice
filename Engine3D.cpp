@@ -171,6 +171,16 @@ bool Engine3D::initGL()
 		printf( "Unable to load cubemap shader!\n" );
 		success = false;
 	}
+	else if(!geometryShader.loadProgram("shaders/geometry.glvs", "shaders/geometry.glfs"))
+	{
+		printf( "Unable to load geometry shader!\n" );
+		success = false;
+	}
+	else if(!lightingShader.loadProgram("shaders/lighting.glvs", "shaders/lighting.glfs"))
+	{
+		printf( "Unable to load lighting shader!\n" );
+		success = false;
+	}
 	else
 	{
 		glEnable(GL_DEPTH_TEST);
@@ -182,6 +192,8 @@ bool Engine3D::initGL()
 		gCubeMapProgramID = cubeMapShader.getProgramID();
 		gSkyBoxProgramID = skyBoxShader.getProgramID();
 		gTextureProgramID = textureShader.getProgramID();
+		gGeometryProgramID = geometryShader.getProgramID();
+		gLightingProgramID = lightingShader.getProgramID();
 		
 		//create VAOs
 		glGenVertexArrays(1, &gVAO);
@@ -197,6 +209,55 @@ bool Engine3D::initGL()
 
 		//update buffers with the new vertices
 		updateVertices();
+
+		glGenFramebuffers(1, &gBuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+
+		//position color buffer
+		glGenTextures(1, &gPosition);
+		glBindTexture(GL_TEXTURE_2D, gPosition);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+
+		//normal color buffer
+		glGenTextures(1, &gNormal);
+		glBindTexture(GL_TEXTURE_2D, gNormal);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+
+		//color + specular color buffer
+		glGenTextures(1, &gAlbedoSpec);
+		glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+		std::cout << gAlbedoSpec << ", " << gNormal << ", " << gPosition << ", " << std::endl;
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
+
+		//tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+		unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+		glDrawBuffers(3, attachments);
+
+		//create and attach depth buffer (renderbuffer)
+		glGenRenderbuffers(1, &rboDepth);
+		glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+
+		// finally check if framebuffer is complete
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			std::cout << "Framebuffer not complete!" << std::endl;
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		// lightingShader.bind();
+		// lightingShader.setInt("gPosition", 0);
+		// lightingShader.setInt("gNormal", 1);
+		// lightingShader.setInt("gAlbedoSpec", 2);
+
 
 		//initialize clear color
 		glClearColor( 0.f, 0.f, 0.f, 1.f );
@@ -245,6 +306,7 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::m
 
 				//declare texture
 				glGenTextures(1, &(*idsMap)[filename]);
+				std::cout << filename << ": " << (*idsMap)[filename] << std::endl;
 				//bind texture
 				glBindTexture(GL_TEXTURE_2D, (*idsMap)[filename]);
 
@@ -279,13 +341,13 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::m
 			}
 		}
 	}
-	//activate shader
-	textureShader.bind();
-	//set the uniforms
-	textureShader.setInt("frameIndex", 0);
-	textureShader.setInt("userMode", (int)cfg.USER_MODE);
-	textureShader.setBool("phongLighting", cfg.PHONG_LIGHTING);
-	textureShader.unbind();
+	// //activate shader
+	// textureShader.bind();
+	// //set the uniforms
+	// textureShader.setInt("frameIndex", 0);
+	// textureShader.setInt("userMode", (int)cfg.USER_MODE);
+	// textureShader.setBool("phongLighting", cfg.PHONG_LIGHTING);
+	// textureShader.unbind();
 }
 
 void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::map<std::string, GLuint>& cubeLightmapIdsMap, std::map<std::string, GLuint>& cubeNormalmapIdsMap, std::map<std::string, GLuint>& cubeDisplacementmapIdsMap)
@@ -374,95 +436,130 @@ bool Engine3D::initUI()
 	return success;
 }
 
+void Engine3D::renderScreenQuad()
+{
+	if (scrQuadVAO == 0)
+	{
+		float quadVertices[] = {
+				// positions        // texture Coords
+				-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+				-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+				 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+				 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		};
+		// setup plane VAO
+		glGenVertexArrays(1, &scrQuadVAO);
+		glGenBuffers(1, &scrQuadVBO);
+		glBindVertexArray(scrQuadVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, scrQuadVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	}
+	glBindVertexArray(scrQuadVAO);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glBindVertexArray(0);
+}
+
 void Engine3D::render()
 {
 	if (updateVerticesFlag) updateVertices();
 	//if (finalCubeModelsToRender.size() == 0) return;
 
+	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	//clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//set cubemap shader uniforms
-	cubeMapShader.bind();
-	cubeMapShader.setMat4("projection", getProjectionMatrix());
-	cubeMapShader.setMat4("view", getViewMatrix());
-	//cubemap lighting
-	cubeMapShader.setVec3("light.direction", light.direction);
-	cubeMapShader.setVec3("light.color", light.color);
-	cubeMapShader.setFloat("light.ambientIntensity", light.ambientIntensity);
-	cubeMapShader.setFloat("light.diffuseIntensity", light.diffuseIntensity);
-	cubeMapShader.setFloat("light.specularIntensity", light.specularIntensity);
-	cubeMapShader.setVec3("viewPos", getCameraPos());
-	cubeMapShader.unbind();
+	// //set cubemap shader uniforms
+	// cubeMapShader.bind();
+	// cubeMapShader.setMat4("projection", getProjectionMatrix());
+	// cubeMapShader.setMat4("view", getViewMatrix());
+	// //cubemap lighting
+	// cubeMapShader.setVec3("light.direction", light.direction);
+	// cubeMapShader.setVec3("light.color", light.color);
+	// cubeMapShader.setFloat("light.ambientIntensity", light.ambientIntensity);
+	// cubeMapShader.setFloat("light.diffuseIntensity", light.diffuseIntensity);
+	// cubeMapShader.setFloat("light.specularIntensity", light.specularIntensity);
+	// cubeMapShader.setVec3("viewPos", getCameraPos());
+	// cubeMapShader.unbind();
 
 	//set texture shader uniforms
-	textureShader.bind();
-	textureShader.setMat4("projection", getProjectionMatrix());
-	textureShader.setMat4("view", getViewMatrix());
-	//texture lighting
-	textureShader.setVec3("light.direction", light.direction);
-	textureShader.setVec3("light.color", light.color);
-	textureShader.setFloat("light.ambientIntensity", light.ambientIntensity);
-	textureShader.setFloat("light.diffuseIntensity", light.diffuseIntensity);
-	textureShader.setFloat("light.specularIntensity", light.specularIntensity);
-	textureShader.setVec3("viewPos", getCameraPos());
-	textureShader.unbind();
+	// glEnable(GL_CULL_FACE);
+	// glCullFace(GL_FRONT);
 
-	//set skybox shader uniforms
-	skyBoxShader.bind();
-	skyBoxShader.setMat4("projection", getProjectionMatrix());
-	skyBoxShader.setMat4("view", getViewMatrixNoTranslation());
-	skyBoxShader.unbind();
 
-	//render active skybox
-	skyBoxShader.bind();
-	glDisable(GL_CULL_FACE);
-	glDepthFunc(GL_LEQUAL);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
-	glBindVertexArray(gCubeVAO);
-	if (finalSkyBoxToRender != nullptr)
-	{
-		cubeModel& cm = *finalSkyBoxToRender;
-		cm.render(&skyBoxShader, cubemapIdsMap[cm.texture], 0, 0, 0);
-	}
-	glBindVertexArray(0);
-	skyBoxShader.unbind();
+	// //texture lighting
+	// textureShader.setVec3("light.direction", light.direction);
+	// textureShader.setVec3("light.color", light.color);
+	// textureShader.setFloat("light.ambientIntensity", light.ambientIntensity);
+	// textureShader.setFloat("light.diffuseIntensity", light.diffuseIntensity);
+	// textureShader.setFloat("light.specularIntensity", light.specularIntensity);
+	// textureShader.setVec3("viewPos", getCameraPos());
+	// textureShader.unbind();
 
-	//render cubemaps
-	cubeMapShader.bind();
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
-	glBindVertexArray(gCubeVAO);
-	mtx.lock();
-	for (auto itr = finalCubeModelsToRender.begin(); itr != finalCubeModelsToRender.end(); itr++)
-	{
-		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
+	// //set skybox shader uniforms
+	// skyBoxShader.bind();
+	// skyBoxShader.setMat4("projection", getProjectionMatrix());
+	// skyBoxShader.setMat4("view", getViewMatrixNoTranslation());
+	// skyBoxShader.unbind();
+
+	// //render active skybox
+	// skyBoxShader.bind();
+	// glDisable(GL_CULL_FACE);
+	// glDepthFunc(GL_LEQUAL);
+	// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
+	// glBindVertexArray(gCubeVAO);
+	// if (finalSkyBoxToRender != nullptr)
+	// {
+	// 	cubeModel& cm = *finalSkyBoxToRender;
+	// 	cm.render(&skyBoxShader, cubemapIdsMap[cm.texture], 0, 0, 0);
+	// }
+	// glBindVertexArray(0);
+	// skyBoxShader.unbind();
+
+	// //render cubemaps
+	// cubeMapShader.bind();
+	// glEnable(GL_CULL_FACE);
+	// glCullFace(GL_FRONT);
+	// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
+	// glBindVertexArray(gCubeVAO);
+	// mtx.lock();
+	// for (auto itr = finalCubeModelsToRender.begin(); itr != finalCubeModelsToRender.end(); itr++)
+	// {
+	// 	if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
 		
-		cubeModel& cm = dynamic_cast<cubeModel &>(*(*itr));
+	// 	cubeModel& cm = dynamic_cast<cubeModel &>(*(*itr));
 				
-		if (cm.removeFlag) continue;
+	// 	if (cm.removeFlag) continue;
 
-		if (cm.isSkyBox) {
-			if (cm.isActiveSkyBox)
-			{
-				finalSkyBoxToRender = std::make_shared<cubeModel>(cm);
-			}
-			continue;
-		}
+	// 	if (cm.isSkyBox) {
+	// 		if (cm.isActiveSkyBox)
+	// 		{
+	// 			finalSkyBoxToRender = std::make_shared<cubeModel>(cm);
+	// 		}
+	// 		continue;
+	// 	}
 
-		cm.render(&cubeMapShader, cubemapIdsMap[cm.texture], cubeLightmapIdsMap[cm.texture], cubeNormalmapIdsMap[cm.texture], cubeDisplacementmapIdsMap[cm.texture]);
-	}
-	glBindVertexArray(0);
-	cubeMapShader.unbind();
+	// 	cm.render(&cubeMapShader, cubemapIdsMap[cm.texture], cubeLightmapIdsMap[cm.texture], cubeNormalmapIdsMap[cm.texture], cubeDisplacementmapIdsMap[cm.texture]);
+	// }
+	// glBindVertexArray(0);
+	// cubeMapShader.unbind();
 
 	//render other models
-	textureShader.bind();
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIBO);
-	glBindVertexArray(gVAO);
+	// textureShader.bind();
+	// glEnable(GL_CULL_FACE);
+	// glCullFace(GL_FRONT);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	geometryShader.bind();
+	geometryShader.setMat4("projection", getProjectionMatrix());
+	geometryShader.setMat4("view", getViewMatrix());
+
 	for (auto itr = finalModelsToRender.begin(); itr != finalModelsToRender.end(); itr++)
 	{
 		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
@@ -475,25 +572,46 @@ void Engine3D::render()
 			finalTransparentModelsToRender.insert(*itr);
 			continue;
 		}
-		model.render(&textureShader, textureIdsMap[model.texture], lightmapIdsMap[model.texture], normalmapIdsMap[model.texture], displacementmapIdsMap[model.texture]);
+		model.render(&geometryShader, &lightingShader, gPosition, gNormal, gAlbedoSpec, gVAO, gIBO, gBuffer, textureIdsMap[model.texture], lightmapIdsMap[model.texture], normalmapIdsMap[model.texture], displacementmapIdsMap[model.texture]);
 	}
 
-	for (auto itr = finalTransparentModelsToRender.begin(); itr != finalTransparentModelsToRender.end(); itr++)
-	{
-		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	lightingShader.bind();
+	lightingShader.setInt("gPosition", 0);
+	lightingShader.setInt("gNormal", 1);
+	lightingShader.setInt("gAlbedoSpec", 2);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, gPosition);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, gNormal);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+	renderScreenQuad();
 
-		model& model = *(*itr);
+	// for (auto itr = finalTransparentModelsToRender.begin(); itr != finalTransparentModelsToRender.end(); itr++)
+	// {
+	// 	if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
 
-		model.render(&textureShader, textureIdsMap[model.texture], lightmapIdsMap[model.texture], normalmapIdsMap[model.texture], displacementmapIdsMap[model.texture]);
-	}
-	finalTransparentModelsToRender.clear();
+	// 	model& model = *(*itr);
 
-	glBindVertexArray(0);
-	textureShader.unbind();
+	// 	model.render(&geometryShader, &lightingShader, gPosition, gNormal, gAlbedoSpec, gVAO, gIBO, gBuffer, textureIdsMap[model.texture], lightmapIdsMap[model.texture], normalmapIdsMap[model.texture], displacementmapIdsMap[model.texture]);
+	// }
+	// finalTransparentModelsToRender.clear();
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
+	// blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
+	// the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
+	// depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
+	glBlitFramebuffer(0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_WIDTH, 0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	//textureShader.unbind();
 
 	mtx.unlock();
 
-	renderUI();
+	// renderUI();
 
 	//update screen
 	SDL_GL_SwapWindow( gWindow );

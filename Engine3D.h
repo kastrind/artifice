@@ -93,6 +93,8 @@ class Engine3D
 		ArtificeShaderProgram textureShader;
 		ArtificeShaderProgram cubeMapShader;
 		ArtificeShaderProgram skyBoxShader;
+		ArtificeShaderProgram geometryShader;
+		ArtificeShaderProgram lightingShader;
 
 		//to render
 		std::vector<std::string> texturePaths;
@@ -114,12 +116,21 @@ class Engine3D
 		GLuint gCubeMapProgramID = 0;
 		GLuint gSkyBoxProgramID = 0;
 		GLuint gTextureProgramID = 0;
+		GLuint gGeometryProgramID = 0;
+		GLuint gLightingProgramID = 0;
 		GLuint gVBO = 0;
 		GLuint gIBO = 0;
 		GLuint gVAO = 0;
 		GLuint gCubeVBO = 0;
 		GLuint gCubeIBO = 0;
 		GLuint gCubeVAO = 0;
+		GLuint gBuffer = 0; //G-Buffer
+		GLuint gPosition = 0; //position color buffer
+		GLuint gNormal = 0; //normal color buffer
+		GLuint gAlbedoSpec = 0; //color and specular color buffer
+		GLuint rboDepth = 0; //depth buffer (renderbuffer)
+		GLuint scrQuadVAO = 0;
+		GLuint scrQuadVBO = 0;
 
 		std::atomic<bool> updateVerticesFlag;
 
@@ -245,6 +256,8 @@ class Engine3D
 		bool initUI();
 
 		void render();
+
+		void renderScreenQuad();
 
 		void updateVertices();
 
