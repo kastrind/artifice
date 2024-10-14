@@ -229,18 +229,49 @@ bool Engine3D::initGL()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
 
-		//color + specular color buffer
-		glGenTextures(1, &gAlbedoSpec);
-		glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-		std::cout << gAlbedoSpec << ", " << gNormal << ", " << gPosition << ", " << std::endl;
+		//texture (diffuse/albedo) color buffer
+		glGenTextures(1, &gAlbedo);
+		glBindTexture(GL_TEXTURE_2D, gAlbedo);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedo, 0);
+
+		//lightmap color buffer
+		glGenTextures(1, &gLightmap);
+		glBindTexture(GL_TEXTURE_2D, gLightmap);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gLightmap, 0);
+
+		//tangent color buffer
+		glGenTextures(1, &gTangent);
+		glBindTexture(GL_TEXTURE_2D, gTangent);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, gTangent, 0);
+
+		//bitangent color buffer
+		glGenTextures(1, &gBitangent);
+		glBindTexture(GL_TEXTURE_2D, gBitangent);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GL_TEXTURE_2D, gBitangent, 0);
+
+		//view dir color buffer
+		glGenTextures(1, &gViewDir);
+		glBindTexture(GL_TEXTURE_2D, gViewDir);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT6, GL_TEXTURE_2D, gViewDir, 0);
 
 		//tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-		unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-		glDrawBuffers(3, attachments);
+		unsigned int attachments[7] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6 };
+		glDrawBuffers(7, attachments);
 
 		//create and attach depth buffer (renderbuffer)
 		glGenRenderbuffers(1, &rboDepth);
@@ -252,12 +283,6 @@ bool Engine3D::initGL()
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			std::cout << "Framebuffer not complete!" << std::endl;
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		// lightingShader.bind();
-		// lightingShader.setInt("gPosition", 0);
-		// lightingShader.setInt("gNormal", 1);
-		// lightingShader.setInt("gAlbedoSpec", 2);
-
 
 		//initialize clear color
 		glClearColor( 0.f, 0.f, 0.f, 1.f );
@@ -468,8 +493,9 @@ void Engine3D::render()
 	if (updateVerticesFlag) updateVertices();
 	//if (finalCubeModelsToRender.size() == 0) return;
 
+	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	//clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -559,7 +585,7 @@ void Engine3D::render()
 	geometryShader.bind();
 	geometryShader.setMat4("projection", getProjectionMatrix());
 	geometryShader.setMat4("view", getViewMatrix());
-
+	geometryShader.setVec3("viewPos", getCameraPos());
 	for (auto itr = finalModelsToRender.begin(); itr != finalModelsToRender.end(); itr++)
 	{
 		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
@@ -572,21 +598,40 @@ void Engine3D::render()
 			finalTransparentModelsToRender.insert(*itr);
 			continue;
 		}
-		model.render(&geometryShader, &lightingShader, gPosition, gNormal, gAlbedoSpec, gVAO, gIBO, gBuffer, textureIdsMap[model.texture], lightmapIdsMap[model.texture], normalmapIdsMap[model.texture], displacementmapIdsMap[model.texture]);
+		model.render(&geometryShader, gVAO, gIBO, textureIdsMap[model.texture], lightmapIdsMap[model.texture], normalmapIdsMap[model.texture], displacementmapIdsMap[model.texture]);
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	lightingShader.bind();
+	lightingShader.setVec3("viewPos", getCameraPos());
+	lightingShader.setBool("phongLighting", cfg.PHONG_LIGHTING);
+	lightingShader.setVec3("light.direction", light.direction);
+	lightingShader.setVec3("light.color", light.color);
+	lightingShader.setFloat("light.ambientIntensity", light.ambientIntensity);
+	lightingShader.setFloat("light.diffuseIntensity", light.diffuseIntensity);
+	lightingShader.setFloat("light.specularIntensity", light.specularIntensity);
 	lightingShader.setInt("gPosition", 0);
 	lightingShader.setInt("gNormal", 1);
-	lightingShader.setInt("gAlbedoSpec", 2);
+	lightingShader.setInt("gAlbedo", 2);
+	lightingShader.setInt("gLightmap", 3);
+	lightingShader.setInt("gTangent", 4);
+	lightingShader.setInt("gBitangent", 5);
+	lightingShader.setInt("gViewDir", 6);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, gPosition);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, gNormal);
 	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+	glBindTexture(GL_TEXTURE_2D, gAlbedo);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, gLightmap);
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, gTangent);
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, gBitangent);
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, gViewDir);
 	renderScreenQuad();
 
 	// for (auto itr = finalTransparentModelsToRender.begin(); itr != finalTransparentModelsToRender.end(); itr++)
@@ -595,7 +640,7 @@ void Engine3D::render()
 
 	// 	model& model = *(*itr);
 
-	// 	model.render(&geometryShader, &lightingShader, gPosition, gNormal, gAlbedoSpec, gVAO, gIBO, gBuffer, textureIdsMap[model.texture], lightmapIdsMap[model.texture], normalmapIdsMap[model.texture], displacementmapIdsMap[model.texture]);
+	// 	model.render(&geometryShader, gVAO, gIBO, textureIdsMap[model.texture], lightmapIdsMap[model.texture], normalmapIdsMap[model.texture], displacementmapIdsMap[model.texture]);
 	// }
 	// finalTransparentModelsToRender.clear();
 
@@ -611,7 +656,7 @@ void Engine3D::render()
 
 	mtx.unlock();
 
-	// renderUI();
+	renderUI();
 
 	//update screen
 	SDL_GL_SwapWindow( gWindow );

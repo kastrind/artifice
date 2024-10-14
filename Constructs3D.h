@@ -422,32 +422,34 @@ typedef struct model {
 			rotationMatrix = shape.rotationMatrix;
 		}
 
-		virtual void render(ArtificeShaderProgram* geometryShader, ArtificeShaderProgram* lightingShader, GLuint gPosition, GLuint gNormal, GLuint gAlbedoSpec, GLuint gVAO, GLuint gIBO, GLuint gBuffer, GLuint textureId, GLuint lightmapId, GLuint normalmapId, GLuint displacementmapId)
+		virtual void render(ArtificeShaderProgram* geometryShader, GLuint gVAO, GLuint gIBO, GLuint textureId, GLuint lightmapId, GLuint normalmapId, GLuint displacementmapId)
 		{
-			// // std::cout << "rendering model" << std::endl;
-			// shader->setInt("material.diffuseTexture", 0);
-			// shader->setInt("material.lightmap", 1);
-			// shader->setInt("material.normalmap", 2);
-			// shader->setInt("material.displacementmap", 3);
-			// glActiveTexture(GL_TEXTURE0);
-			// glBindTexture(GL_TEXTURE_2D, textureId);
-			
-			// shader->setBool("material.existsLightmap", lightmapId > 0);
-			// glActiveTexture(GL_TEXTURE1);
-			// glBindTexture(GL_TEXTURE_2D, lightmapId);
-
-			// shader->setBool("material.existsNormalmap", normalmapId > 0);
-			// glActiveTexture(GL_TEXTURE2);
-			// glBindTexture(GL_TEXTURE_2D, normalmapId);
-
-			// shader->setBool("material.existsDisplacementmap", displacementmapId > 0);
-			// glActiveTexture(GL_TEXTURE3);
-			// glBindTexture(GL_TEXTURE_2D, displacementmapId);
-			// geometryShader->bind();
-			geometryShader->setInt("texture_diffuse1", 0);
-			// geometryShader->setInt("texture_specular1", 1);
+			// std::cout << "rendering model" << std::endl;
+			geometryShader->bind();
+			geometryShader->setInt("material.diffuseTexture", 0);
+			geometryShader->setInt("material.lightmap", 1);
+			geometryShader->setInt("material.normalmap", 2);
+			geometryShader->setInt("material.displacementmap", 3);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, textureId);
+			
+			geometryShader->setBool("material.existsLightmap", lightmapId > 0);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, lightmapId);
+
+			geometryShader->setBool("material.existsNormalmap", normalmapId > 0);
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, normalmapId);
+
+			geometryShader->setBool("material.existsDisplacementmap", displacementmapId > 0);
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_2D, displacementmapId);
+
+			// geometryShader->bind();
+			// geometryShader->setInt("texture_diffuse1", 0);
+			// geometryShader->setInt("texture_specular1", 1);
+			// glActiveTexture(GL_TEXTURE0);
+			// glBindTexture(GL_TEXTURE_2D, textureId);
 			// glActiveTexture(GL_TEXTURE1);
 			// glBindTexture(GL_TEXTURE_2D, lightmapId);
 
@@ -478,7 +480,7 @@ typedef struct cubeModel : public model {
 
 		cubeModel(model& m) : model(m) {}
 
-		void render(ArtificeShaderProgram* geometryShader, ArtificeShaderProgram* lightingShader, GLuint gPosition, GLuint gNormal, GLuint gAlbedoSpec, GLuint gCubeVAO, GLuint gCubeIBO, GLuint gCubeBuffer, GLuint textureId, GLuint lightmapId, GLuint normalmapId, GLuint displacementmapId) override
+		void render(ArtificeShaderProgram* geometryShader, GLuint gCubeVAO, GLuint gCubeIBO, GLuint textureId, GLuint lightmapId, GLuint normalmapId, GLuint displacementmapId) override
 		{
 			// //std::cout << "rendering cubeModel" << std::endl;
 			// cubeMapShader->setInt("material.diffuseTexture", 0);

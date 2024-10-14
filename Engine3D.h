@@ -127,7 +127,11 @@ class Engine3D
 		GLuint gBuffer = 0; //G-Buffer
 		GLuint gPosition = 0; //position color buffer
 		GLuint gNormal = 0; //normal color buffer
-		GLuint gAlbedoSpec = 0; //color and specular color buffer
+		GLuint gAlbedo = 0; //color buffer
+		GLuint gLightmap = 0; //normal map color buffer
+		GLuint gTangent = 0; //tangent color buffer
+		GLuint gBitangent = 0; //bitangent color buffer
+		GLuint gViewDir = 0; //view dir color buffer
 		GLuint rboDepth = 0; //depth buffer (renderbuffer)
 		GLuint scrQuadVAO = 0;
 		GLuint scrQuadVBO = 0;

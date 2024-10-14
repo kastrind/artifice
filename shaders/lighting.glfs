@@ -5,16 +5,70 @@ in vec2 TexCoord;
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
-uniform sampler2D gAlbedoSpec;
+uniform sampler2D gAlbedo;
+uniform sampler2D gLightmap;
+uniform sampler2D gTangent;
+uniform sampler2D gBitangent;
+uniform sampler2D gViewDir;
+
+struct Light {
+	vec3 direction;
+	vec3 color;
+	float ambientIntensity;
+	float diffuseIntensity;
+	float specularIntensity;
+};
+uniform Light light;
+
+uniform bool phongLighting;
+uniform vec3 viewPos;
 
 void main()
 {
 	// retrieve data from gbuffer
-	vec3 FragPos = texture(gPosition, TexCoord).rgb;
-	vec3 Normal = texture(gNormal, TexCoord).rgb;
-	vec3 Diffuse = texture(gAlbedoSpec, TexCoord).rgb;
-	float Specular = texture(gAlbedoSpec, TexCoord).a;
+	vec3 FragPos  = texture(gPosition, TexCoord).rgb;
+	vec3 Diffuse  = texture(gAlbedo, TexCoord).rgb;
+	vec3 Specular = texture(gLightmap, TexCoord).rgb;
+	vec3 T = texture(gTangent, TexCoord).rgb;
+	vec3 B = texture(gBitangent, TexCoord).rgb;
+	vec3 N = texture(gNormal, TexCoord).rgb;
+	vec4 inViewDir = texture(gViewDir, TexCoord).rgba;
 
-	FragColor = vec4(Diffuse, 1.0);
+	mat3 TBN = transpose(mat3(T, B, N));
+	vec3 TangentLightPos = TBN * light.direction;
+	vec3 TangentViewPos = TBN * viewPos;
+	vec3 TangentFragPos = TBN * FragPos;
+
+	vec3 viewDir;
+	vec3 lightDir;
+	if (inViewDir.a == 1.0) {
+		viewDir = normalize(TangentViewPos - TangentFragPos);
+		lightDir = normalize(TangentLightPos - TangentFragPos);
+	}else {
+		viewDir = inViewDir.rgb;
+		lightDir = normalize(-light.direction);
+	}
+
+	vec3 ambient = vec3(1.0, 1.0, 1.0);
+	vec3 diffuse = vec3(0.0, 0.0, 0.0);
+	vec3 specular = vec3(0.0, 0.0, 0.0);
+
+	if (phongLighting) {
+		// ambient
+		ambient = light.ambientIntensity * light.color;
+
+		// diffuse
+		float diff = max(dot(-lightDir, N), 0.0);
+		diffuse = diff * light.diffuseIntensity * light.color;
+
+		// specular
+		vec3 reflectDir = reflect(-lightDir, N);
+		float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+		specular = spec * light.specularIntensity * light.color * Specular;
+	}
+
+	vec3 finalColor = (ambient + diffuse + specular) * Diffuse;
+
+	FragColor = vec4(finalColor, 1.0);
 }
 

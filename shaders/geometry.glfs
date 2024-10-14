@@ -1,15 +1,31 @@
 #version 330 core
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
-layout (location = 2) out vec4 gAlbedoSpec;
+layout (location = 2) out vec4 gAlbedo;
+layout (location = 3) out vec4 gLightmap;
+layout (location = 4) out vec3 gTangent;
+layout (location = 5) out vec3 gBitangent;
+layout (location = 6) out vec4 gViewDir; //vec4 on purpose
 
 in vec3 FragPos;
 in vec3 color;
 in vec2 TexCoord;
 in vec3 surfaceNormal;
+in vec3 T;
+in vec3 B;
+in vec3 N;
 
-uniform sampler2D texture_diffuse1;
-//uniform sampler2D texture_specular1;
+struct Material {
+	sampler2D diffuseTexture; // texture sampler
+	sampler2D lightmap;
+	bool existsLightmap;
+	sampler2D normalmap;
+	bool existsNormalmap;
+	sampler2D displacementmap;
+	bool existsDisplacementmap;
+	float shininess;
+};
+uniform Material material;
 
 uniform int frameIndex;
 uniform int frameRows;
@@ -21,15 +37,34 @@ int frameRow = frameIndex / frameRows;
 vec2 offset = vec2(frameCol * frameSize.x, frameRow * frameSize.y);
 vec2 adjustedTexCoord = TexCoord * frameSize + offset;
 
+uniform vec3 viewPos;
+
 void main()
 {
 	// store the fragment position vector in the first gbuffer texture
 	gPosition = FragPos;
-	// also store the per-fragment normals into the gbuffer
-	gNormal = normalize(surfaceNormal);
+
+	if (!material.existsNormalmap && !material.existsDisplacementmap) {
+		// also store the per-fragment normals into the gbuffer
+		gNormal = normalize(surfaceNormal);
+		gViewDir = vec4(normalize(viewPos - FragPos), 0);
+	}else {
+		// obtain normal from normal map in range [0,1]
+		vec3 normal = texture(material.normalmap, adjustedTexCoord).rgb;
+		// transform normal vector to range [-1,1]
+		gNormal = normalize(normal * 2.0 - 1.0);
+		gViewDir = vec4(0, 0, 0, 1.0);
+	}
+
 	// and the diffuse per-fragment color
-	gAlbedoSpec.rgb = texture(texture_diffuse1, TexCoord).rgb;
-	// store specular intensity in gAlbedoSpec's alpha component
-	//gAlbedoSpec.a = texture(texture_specular1, TexCoord).r;
-	gAlbedoSpec.a = 1.0;
+	gAlbedo.rgb = texture(material.diffuseTexture, adjustedTexCoord).rgb * color;
+	// and the lightmap per-fragment color
+	if (material.existsLightmap) {
+		gLightmap.rgb = texture(material.lightmap, adjustedTexCoord).rgb;
+	}else {
+		gLightmap = vec4(1.0, 1.0, 1.0, 1.0);
+	}
+
+	gTangent = T;
+	gBitangent = B;
 }
