@@ -269,9 +269,17 @@ bool Engine3D::initGL()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT6, GL_TEXTURE_2D, gViewDir, 0);
 
+		//normap color buffer
+		glGenTextures(1, &gNormap);
+		glBindTexture(GL_TEXTURE_2D, gNormap);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT7, GL_TEXTURE_2D, gNormap, 0);
+
 		//tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-		unsigned int attachments[7] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6 };
-		glDrawBuffers(7, attachments);
+		unsigned int attachments[8] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6, GL_COLOR_ATTACHMENT7 };
+		glDrawBuffers(8, attachments);
 
 		//create and attach depth buffer (renderbuffer)
 		glGenRenderbuffers(1, &rboDepth);
@@ -586,6 +594,7 @@ void Engine3D::render()
 	geometryShader.setMat4("projection", getProjectionMatrix());
 	geometryShader.setMat4("view", getViewMatrix());
 	geometryShader.setVec3("viewPos", getCameraPos());
+	geometryShader.setVec3("light_direction", light.direction);
 	for (auto itr = finalModelsToRender.begin(); itr != finalModelsToRender.end(); itr++)
 	{
 		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
@@ -618,6 +627,7 @@ void Engine3D::render()
 	lightingShader.setInt("gTangent", 4);
 	lightingShader.setInt("gBitangent", 5);
 	lightingShader.setInt("gViewDir", 6);
+	lightingShader.setInt("gNormap", 7);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, gPosition);
 	glActiveTexture(GL_TEXTURE1);
@@ -632,6 +642,8 @@ void Engine3D::render()
 	glBindTexture(GL_TEXTURE_2D, gBitangent);
 	glActiveTexture(GL_TEXTURE6);
 	glBindTexture(GL_TEXTURE_2D, gViewDir);
+	glActiveTexture(GL_TEXTURE7);
+	glBindTexture(GL_TEXTURE_2D, gNormap);
 	renderScreenQuad();
 
 	// for (auto itr = finalTransparentModelsToRender.begin(); itr != finalTransparentModelsToRender.end(); itr++)

@@ -132,6 +132,7 @@ class Engine3D
 		GLuint gTangent = 0; //tangent color buffer
 		GLuint gBitangent = 0; //bitangent color buffer
 		GLuint gViewDir = 0; //view dir color buffer
+		GLuint gNormap = 0; //normap color buffer
 		GLuint rboDepth = 0; //depth buffer (renderbuffer)
 		GLuint scrQuadVAO = 0;
 		GLuint scrQuadVBO = 0;
