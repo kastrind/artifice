@@ -32,10 +32,10 @@ void main()
 	vec3 T = texture(gTangent, TexCoord).rgb;
 	vec3 B = texture(gBitangent, TexCoord).rgb;
 	vec3 N = texture(gNormal, TexCoord).rgb;
-	vec4 inViewDir = texture(gViewDir, TexCoord).rgba;
+	vec4 inViewDir = texture(gViewDir, TexCoord);
 
 	mat3 TBN = transpose(mat3(T, B, N));
-	vec3 TangentLightPos = TBN * light.direction;
+	//vec3 TangentLightPos = TBN * (-light.direction);
 	vec3 TangentViewPos = TBN * viewPos;
 	vec3 TangentFragPos = TBN * FragPos;
 
@@ -43,7 +43,8 @@ void main()
 	vec3 lightDir;
 	if (inViewDir.a == 1.0) {
 		viewDir = normalize(TangentViewPos - TangentFragPos);
-		lightDir = normalize(TangentLightPos - TangentFragPos);
+		//lightDir = normalize(TangentLightPos - TangentFragPos);
+		lightDir = normalize(TBN * normalize(-light.direction));
 	}else {
 		viewDir = inViewDir.rgb;
 		lightDir = normalize(-light.direction);
@@ -58,12 +59,12 @@ void main()
 		ambient = light.ambientIntensity * light.color;
 
 		// diffuse
-		float diff = max(dot(-lightDir, N), 0.0);
+		float diff = max(dot(lightDir, N), 0.0);
 		diffuse = diff * light.diffuseIntensity * light.color;
 
 		// specular
 		vec3 reflectDir = reflect(-lightDir, N);
-		float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+		float spec = pow(max(dot(viewDir, reflectDir), 0.0), 16);
 		specular = spec * light.specularIntensity * light.color * Specular;
 	}
 

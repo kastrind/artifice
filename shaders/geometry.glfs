@@ -53,7 +53,7 @@ void main()
 		vec3 normal = texture(material.normalmap, adjustedTexCoord).rgb;
 		// transform normal vector to range [-1,1]
 		gNormal = normalize(normal * 2.0 - 1.0);
-		gViewDir = vec4(0, 0, 0, 1.0);
+		gViewDir = vec4(0.1, 0.2, 0.3, 1.0);
 	}
 
 	// and the diffuse per-fragment color
