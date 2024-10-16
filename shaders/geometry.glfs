@@ -15,6 +15,10 @@ in vec3 surfaceNormal;
 in vec3 T;
 in vec3 B;
 in vec3 N;
+in mat3 TBN;
+in vec3 TangentLightPos;
+in vec3 TangentViewPos;
+in vec3 TangentFragPos;
 
 struct Material {
 	sampler2D diffuseTexture; // texture sampler
@@ -56,14 +60,11 @@ void main()
 		// obtain normal from normal map in range [0,1]
 		vec3 normal = texture(material.normalmap, adjustedTexCoord).rgb;
 		// transform normal vector to range [-1,1]
-		gNormap = normalize(normal * 2.0 - 1.0);
+		normal = normalize(normal * 2.0 - 1.0);
+		gNormap = normal;
 
-		mat3 TBN = transpose(mat3(T, B, N));
-		vec3 TangentLightPos = TBN * light_direction;
-		vec3 TangentViewPos = TBN * viewPos;
-		vec3 TangentFragPos = TBN * FragPos;
-
-		gViewDir = vec4(normalize(TangentViewPos - TangentFragPos), 0);
+		//gViewDir = vec4(normalize(TangentViewPos - TangentFragPos), 1);
+		gViewDir = vec4(normalize(viewPos - FragPos), 0);
 	}
 
 	// and the diffuse per-fragment color
