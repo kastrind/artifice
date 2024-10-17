@@ -1,8 +1,7 @@
 # player position positionX positionY positionZ
-player_position,0.831131,-0.354705,4.09422
+player_position,0.528532,-0.87381,2.11665
 # light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity
 light,0.264035,-0.34048,-2.60431,128,128,128,0.3,0.4,0.9
-#light,-0.5,0.5,-0.2,128,128,128,0.3,0.4,0.9
 # id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ
 633205944,cube,lightbox,0.1,0.1,0.1,true,-0,0,-0,0.264035,-0.34048,2.60431
 1,skybox,sky,1,1,1,false,-0,0,-0,0,0,0
@@ -421,3 +420,5 @@ light,0.264035,-0.34048,-2.60431,128,128,128,0.3,0.4,0.9
 1152163266,cube,brickwall,0.1,0.1,0.1,true,-0,0,-0,0.0917635,-0.30529,2.4943
 1152715859,cube,brickwall,0.1,0.1,0.1,true,-0,0,-0,0.218817,-0.822385,2.53478
 1152733419,cube,brickwall,0.1,0.1,0.1,true,-0,0,-0,0.306264,-0.000415847,2.61343
+2541939570,rectangle,transparentQ,0.1,0.1,0,true,-0,0,-0,0.279911,-0.487654,3.27654
+2542206396,cuboid,transparentQ,0.1,0.1,0.1,true,-0,0,-0,0.283821,-0.343938,3.83484

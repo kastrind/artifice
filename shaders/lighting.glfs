@@ -7,10 +7,7 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedo;
 uniform sampler2D gLightmap;
-uniform sampler2D gTangent;
-uniform sampler2D gBitangent;
 uniform sampler2D gViewDir;
-uniform sampler2D gNormap;
 
 struct Light {
 	vec3 direction;
@@ -28,22 +25,15 @@ void main()
 {
 	// retrieve data from gbuffer
 	vec3 FragPos  = texture(gPosition, TexCoord).rgb;
-	vec3 Diffuse  = texture(gAlbedo, TexCoord).rgb;
-	vec3 Specular = texture(gLightmap, TexCoord).rgb;
-	vec3 T = texture(gTangent, TexCoord).rgb;
-	vec3 B = texture(gBitangent, TexCoord).rgb;
-	vec3 N = texture(gNormal, TexCoord).rgb;
-	vec4 inViewDir = texture(gViewDir, TexCoord);
-	bool isTangentSpace = inViewDir.a == 1;
-	vec3 viewDir = inViewDir.rgb;
-	vec3 n = texture(gNormap, TexCoord).rgb;
+	vec4 gAlbedo  = texture(gAlbedo, TexCoord);
 
-	vec3 lightDir;
-	if (isTangentSpace) {
-		lightDir = normalize(-light.direction);
-	}else {
-		lightDir = normalize(-light.direction);
-	}
+	vec3 Diffuse = gAlbedo.rgb;
+
+	vec3 Specular = texture(gLightmap, TexCoord).rgb;
+	vec3 N = texture(gNormal, TexCoord).rgb;
+	vec3 viewDir = texture(gViewDir, TexCoord).rgb;
+
+	vec3 lightDir = normalize(-light.direction);
 
 	vec3 ambient = vec3(1.0, 1.0, 1.0);
 	vec3 diffuse = vec3(0.0, 0.0, 0.0);
@@ -54,11 +44,11 @@ void main()
 		ambient = light.ambientIntensity * light.color;
 
 		// diffuse
-		float diff = max(dot(lightDir, n), 0.0);
+		float diff = max(dot(-lightDir, N), 0.0);
 		diffuse = diff * light.diffuseIntensity * light.color;
 
 		// specular
-		vec3 reflectDir = reflect(-lightDir, n);
+		vec3 reflectDir = reflect(-lightDir, N);
 		float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
 		specular = spec * light.specularIntensity * light.color * Specular;
 	}

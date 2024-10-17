@@ -232,7 +232,7 @@ bool Engine3D::initGL()
 		//texture (diffuse/albedo) color buffer
 		glGenTextures(1, &gAlbedo);
 		glBindTexture(GL_TEXTURE_2D, gAlbedo);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedo, 0);
@@ -245,41 +245,17 @@ bool Engine3D::initGL()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gLightmap, 0);
 
-		//tangent color buffer
-		glGenTextures(1, &gTangent);
-		glBindTexture(GL_TEXTURE_2D, gTangent);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, gTangent, 0);
-
-		//bitangent color buffer
-		glGenTextures(1, &gBitangent);
-		glBindTexture(GL_TEXTURE_2D, gBitangent);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GL_TEXTURE_2D, gBitangent, 0);
-
 		//view dir color buffer
 		glGenTextures(1, &gViewDir);
 		glBindTexture(GL_TEXTURE_2D, gViewDir);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT6, GL_TEXTURE_2D, gViewDir, 0);
-
-		//normap color buffer
-		glGenTextures(1, &gNormap);
-		glBindTexture(GL_TEXTURE_2D, gNormap);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT7, GL_TEXTURE_2D, gNormap, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, gViewDir, 0);
 
 		//tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-		unsigned int attachments[8] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6, GL_COLOR_ATTACHMENT7 };
-		glDrawBuffers(8, attachments);
+		unsigned int attachments[5] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 };
+		glDrawBuffers(5, attachments);
 
 		//create and attach depth buffer (renderbuffer)
 		glGenRenderbuffers(1, &rboDepth);
@@ -374,13 +350,12 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::m
 			}
 		}
 	}
-	// //activate shader
-	// textureShader.bind();
-	// //set the uniforms
-	// textureShader.setInt("frameIndex", 0);
-	// textureShader.setInt("userMode", (int)cfg.USER_MODE);
-	// textureShader.setBool("phongLighting", cfg.PHONG_LIGHTING);
-	// textureShader.unbind();
+	//activate shader
+	geometryShader.bind();
+	//set the uniforms
+	geometryShader.setInt("frameIndex", 0);
+	geometryShader.setInt("userMode", (int)cfg.USER_MODE);
+	geometryShader.unbind();
 }
 
 void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::map<std::string, GLuint>& cubeLightmapIdsMap, std::map<std::string, GLuint>& cubeNormalmapIdsMap, std::map<std::string, GLuint>& cubeDisplacementmapIdsMap)
@@ -447,7 +422,6 @@ void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::m
 	cubeMapShader.bind();
 	//set the uniforms
 	cubeMapShader.setInt("userMode", (int)cfg.USER_MODE);
-	cubeMapShader.setBool("phongLighting", cfg.PHONG_LIGHTING);
 	cubeMapShader.unbind();
 }
 
@@ -594,7 +568,6 @@ void Engine3D::render()
 	geometryShader.setMat4("projection", getProjectionMatrix());
 	geometryShader.setMat4("view", getViewMatrix());
 	geometryShader.setVec3("viewPos", getCameraPos());
-	geometryShader.setVec3("light_direction", light.direction);
 	for (auto itr = finalModelsToRender.begin(); itr != finalModelsToRender.end(); itr++)
 	{
 		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
@@ -610,8 +583,19 @@ void Engine3D::render()
 		model.render(&geometryShader, gVAO, gIBO, textureIdsMap[model.texture], lightmapIdsMap[model.texture], normalmapIdsMap[model.texture], displacementmapIdsMap[model.texture]);
 	}
 
+	for (auto itr = finalTransparentModelsToRender.begin(); itr != finalTransparentModelsToRender.end(); itr++)
+	{
+		if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
+
+		model& model = *(*itr);
+
+		model.render(&geometryShader, gVAO, gIBO, textureIdsMap[model.texture], lightmapIdsMap[model.texture], normalmapIdsMap[model.texture], displacementmapIdsMap[model.texture]);
+	}
+	finalTransparentModelsToRender.clear();
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_BLEND);
 	lightingShader.bind();
 	lightingShader.setVec3("viewPos", getCameraPos());
 	lightingShader.setBool("phongLighting", cfg.PHONG_LIGHTING);
@@ -624,10 +608,7 @@ void Engine3D::render()
 	lightingShader.setInt("gNormal", 1);
 	lightingShader.setInt("gAlbedo", 2);
 	lightingShader.setInt("gLightmap", 3);
-	lightingShader.setInt("gTangent", 4);
-	lightingShader.setInt("gBitangent", 5);
-	lightingShader.setInt("gViewDir", 6);
-	lightingShader.setInt("gNormap", 7);
+	lightingShader.setInt("gViewDir", 4);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, gPosition);
 	glActiveTexture(GL_TEXTURE1);
@@ -637,24 +618,8 @@ void Engine3D::render()
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, gLightmap);
 	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_2D, gTangent);
-	glActiveTexture(GL_TEXTURE5);
-	glBindTexture(GL_TEXTURE_2D, gBitangent);
-	glActiveTexture(GL_TEXTURE6);
 	glBindTexture(GL_TEXTURE_2D, gViewDir);
-	glActiveTexture(GL_TEXTURE7);
-	glBindTexture(GL_TEXTURE_2D, gNormap);
 	renderScreenQuad();
-
-	// for (auto itr = finalTransparentModelsToRender.begin(); itr != finalTransparentModelsToRender.end(); itr++)
-	// {
-	// 	if (!(*itr)) { std::cout << "nullptr!" << std::endl; continue; }
-
-	// 	model& model = *(*itr);
-
-	// 	model.render(&geometryShader, gVAO, gIBO, textureIdsMap[model.texture], lightmapIdsMap[model.texture], normalmapIdsMap[model.texture], displacementmapIdsMap[model.texture]);
-	// }
-	// finalTransparentModelsToRender.clear();
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
