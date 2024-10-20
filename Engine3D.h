@@ -95,6 +95,7 @@ class Engine3D
 		ArtificeShaderProgram skyBoxShader;
 		ArtificeShaderProgram geometryShader;
 		ArtificeShaderProgram lightingShader;
+		ArtificeShaderProgram postProcShader;
 
 		//to render
 		std::vector<std::string> texturePaths;
@@ -112,26 +113,28 @@ class Engine3D
 		std::map<std::string, GLuint> cubeDisplacementmapIdsMap;
 		std::vector<std::string> cubemapNames;
 
-		//to update vertices
+		//shader related
 		GLuint gCubeMapProgramID = 0;
 		GLuint gSkyBoxProgramID = 0;
 		GLuint gTextureProgramID = 0;
 		GLuint gGeometryProgramID = 0;
 		GLuint gLightingProgramID = 0;
+		GLuint gPostProcProgramID = 0;
 		GLuint gVBO = 0;
 		GLuint gIBO = 0;
 		GLuint gVAO = 0;
 		GLuint gCubeVBO = 0;
 		GLuint gCubeIBO = 0;
 		GLuint gCubeVAO = 0;
-		GLuint gBuffer = 0; //G-Buffer
-		GLuint gPosition = 0; //position color buffer
-		GLuint gNormal = 0; //normal color buffer
-		GLuint gAlbedo = 0; //color buffer
-		GLuint gLightmap = 0; //normal map color buffer
-		GLuint gDisplacementmap = 0; //displacement map color buffer
-		GLuint gViewDir = 0; //view dir color buffer
-		GLuint rboDepth = 0; //depth buffer (renderbuffer)
+		GLuint gBO = 0; //G-Buffer
+		GLuint gPosition = 0; //position color buffer texture
+		GLuint gNormal = 0; //normal color buffer texture
+		GLuint gAlbedo = 0; //color buffer texture
+		GLuint gLightmap = 0; //normal map color buffer texture
+		GLuint gViewDir = 0; //view dir color buffer texture
+		GLuint depthRenderBO = 0; //depth buffer (renderbuffer)
+		GLuint gLightingBO = 0; //lighting buffer
+		GLuint gLighting = 0; //lighting buffer texture
 		GLuint scrQuadVAO = 0;
 		GLuint scrQuadVBO = 0;
 

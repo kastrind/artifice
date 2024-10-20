@@ -181,6 +181,11 @@ bool Engine3D::initGL()
 		printf( "Unable to load lighting shader!\n" );
 		success = false;
 	}
+	else if(!postProcShader.loadProgram("shaders/postproc.glvs", "shaders/postproc.glfs"))
+	{
+		printf( "Unable to load post-processing shader!\n" );
+		success = false;
+	}
 	else
 	{
 		glEnable(GL_DEPTH_TEST);
@@ -194,6 +199,7 @@ bool Engine3D::initGL()
 		gTextureProgramID = textureShader.getProgramID();
 		gGeometryProgramID = geometryShader.getProgramID();
 		gLightingProgramID = lightingShader.getProgramID();
+		gPostProcProgramID = postProcShader.getProgramID();
 		
 		//create VAOs
 		glGenVertexArrays(1, &gVAO);
@@ -210,8 +216,29 @@ bool Engine3D::initGL()
 		//update buffers with the new vertices
 		updateVertices();
 
-		glGenFramebuffers(1, &gBuffer);
-		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+		glGenFramebuffers(1, &gLightingBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, gLightingBO);
+
+		//lighting color buffer
+		glGenTextures(1, &gLighting);
+		glBindTexture(GL_TEXTURE_2D, gLighting);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gLighting, 0);
+
+		//tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+		unsigned int attachmentsLighting[1] = { GL_COLOR_ATTACHMENT0 };
+		glDrawBuffers(1, attachmentsLighting);
+
+		// finally check if framebuffer is complete
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			std::cout << "Lighting framebuffer not complete!" << std::endl;
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		glGenFramebuffers(1, &gBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, gBO);
 
 		//position color buffer
 		glGenTextures(1, &gPosition);
@@ -258,14 +285,15 @@ bool Engine3D::initGL()
 		glDrawBuffers(5, attachments);
 
 		//create and attach depth buffer (renderbuffer)
-		glGenRenderbuffers(1, &rboDepth);
-		glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+		glGenRenderbuffers(1, &depthRenderBO);
+		glBindRenderbuffer(GL_RENDERBUFFER, depthRenderBO);
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBO);
 
 		// finally check if framebuffer is complete
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-			std::cout << "Framebuffer not complete!" << std::endl;
+			std::cout << "G Framebuffer not complete!" << std::endl;
+
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		//initialize clear color
@@ -477,7 +505,7 @@ void Engine3D::render()
 
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.8f, 0.0f, 0.8f, 1.0f);
 	//clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -561,7 +589,7 @@ void Engine3D::render()
 	// glEnable(GL_CULL_FACE);
 	// glCullFace(GL_FRONT);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, gBO);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	geometryShader.bind();
@@ -593,7 +621,8 @@ void Engine3D::render()
 	}
 	finalTransparentModelsToRender.clear();
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, gLightingBO);
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_BLEND);
 	lightingShader.bind();
@@ -619,15 +648,26 @@ void Engine3D::render()
 	glBindTexture(GL_TEXTURE_2D, gLightmap);
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_2D, gViewDir);
+
 	renderScreenQuad();
 
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
-	// blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
-	// the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
-	// depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
-	glBlitFramebuffer(0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_WIDTH, 0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glDisable(GL_DEPTH_TEST);
+	postProcShader.bind();
+	postProcShader.setInt("gLighting", 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, gLighting);
+
+	renderScreenQuad();
+
+	// glBindFramebuffer(GL_READ_FRAMEBUFFER, gBO);
+	// glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
+	// // blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
+	// // the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
+	// // depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
+	// glBlitFramebuffer(0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_WIDTH, 0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+	// glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	//textureShader.unbind();
 
