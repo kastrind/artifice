@@ -26,7 +26,11 @@ typedef struct Configuration
 
 	unsigned int SCREEN_HEIGHT = 600;
 
-	bool ANTIALIASING = true;
+	bool MSAA = true;
+
+	unsigned int MSAA_SAMPLES = 8;
+
+	bool FXAA = true;
 
 	bool PHONG_LIGHTING = true;
 

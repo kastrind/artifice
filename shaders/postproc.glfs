@@ -3,56 +3,68 @@ out vec4 FragColor;
 
 in vec2 TexCoord;
 
-uniform sampler2D gLighting;
-vec2 resolution = vec2(1600, 900);
+uniform sampler2D screenTexture;
+uniform int SCREEN_WIDTH;
+uniform int SCREEN_HEIGHT;
+uniform bool isFXAAOn;
+
+vec3 FXAA(vec2 texCoords)
+{
+
+		vec2 resolution = vec2(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+		vec2 invResolution = 1.0 / resolution; // Inverse resolution for offsets
+
+		vec3 rgbM  = texture(screenTexture, texCoords).rgb;
+
+		// Sample surrounding pixels
+		vec3 rgbN  = texture(screenTexture, texCoords + vec2(0, -1.0) * invResolution).rgb;
+		vec3 rgbNW = texture(screenTexture, texCoords + vec2(-1.0, -1.0) * invResolution).rgb;
+		vec3 rgbW  = texture(screenTexture, texCoords + vec2(-1.0, 0) * invResolution).rgb;
+		vec3 rgbNE = texture(screenTexture, texCoords + vec2(1.0, -1.0) * invResolution).rgb;
+		vec3 rgbE  = texture(screenTexture, texCoords + vec2(1.0, 0) * invResolution).rgb;
+		vec3 rgbSW = texture(screenTexture, texCoords + vec2(-1.0, 1.0) * invResolution).rgb;
+		vec3 rgbS = texture(screenTexture, texCoords + vec2(0, 1.0) * invResolution).rgb;
+		vec3 rgbSE = texture(screenTexture, texCoords + vec2(1.0, 1.0) * invResolution).rgb;
+
+		// Calculate luma
+		vec3 luma = vec3(0.299, 0.587, 0.114);
+		float lumaM  = dot(rgbM, luma);
+		float lumaN  = dot(rgbN, luma);
+		float lumaNW = dot(rgbNW, luma);
+		float lumaW  = dot(rgbW, luma);
+		float lumaNE = dot(rgbNE, luma);
+		float lumaE  = dot(rgbE, luma);
+		float lumaSW = dot(rgbSW, luma);
+		float lumaS  = dot(rgbS, luma);
+		float lumaSE = dot(rgbSE, luma);
+
+		// Compute the maximum and minimum luma values
+		//float maxLuma = max(max(lumaNW, lumaNE), max(lumaSW, lumaSE));
+		float maxLuma = max(max(max(max(max(max(max(max(lumaN, lumaNE), lumaE), lumaSE), lumaS), lumaSW), lumaW), lumaNW), lumaM);
+		//float minLuma = min(min(lumaNW, lumaNE), min(lumaSW, lumaSE));
+		float minLuma = min(min(min(min(min(min(min(min(lumaN, lumaNE), lumaE), lumaSE), lumaS), lumaSW), lumaW), lumaNW), lumaM);
+
+		// Calculate the edge detection threshold
+		float edgeThreshold = 0.1; // You can tweak this value for better results
+
+		// Detect edges
+		float edge = step(edgeThreshold, maxLuma - minLuma);
+
+		// Blend the colors if an edge is detected
+		vec3 color = edge > 0.0 ? mix(rgbM, (rgbN + rgbNW + rgbW + rgbNE + rgbE + rgbSW + rgbS + rgbSE) * 0.125, 0.9) : rgbM;
+		//vec3 color = edge > 0.0 ? vec3(0, 1, 0) : rgbM;
+		return color;
+}
 
 void main()
 {
 
-	vec2 invResolution = 1.0 / resolution; // Inverse resolution for offsets
+	if (!isFXAAOn || TexCoord.x <= 0.01 || TexCoord.y <= 0.01 || TexCoord.x >= 0.99 || TexCoord.y >= 0.99) {
+		vec3 col = texture(screenTexture, TexCoord).rgb;
+		FragColor = vec4(col, 1.0);
+	}else {
+		FragColor = vec4(FXAA(TexCoord), 1.0);
+	}
 
-	// Sample surrounding pixels
-	vec3 rgbN  = texture(gLighting, TexCoord + vec2(0, -1.0) * invResolution).rgb;
-	vec3 rgbNW = texture(gLighting, TexCoord + vec2(-1.0, -1.0) * invResolution).rgb;
-	vec3 rgbW  = texture(gLighting, TexCoord + vec2(-1.0, 0) * invResolution).rgb;
-	vec3 rgbNE = texture(gLighting, TexCoord + vec2(1.0, -1.0) * invResolution).rgb;
-	vec3 rgbE  = texture(gLighting, TexCoord + vec2(1.0, 0) * invResolution).rgb;
-	vec3 rgbSW = texture(gLighting, TexCoord + vec2(-1.0, 1.0) * invResolution).rgb;
-	vec3 rgbS = texture(gLighting, TexCoord + vec2(0, 1.0) * invResolution).rgb;
-	vec3 rgbSE = texture(gLighting, TexCoord + vec2(1.0, 1.0) * invResolution).rgb;
-	vec3 rgbM  = texture(gLighting, TexCoord).rgb;
-
-	// Calculate luma
-	vec3 luma = vec3(0.299, 0.587, 0.114);
-	float lumaM  = dot(rgbM, luma);
-	float lumaN  = dot(rgbN, luma);
-	float lumaNW = dot(rgbNW, luma);
-	float lumaW  = dot(rgbW, luma);
-	float lumaNE = dot(rgbNE, luma);
-	float lumaE  = dot(rgbE, luma);
-	float lumaSW = dot(rgbSW, luma);
-	float lumaS  = dot(rgbS, luma);
-	float lumaSE = dot(rgbSE, luma);
-
-	// Compute the maximum and minimum luma values
-	//float maxLuma = max(max(lumaNW, lumaNE), max(lumaSW, lumaSE));
-	float maxLuma = max(max(max(max(max(max(max(max(lumaN, lumaNE), lumaE), lumaSE), lumaS), lumaSW), lumaW), lumaNW), lumaM);
-	//float minLuma = min(min(lumaNW, lumaNE), min(lumaSW, lumaSE));
-	float minLuma = min(min(min(min(min(min(min(min(lumaN, lumaNE), lumaE), lumaSE), lumaS), lumaSW), lumaW), lumaNW), lumaM);
-
-	// Calculate the edge detection threshold
-	float edgeThreshold = 0.05; // You can tweak this value for better results
-
-	// Detect edges
-	float edge = step(edgeThreshold, maxLuma - minLuma);
-
-	// Blend the colors if an edge is detected
-	vec3 color = edge > 0.0 ? mix(rgbM, (rgbN + rgbNW + rgbW + rgbNE + rgbE + rgbSW + rgbS + rgbSE) * 0.125, 0.9) : rgbM;
-	//vec3 color = edge > 0.0 ? vec3(0, 1, 1) : rgbM;
-	FragColor = vec4(color, 1.0);
-
-/*
-	vec3 col = texture(gLighting, TexCoord).rgb;
-	FragColor = vec4(col, 1.0);
-*/
 }

@@ -126,15 +126,22 @@ class Engine3D
 		GLuint gCubeVBO = 0;
 		GLuint gCubeIBO = 0;
 		GLuint gCubeVAO = 0;
-		GLuint gBO = 0; //G-Buffer
+		GLuint gBOMS = 0; //G-Buffer for MSAA
+		GLuint gPositionMS = 0; //position color buffer texture for MSAA
+		GLuint gNormalMS = 0; //normal color buffer texture for MSAA
+		GLuint gAlbedoMS = 0; //color buffer texture for MSAA
+		GLuint gLightmapMS = 0; //normal map color buffer texture for MSAA
+		GLuint gViewDirMS = 0; //view dir color buffer texture for MSAA
+		GLuint depthRenderBOMS = 0; //depth buffer (renderbuffer) for MSAA
+		GLuint gBO = 0; //G-Buffer for deferred rendering
 		GLuint gPosition = 0; //position color buffer texture
 		GLuint gNormal = 0; //normal color buffer texture
 		GLuint gAlbedo = 0; //color buffer texture
 		GLuint gLightmap = 0; //normal map color buffer texture
 		GLuint gViewDir = 0; //view dir color buffer texture
 		GLuint depthRenderBO = 0; //depth buffer (renderbuffer)
-		GLuint gLightingBO = 0; //lighting buffer
-		GLuint gLighting = 0; //lighting buffer texture
+		GLuint lightingBO = 0; //lighting buffer for post-processing
+		GLuint screenTexture = 0; //lighting buffer texture
 		GLuint scrQuadVAO = 0;
 		GLuint scrQuadVBO = 0;
 

@@ -119,8 +119,6 @@ void Engine3D::renderingThread()
 	}
 	else
 	{
-		// Enable multisampling
-		if (cfg.ANTIALIASING) { glEnable(GL_MULTISAMPLE); }
 		//initialize GLEW
 		printf( "Initializing GLEW...\n" );
 		glewExperimental = GL_TRUE; 
@@ -200,6 +198,16 @@ bool Engine3D::initGL()
 		gGeometryProgramID = geometryShader.getProgramID();
 		gLightingProgramID = lightingShader.getProgramID();
 		gPostProcProgramID = postProcShader.getProgramID();
+
+		lightingShader.bind();
+		lightingShader.setBool("phongLighting", cfg.PHONG_LIGHTING);
+		lightingShader.unbind();
+
+		postProcShader.bind();
+		postProcShader.setInt("SCREEN_WIDTH", cfg.SCREEN_WIDTH);
+		postProcShader.setInt("SCREEN_HEIGHT", cfg.SCREEN_HEIGHT);
+		postProcShader.setBool("isFXAAOn", cfg.FXAA);
+		postProcShader.unbind();
 		
 		//create VAOs
 		glGenVertexArrays(1, &gVAO);
@@ -216,27 +224,60 @@ bool Engine3D::initGL()
 		//update buffers with the new vertices
 		updateVertices();
 
-		glGenFramebuffers(1, &gLightingBO);
-		glBindFramebuffer(GL_FRAMEBUFFER, gLightingBO);
+		if (cfg.MSAA && cfg.MSAA_SAMPLES > 1) {
+			//configure MSAA framebuffer
+			glGenFramebuffers(1, &gBOMS);
+			glBindFramebuffer(GL_FRAMEBUFFER, gBOMS);
 
-		//lighting color buffer
-		glGenTextures(1, &gLighting);
-		glBindTexture(GL_TEXTURE_2D, gLighting);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gLighting, 0);
+			//multisampled position color buffer
+			glGenTextures(1, &gPositionMS);
+			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, gPositionMS);
+			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, cfg.MSAA_SAMPLES, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_TRUE);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, gPositionMS, 0);
 
-		//tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-		unsigned int attachmentsLighting[1] = { GL_COLOR_ATTACHMENT0 };
-		glDrawBuffers(1, attachmentsLighting);
+			//multisampled normal color buffer
+			glGenTextures(1, &gNormalMS);
+			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, gNormalMS);
+			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, cfg.MSAA_SAMPLES, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_TRUE);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D_MULTISAMPLE, gNormalMS, 0);
 
-		// finally check if framebuffer is complete
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-			std::cout << "Lighting framebuffer not complete!" << std::endl;
+			//multisampled albedo color buffer
+			glGenTextures(1, &gAlbedoMS);
+			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, gAlbedoMS);
+			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, cfg.MSAA_SAMPLES, GL_RGBA, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_TRUE);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D_MULTISAMPLE, gAlbedoMS, 0);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			//multisampled lightmap color buffer
+			glGenTextures(1, &gLightmapMS);
+			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, gLightmapMS);
+			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, cfg.MSAA_SAMPLES, GL_RGBA, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_TRUE);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D_MULTISAMPLE, gLightmapMS, 0);
 
+			//multisampled view dir color buffer
+			glGenTextures(1, &gViewDirMS);
+			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, gViewDirMS);
+			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, cfg.MSAA_SAMPLES, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_TRUE);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D_MULTISAMPLE, gViewDirMS, 0);
+
+			//tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+			unsigned int attachmentsMS[5] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 };
+			glDrawBuffers(5, attachmentsMS);
+
+			//create and attach multisampled depth buffer (renderbuffer)
+			glGenRenderbuffers(1, &depthRenderBOMS);
+			glBindRenderbuffer(GL_RENDERBUFFER, depthRenderBOMS);
+			glRenderbufferStorageMultisample(GL_RENDERBUFFER, cfg.MSAA_SAMPLES, GL_DEPTH_COMPONENT, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT);
+			glBindRenderbuffer(GL_RENDERBUFFER, 0);
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBOMS);
+
+			//finally check if framebuffer is complete
+			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+				std::cout << "MSAA Framebuffer not complete!" << std::endl;
+
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
+
+		//configure G-Buffer for deferred rendering
 		glGenFramebuffers(1, &gBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, gBO);
 
@@ -256,7 +297,7 @@ bool Engine3D::initGL()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
 
-		//texture (diffuse/albedo) color buffer
+		//albedo color buffer
 		glGenTextures(1, &gAlbedo);
 		glBindTexture(GL_TEXTURE_2D, gAlbedo);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
@@ -290,9 +331,31 @@ bool Engine3D::initGL()
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT);
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBO);
 
-		// finally check if framebuffer is complete
+		//finally check if framebuffer is complete
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			std::cout << "G Framebuffer not complete!" << std::endl;
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		//configure lighting color buffer for post-processing
+		glGenFramebuffers(1, &lightingBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, lightingBO);
+
+		//screen texture color buffer
+		glGenTextures(1, &screenTexture);
+		glBindTexture(GL_TEXTURE_2D, screenTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenTexture, 0);
+
+		//tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+		unsigned int attachmentsLighting[1] = { GL_COLOR_ATTACHMENT0 };
+		glDrawBuffers(1, attachmentsLighting);
+
+		//finally check if framebuffer is complete
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			std::cout << "Lighting framebuffer not complete!" << std::endl;
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -589,7 +652,12 @@ void Engine3D::render()
 	// glEnable(GL_CULL_FACE);
 	// glCullFace(GL_FRONT);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, gBO);
+	if (cfg.MSAA && cfg.MSAA_SAMPLES > 1) {
+		glEnable(GL_MULTISAMPLE);
+		glBindFramebuffer(GL_FRAMEBUFFER, gBOMS);
+	} else {
+		glBindFramebuffer(GL_FRAMEBUFFER, gBO);
+	}
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	geometryShader.bind();
@@ -621,13 +689,34 @@ void Engine3D::render()
 	}
 	finalTransparentModelsToRender.clear();
 
-	glBindFramebuffer(GL_FRAMEBUFFER, gLightingBO);
-	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	if (cfg.MSAA && cfg.MSAA_SAMPLES > 1) {
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, gBOMS);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gBO);
+		glBlitFramebuffer(0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		glReadBuffer(GL_COLOR_ATTACHMENT0);
+		glDrawBuffer(GL_COLOR_ATTACHMENT0);
+		glBlitFramebuffer(0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glReadBuffer(GL_COLOR_ATTACHMENT1);
+		glDrawBuffer(GL_COLOR_ATTACHMENT1);
+		glBlitFramebuffer(0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glReadBuffer(GL_COLOR_ATTACHMENT2);
+		glDrawBuffer(GL_COLOR_ATTACHMENT2);
+		glBlitFramebuffer(0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glReadBuffer(GL_COLOR_ATTACHMENT3);
+		glDrawBuffer(GL_COLOR_ATTACHMENT3);
+		glBlitFramebuffer(0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glReadBuffer(GL_COLOR_ATTACHMENT4);
+		glDrawBuffer(GL_COLOR_ATTACHMENT4);
+		glBlitFramebuffer(0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	}
+
+
+	glBindFramebuffer(GL_FRAMEBUFFER, lightingBO);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_BLEND);
 	lightingShader.bind();
 	lightingShader.setVec3("viewPos", getCameraPos());
-	lightingShader.setBool("phongLighting", cfg.PHONG_LIGHTING);
 	lightingShader.setVec3("light.direction", light.direction);
 	lightingShader.setVec3("light.color", light.color);
 	lightingShader.setFloat("light.ambientIntensity", light.ambientIntensity);
@@ -655,9 +744,9 @@ void Engine3D::render()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
 	postProcShader.bind();
-	postProcShader.setInt("gLighting", 0);
+	postProcShader.setInt("screenTexture", 0);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, gLighting);
+	glBindTexture(GL_TEXTURE_2D, screenTexture);
 
 	renderScreenQuad();
 
