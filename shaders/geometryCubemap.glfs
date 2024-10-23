@@ -7,18 +7,18 @@ layout (location = 4) out vec3 gViewDir;
 
 in vec3 FragPos;
 in vec3 color;
-in vec2 TexCoord;
+in vec3 TexCoord;
 in vec3 surfaceNormal;
 in vec3 TangentViewPos;
 in vec3 TangentFragPos;
 
 struct Material {
-	sampler2D diffuseTexture; // texture sampler
-	sampler2D lightmap;
+	samplerCube diffuseTexture; // texture sampler
+	samplerCube lightmap;
 	bool existsLightmap;
-	sampler2D normalmap;
+	samplerCube normalmap;
 	bool existsNormalmap;
-	sampler2D displacementmap;
+	samplerCube displacementmap;
 	bool existsDisplacementmap;
 	float shininess;
 };
