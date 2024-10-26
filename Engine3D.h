@@ -94,6 +94,7 @@ class Engine3D
 		ArtificeShaderProgram cubeMapShader;
 		ArtificeShaderProgram skyBoxShader;
 		ArtificeShaderProgram geometryShader;
+		ArtificeShaderProgram geometryCubemapShader;
 		ArtificeShaderProgram lightingShader;
 		ArtificeShaderProgram postProcShader;
 
@@ -118,6 +119,7 @@ class Engine3D
 		GLuint gSkyBoxProgramID = 0;
 		GLuint gTextureProgramID = 0;
 		GLuint gGeometryProgramID = 0;
+		GLuint gGeometryCubemapProgramID = 0;
 		GLuint gLightingProgramID = 0;
 		GLuint gPostProcProgramID = 0;
 		GLuint gVBO = 0;

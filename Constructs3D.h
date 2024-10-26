@@ -445,14 +445,6 @@ typedef struct model {
 			glActiveTexture(GL_TEXTURE3);
 			glBindTexture(GL_TEXTURE_2D, displacementmapId);
 
-			// geometryShader->bind();
-			// geometryShader->setInt("texture_diffuse1", 0);
-			// geometryShader->setInt("texture_specular1", 1);
-			// glActiveTexture(GL_TEXTURE0);
-			// glBindTexture(GL_TEXTURE_2D, textureId);
-			// glActiveTexture(GL_TEXTURE1);
-			// glBindTexture(GL_TEXTURE_2D, lightmapId);
-
 			geometryShader->setMat4("model", this->modelMatrix);
 			geometryShader->setInt("frameIndex", this->frameIndex);
 			geometryShader->setInt("frameRows", this->frameRows);
@@ -482,28 +474,30 @@ typedef struct cubeModel : public model {
 
 		void render(ArtificeShaderProgram* geometryShader, GLuint gCubeVAO, GLuint gCubeIBO, GLuint textureId, GLuint lightmapId, GLuint normalmapId, GLuint displacementmapId) override
 		{
-			// //std::cout << "rendering cubeModel" << std::endl;
-			// cubeMapShader->setInt("material.diffuseTexture", 0);
-			// cubeMapShader->setInt("material.lightmap", 1);
-			// cubeMapShader->setInt("material.normalmap", 2);
-			// cubeMapShader->setInt("material.displacementmap", 3);
-			// glActiveTexture(GL_TEXTURE0);
-			// glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+			//std::cout << "rendering cubeModel" << std::endl;
+			geometryShader->setInt("material.diffuseTexture", 0);
+			geometryShader->setInt("material.lightmap", 1);
+			geometryShader->setInt("material.normalmap", 2);
+			geometryShader->setInt("material.displacementmap", 3);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
 
-			// cubeMapShader->setBool("material.existsLightmap", lightmapId > 0);
-			// glActiveTexture(GL_TEXTURE1);
-			// glBindTexture(GL_TEXTURE_CUBE_MAP, lightmapId);
+			geometryShader->setBool("material.existsLightmap", lightmapId > 0);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, lightmapId);
 
-			// cubeMapShader->setBool("material.existsNormalmap", normalmapId > 0);
-			// glActiveTexture(GL_TEXTURE2);
-			// glBindTexture(GL_TEXTURE_CUBE_MAP, normalmapId);
+			geometryShader->setBool("material.existsNormalmap", normalmapId > 0);
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, normalmapId);
 
-			// cubeMapShader->setBool("material.existsDisplacementmap", displacementmapId > 0);
-			// glActiveTexture(GL_TEXTURE3);
-			// glBindTexture(GL_TEXTURE_CUBE_MAP, displacementmapId);
+			geometryShader->setBool("material.existsDisplacementmap", displacementmapId > 0);
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, displacementmapId);
 
-			// if (!isSkyBox) { cubeMapShader->setMat4("model", this->modelMatrix); }
-			// glDrawElements(GL_TRIANGLES, this->modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)((this->sn) * sizeof(GL_UNSIGNED_INT)));
+			if (!isSkyBox) { geometryShader->setMat4("model", this->modelMatrix); }
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
+			glBindVertexArray(gCubeVAO);
+			glDrawElements(GL_TRIANGLES, this->modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)((this->sn) * sizeof(GL_UNSIGNED_INT)));
 		}
 
 		virtual ~cubeModel() {}

@@ -140,7 +140,7 @@ void main()
 
 	if (userMode == 0 && textureColor.rgb == transparentColor) {
 		FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-	}else {
+	} else {
 		FragColor = vec4(finalColor, 1.0);
 	}
 }

@@ -31,7 +31,7 @@ bool ShaderProgram::bind()
 	GLenum error = glGetError();
 	if( error != GL_NO_ERROR )
 	{
-		printf( "Error binding shader! %s\n", glewGetErrorString( error ) );
+		printf( "Error binding shader with id %d! %s\n", mProgramID, glewGetErrorString( error ) );
 		printProgramLog( mProgramID );
 		return false;
 	}

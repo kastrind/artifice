@@ -97,9 +97,9 @@ void main()
 		lightDir = normalize(-light.direction);
 		viewDir = normalize(viewPos - FragPos);
 	}else {
-		//obtain normal from normal map in range [0,1]
+		// obtain normal from normal map in range [0,1]
 		normal = texture(material.normalmap, normalize(TexCoord)).rgb;
-		//transform normal vector to range [-1,1]
+		// transform normal vector to range [-1,1]
 		normal = normalize(normal * 2.0 - 1.0);
 		lightDir = normalize(TangentLightPos - TangentFragPos);
 		viewDir = normalize(TangentViewPos - TangentFragPos);

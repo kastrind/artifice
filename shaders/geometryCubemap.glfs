@@ -24,24 +24,13 @@ struct Material {
 };
 uniform Material material;
 
-const vec3 transparentColor = vec3(1.0, 0.0, 1.0); // pure magenta for transparency
 uniform int userMode;
-
-uniform int frameIndex;
-uniform int frameRows;
-uniform int frameCols;
-
-vec2 frameSize = vec2(1.0f / frameCols, 1.0f / frameRows);
-int frameCol = frameIndex % frameCols;
-int frameRow = frameIndex / frameRows;
-vec2 offset = vec2(frameCol * frameSize.x, frameRow * frameSize.y);
-vec2 adjustedTexCoord = TexCoord * frameSize + offset;
 
 uniform vec3 viewPos;
 
 const float heightScale = 0.015;
 
-vec2 DisplacementMapping(vec2 texCoords, vec3 viewDir)
+vec2 DisplacementMapping(vec3 texCoords, vec3 viewDir)
 {
 	// number of depth layers
 	const float minLayers = 8.0;
@@ -56,15 +45,15 @@ vec2 DisplacementMapping(vec2 texCoords, vec3 viewDir)
 	vec2 deltaTexCoords = P / numLayers;
 
 	// get initial values
-	vec2 currentTexCoords = texCoords;
-	float currentDepthMapValue = texture(material.displacementmap, currentTexCoords).r;
+	vec2 currentTexCoords = texCoords.xy;
+	float currentDepthMapValue = texture(material.displacementmap, vec3(currentTexCoords, texCoords.z)).r;
 	
 	while(currentLayerDepth < currentDepthMapValue)
 	{
 		// shift texture coordinates along direction of P
 		currentTexCoords -= deltaTexCoords;
 		// get depthmap value at current texture coordinates
-		currentDepthMapValue = texture(material.displacementmap, currentTexCoords).r;
+		currentDepthMapValue = texture(material.displacementmap, vec3(currentTexCoords, texCoords.z)).r;
 		// get depth of next layer
 		currentLayerDepth += layerDepth;
 	}
@@ -74,7 +63,7 @@ vec2 DisplacementMapping(vec2 texCoords, vec3 viewDir)
 
 	// get depth after and before collision for linear interpolation
 	float afterDepth  = currentDepthMapValue - currentLayerDepth;
-	float beforeDepth = texture(material.displacementmap, prevTexCoords).r - currentLayerDepth + layerDepth;
+	float beforeDepth = texture(material.displacementmap, vec3(prevTexCoords, texCoords.z)).r - currentLayerDepth + layerDepth;
 
 	// interpolation of texture coordinates
 	float weight = afterDepth / (afterDepth - beforeDepth);
@@ -85,21 +74,14 @@ vec2 DisplacementMapping(vec2 texCoords, vec3 viewDir)
 
 void main()
 {
+	vec3 tempTextCoord = normalize(TexCoord);
+	vec3 displacedTextCoord = tempTextCoord;
 	if (material.existsDisplacementmap) {
 		vec3 tangentViewDir = normalize(TangentViewPos - TangentFragPos);
-		adjustedTexCoord = DisplacementMapping(adjustedTexCoord, tangentViewDir);
+		displacedTextCoord = vec3(DisplacementMapping(tempTextCoord, tangentViewDir), tempTextCoord.z);
 	}
 
-	vec4 diffuse = texture(material.diffuseTexture, adjustedTexCoord);
-
-	// discard if diffuse per-fragment color is pure magenta which is considered transparent
-	if (userMode == 0 && diffuse.rgb == transparentColor) {
-		discard;
-	// else store the diffuse per-fragment color
-	}else {
-		gAlbedo.rgb = diffuse.rgb;
-		gAlbedo.a = 1.0;
-	}
+	vec4 diffuse = texture(material.diffuseTexture, displacedTextCoord);
 
 	gViewDir = normalize(viewPos - FragPos);
 
@@ -111,7 +93,7 @@ void main()
 		gNormal = normalize(surfaceNormal);
 	}else {
 		// obtain normal from normal map in range [0,1]
-		vec3 normal = texture(material.normalmap, adjustedTexCoord).rgb;
+		vec3 normal = texture(material.normalmap, displacedTextCoord).rgb;
 		// transform normal vector to range [-1,1]
 		normal = normalize(normal * 2.0 - 1.0);
 		gNormal = normal;
@@ -119,7 +101,7 @@ void main()
 
 	// and the lightmap per-fragment color
 	if (material.existsLightmap) {
-		gLightmap.rgb = texture(material.lightmap, adjustedTexCoord).rgb;
+		gLightmap.rgb = texture(material.lightmap, displacedTextCoord).rgb;
 	}else {
 		gLightmap = vec4(1.0, 1.0, 1.0, 1.0);
 	}
