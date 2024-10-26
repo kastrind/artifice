@@ -2,13 +2,13 @@
 layout (location = 0) out vec4 screenTexture; // final color texture
 layout (location = 1) out vec4 FragColor; // final color
 
-in vec3 TexCoord;
+in vec2 TexCoord;
 
-uniform samplerCube gPosition;
-uniform samplerCube gNormal;
-uniform samplerCube gAlbedo;
-uniform samplerCube gLightmap;
-uniform samplerCube gViewDir;
+uniform sampler2D gPosition;
+uniform sampler2D gNormal;
+uniform sampler2D gAlbedo;
+uniform sampler2D gLightmap;
+uniform sampler2D gViewDir;
 
 struct Light {
 	vec3 direction;
