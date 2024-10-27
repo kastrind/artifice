@@ -788,7 +788,7 @@ void Engine3D::render()
 	geometrySkyboxShader.bind();
 	geometrySkyboxShader.setMat4("projection", getProjectionMatrix());
 	geometrySkyboxShader.setMat4("view", getViewMatrixNoTranslation());
-	// glDisable(GL_CULL_FACE);
+	glDepthMask(GL_FALSE);
 	glDepthFunc(GL_LEQUAL);
 	if (finalSkyBoxToRender != nullptr)
 	{
@@ -801,8 +801,7 @@ void Engine3D::render()
 
 
 	//render cubemaps
-	// glEnable(GL_CULL_FACE);
-	// glCullFace(GL_FRONT);
+	glDepthMask(GL_TRUE);
 	glDepthFunc(GL_LESS);
 	geometryCubemapShader.bind();
 	geometryCubemapShader.setMat4("projection", getProjectionMatrix());
