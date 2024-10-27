@@ -179,6 +179,11 @@ bool Engine3D::initGL()
 		printf( "Unable to load geometry cubemap shader!\n" );
 		success = false;
 	}
+	else if(!geometrySkyboxShader.loadProgram("shaders/geometrySkybox.glvs", "shaders/geometrySkybox.glfs"))
+	{
+		printf( "Unable to load geometry skybox shader!\n" );
+		success = false;
+	}
 	else if(!lightingShader.loadProgram("shaders/lighting.glvs", "shaders/lighting.glfs"))
 	{
 		printf( "Unable to load lighting shader!\n" );
@@ -193,9 +198,9 @@ bool Engine3D::initGL()
 	{
 		glEnable(GL_DEPTH_TEST);
 		glDepthMask(GL_TRUE);
+		glDepthFunc(GL_LESS); 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDepthFunc(GL_LESS); 
 
 		gCubeMapProgramID = cubeMapShader.getProgramID();
 		std::cout << "cspID: " << gCubeMapProgramID << std::endl;
@@ -207,8 +212,18 @@ bool Engine3D::initGL()
 		std::cout << "gspID: " << gGeometryProgramID << std::endl;
 		gGeometryCubemapProgramID = geometryCubemapShader.getProgramID();
 		std::cout << "gcspID: " << gGeometryCubemapProgramID << std::endl;
+		gGeometrySkyboxProgramID = geometrySkyboxShader.getProgramID();
+		std::cout << "gsspID: " << gGeometrySkyboxProgramID << std::endl;
 		gLightingProgramID = lightingShader.getProgramID();
 		gPostProcProgramID = postProcShader.getProgramID();
+
+		geometryShader.bind();
+		geometryShader.setInt("userMode", (int)cfg.USER_MODE);
+		geometryShader.unbind();
+
+		geometryCubemapShader.bind();
+		geometryCubemapShader.setInt("userMode", (int)cfg.USER_MODE);
+		geometryCubemapShader.unbind();
 
 		lightingShader.bind();
 		lightingShader.setBool("phongLighting", cfg.PHONG_LIGHTING);
@@ -629,7 +644,6 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::m
 	geometryShader.bind();
 	//set the uniforms
 	geometryShader.setInt("frameIndex", 0);
-	geometryShader.setInt("userMode", (int)cfg.USER_MODE);
 	geometryShader.unbind();
 }
 
@@ -693,11 +707,6 @@ void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::m
 			}
 		}
 	}
-	//activate shader
-	geometryCubemapShader.bind();
-	//set the uniforms
-	geometryCubemapShader.setInt("userMode", (int)cfg.USER_MODE);
-	geometryCubemapShader.unbind();
 }
 
 bool Engine3D::initUI()
@@ -756,63 +765,45 @@ void Engine3D::render()
 	//clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// //set cubemap shader uniforms
-	// cubeMapShader.bind();
-	// cubeMapShader.setMat4("projection", getProjectionMatrix());
-	// cubeMapShader.setMat4("view", getViewMatrix());
-	// //cubemap lighting
-	// cubeMapShader.setVec3("light.direction", light.direction);
-	// cubeMapShader.setVec3("light.color", light.color);
-	// cubeMapShader.setFloat("light.ambientIntensity", light.ambientIntensity);
-	// cubeMapShader.setFloat("light.diffuseIntensity", light.diffuseIntensity);
-	// cubeMapShader.setFloat("light.specularIntensity", light.specularIntensity);
-	// cubeMapShader.setVec3("viewPos", getCameraPos());
-	// cubeMapShader.unbind();
-
 	//set texture shader uniforms
 	// glEnable(GL_CULL_FACE);
 	// glCullFace(GL_FRONT);
 
 
-	// //texture lighting
-	// textureShader.setVec3("light.direction", light.direction);
-	// textureShader.setVec3("light.color", light.color);
-	// textureShader.setFloat("light.ambientIntensity", light.ambientIntensity);
-	// textureShader.setFloat("light.diffuseIntensity", light.diffuseIntensity);
-	// textureShader.setFloat("light.specularIntensity", light.specularIntensity);
-	// textureShader.setVec3("viewPos", getCameraPos());
-	// textureShader.unbind();
+	// glBindFramebuffer(GL_FRAMEBUFFER, lightingBO);
+	// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// //set skybox shader uniforms
-	// skyBoxShader.bind();
-	// skyBoxShader.setMat4("projection", getProjectionMatrix());
-	// skyBoxShader.setMat4("view", getViewMatrixNoTranslation());
-	// skyBoxShader.unbind();
-
-	// //render active skybox
-	// skyBoxShader.bind();
-	// glDisable(GL_CULL_FACE);
-	// glDepthFunc(GL_LEQUAL);
-	// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
-	// glBindVertexArray(gCubeVAO);
-	// if (finalSkyBoxToRender != nullptr)
-	// {
-	// 	cubeModel& cm = *finalSkyBoxToRender;
-	// 	cm.render(&skyBoxShader, cubemapIdsMap[cm.texture], 0, 0, 0);
-	// }
-	// glBindVertexArray(0);
-	// skyBoxShader.unbind();
-
-	//render cubemaps
 	if (cfg.MSAA && cfg.MSAA_SAMPLES > 1) {
 		glEnable(GL_MULTISAMPLE);
-		//TODO!
+		glBindFramebuffer(GL_FRAMEBUFFER, gBOMS);
 	} else {
 		glBindFramebuffer(GL_FRAMEBUFFER, gBO);
 	}
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+
+
+	//set skybox shader uniforms
+	geometrySkyboxShader.bind();
+	geometrySkyboxShader.setMat4("projection", getProjectionMatrix());
+	geometrySkyboxShader.setMat4("view", getViewMatrixNoTranslation());
+	// glDisable(GL_CULL_FACE);
+	glDepthFunc(GL_LEQUAL);
+	if (finalSkyBoxToRender != nullptr)
+	{
+		cubeModel& cm = *finalSkyBoxToRender;
+		cm.render(&geometrySkyboxShader, gCubeVAO, gCubeIBO, cubemapIdsMap[cm.texture], 0, 0, 0);
+	}
+	geometrySkyboxShader.unbind();
+
+
+
+
+	//render cubemaps
 	// glEnable(GL_CULL_FACE);
 	// glCullFace(GL_FRONT);
+	glDepthFunc(GL_LESS);
 	geometryCubemapShader.bind();
 	geometryCubemapShader.setMat4("projection", getProjectionMatrix());
 	geometryCubemapShader.setMat4("view", getViewMatrix());
@@ -836,27 +827,7 @@ void Engine3D::render()
 		cm.render(&geometryCubemapShader, gCubeVAO, gCubeIBO, cubemapIdsMap[cm.texture], cubeLightmapIdsMap[cm.texture], cubeNormalmapIdsMap[cm.texture], cubeDisplacementmapIdsMap[cm.texture]);
 	}
 
-
-
-	// glBindVertexArray(0);
-	// cubeMapShader.unbind();
-
 	//render other models
-	// textureShader.bind();
-	// glEnable(GL_CULL_FACE);
-	// glCullFace(GL_FRONT);
-
-
-	/*
-
-	if (cfg.MSAA && cfg.MSAA_SAMPLES > 1) {
-		glEnable(GL_MULTISAMPLE);
-		glBindFramebuffer(GL_FRAMEBUFFER, gBOMS);
-	} else {
-		glBindFramebuffer(GL_FRAMEBUFFER, gBO);
-	}
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 	geometryShader.bind();
 	geometryShader.setMat4("projection", getProjectionMatrix());
 	geometryShader.setMat4("view", getViewMatrix());
@@ -886,7 +857,6 @@ void Engine3D::render()
 	}
 	finalTransparentModelsToRender.clear();
 
-
 	if (cfg.MSAA && cfg.MSAA_SAMPLES > 1) {
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, gBOMS);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gBO);
@@ -907,9 +877,8 @@ void Engine3D::render()
 		glDrawBuffer(GL_COLOR_ATTACHMENT4);
 		glBlitFramebuffer(0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	}
-	*/
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, lightingBO);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_BLEND);
 	lightingShader.bind();
@@ -937,44 +906,15 @@ void Engine3D::render()
 
 	renderScreenQuad();
 
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glDisable(GL_DEPTH_TEST);
+	postProcShader.bind();
+	postProcShader.setInt("screenTexture", 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, screenTexture);
 
-	// glBindFramebuffer(GL_FRAMEBUFFER, lightingBO);
-	// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	// glEnable(GL_BLEND);
-	// lightingShader.bind();
-	// lightingShader.setVec3("viewPos", getCameraPos());
-	// lightingShader.setVec3("light.direction", light.direction);
-	// lightingShader.setVec3("light.color", light.color);
-	// lightingShader.setFloat("light.ambientIntensity", light.ambientIntensity);
-	// lightingShader.setFloat("light.diffuseIntensity", light.diffuseIntensity);
-	// lightingShader.setFloat("light.specularIntensity", light.specularIntensity);
-	// lightingShader.setInt("gPosition", 0);
-	// lightingShader.setInt("gNormal", 1);
-	// lightingShader.setInt("gAlbedo", 2);
-	// lightingShader.setInt("gLightmap", 3);
-	// lightingShader.setInt("gViewDir", 4);
-	// glActiveTexture(GL_TEXTURE0);
-	// glBindTexture(GL_TEXTURE_2D, gPosition);
-	// glActiveTexture(GL_TEXTURE1);
-	// glBindTexture(GL_TEXTURE_2D, gNormal);
-	// glActiveTexture(GL_TEXTURE2);
-	// glBindTexture(GL_TEXTURE_2D, gAlbedo);
-	// glActiveTexture(GL_TEXTURE3);
-	// glBindTexture(GL_TEXTURE_2D, gLightmap);
-	// glActiveTexture(GL_TEXTURE4);
-	// glBindTexture(GL_TEXTURE_2D, gViewDir);
-
-	// renderScreenQuad();
-
-	// glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	// glDisable(GL_DEPTH_TEST);
-	// postProcShader.bind();
-	// postProcShader.setInt("screenTexture", 0);
-	// glActiveTexture(GL_TEXTURE0);
-	// glBindTexture(GL_TEXTURE_2D, screenTexture);
-
-	// renderScreenQuad();
+	renderScreenQuad();
 
 
 	// glBindFramebuffer(GL_READ_FRAMEBUFFER, gBO);

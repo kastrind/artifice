@@ -1,0 +1,31 @@
+#version 330 core
+layout (location = 0) out vec3 gPosition;
+layout (location = 1) out vec3 gNormal;
+layout (location = 2) out vec4 gAlbedo;
+layout (location = 3) out vec4 gLightmap;
+layout (location = 4) out vec3 gViewDir;
+
+in vec3 TexCoord;
+
+struct Material {
+	samplerCube diffuseTexture; // texture sampler
+	samplerCube lightmap;
+	bool existsLightmap;
+	samplerCube normalmap;
+	bool existsNormalmap;
+	samplerCube displacementmap;
+	bool existsDisplacementmap;
+	float shininess;
+};
+uniform Material material;
+
+void main()
+{
+	gPosition = TexCoord;
+	gNormal = vec3(0.0, 0.0, 0.0);
+	vec4 diffuse = texture(material.diffuseTexture, TexCoord);
+	gAlbedo.rgb = diffuse.rgb;
+	gAlbedo.a = 1.0;
+	gLightmap = vec4(1.0, 1.0, 1.0, 1.0);
+	gViewDir = vec3(0.0, 0.0, 0.0);
+}
