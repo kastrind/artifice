@@ -808,11 +808,11 @@ void Engine3D::render()
 		glEnable(GL_MULTISAMPLE);
 		//TODO!
 	} else {
-		glBindFramebuffer(GL_FRAMEBUFFER, gCubeBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, gBO);
 	}
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
+	// glEnable(GL_CULL_FACE);
+	// glCullFace(GL_FRONT);
 	geometryCubemapShader.bind();
 	geometryCubemapShader.setMat4("projection", getProjectionMatrix());
 	geometryCubemapShader.setMat4("view", getViewMatrix());
@@ -909,7 +909,7 @@ void Engine3D::render()
 	}
 	*/
 
-	glBindFramebuffer(GL_FRAMEBUFFER, lightingBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_BLEND);
 	lightingShader.bind();
@@ -925,15 +925,15 @@ void Engine3D::render()
 	lightingShader.setInt("gLightmap", 3);
 	lightingShader.setInt("gViewDir", 4);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, gCubePosition);
+	glBindTexture(GL_TEXTURE_2D, gPosition);
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, gCubeNormal);
+	glBindTexture(GL_TEXTURE_2D, gNormal);
 	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, gCubeAlbedo);
+	glBindTexture(GL_TEXTURE_2D, gAlbedo);
 	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, gCubeLightmap);
+	glBindTexture(GL_TEXTURE_2D, gLightmap);
 	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, gCubeViewDir);
+	glBindTexture(GL_TEXTURE_2D, gViewDir);
 
 	renderScreenQuad();
 
@@ -966,15 +966,15 @@ void Engine3D::render()
 
 	// renderScreenQuad();
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glDisable(GL_DEPTH_TEST);
-	postProcShader.bind();
-	postProcShader.setInt("screenTexture", 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, screenTexture);
+	// glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// glDisable(GL_DEPTH_TEST);
+	// postProcShader.bind();
+	// postProcShader.setInt("screenTexture", 0);
+	// glActiveTexture(GL_TEXTURE0);
+	// glBindTexture(GL_TEXTURE_2D, screenTexture);
 
-	renderScreenQuad();
+	// renderScreenQuad();
 
 
 	// glBindFramebuffer(GL_READ_FRAMEBUFFER, gBO);
