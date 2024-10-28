@@ -154,22 +154,7 @@ bool Engine3D::initGL()
 	bool success = true;
 
 	printf( "Loading shader programs...\n" );
-	if (!cubeMapShader.loadProgram("shaders/cubemap.glvs", "shaders/cubemap.glfs"))
-	{
-		printf( "Unable to load cubemap shader!\n" );
-		success = false;
-	}
-	if (!skyBoxShader.loadProgram("shaders/skybox.glvs", "shaders/skybox.glfs"))
-	{
-		printf( "Unable to load skybox shader!\n" );
-		success = false;
-	}
-	else if(!textureShader.loadProgram("shaders/texture.glvs", "shaders/texture.glfs"))
-	{
-		printf( "Unable to load cubemap shader!\n" );
-		success = false;
-	}
-	else if(!geometryShader.loadProgram("shaders/geometry.glvs", "shaders/geometry.glfs"))
+	if(!geometryShader.loadProgram("shaders/geometry.glvs", "shaders/geometry.glfs"))
 	{
 		printf( "Unable to load geometry shader!\n" );
 		success = false;
@@ -196,15 +181,8 @@ bool Engine3D::initGL()
 	}
 	else
 	{
-		glEnable(GL_DEPTH_TEST);
-		glDepthMask(GL_TRUE);
-		glDepthFunc(GL_LESS); 
-		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		gCubeMapProgramID = cubeMapShader.getProgramID();
-		gSkyBoxProgramID = skyBoxShader.getProgramID();
-		gTextureProgramID = textureShader.getProgramID();
 		gGeometryProgramID = geometryShader.getProgramID();
 		gGeometryCubemapProgramID = geometryCubemapShader.getProgramID();
 		gGeometrySkyboxProgramID = geometrySkyboxShader.getProgramID();
@@ -584,7 +562,7 @@ void Engine3D::render()
 	//clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//write geometry to the multisampling buffer or the regular one
+	//geometry pass: write geometry to the multisampling buffer or the regular one
 	if (cfg.MSAA && cfg.MSAA_SAMPLES > 1) {
 		glEnable(GL_MULTISAMPLE);
 		glBindFramebuffer(GL_FRAMEBUFFER, gBOMS);
@@ -1289,14 +1267,18 @@ bool Engine3D::onUserDestroy()
 	printf("Unbinding and deleting shader programs...\n");
 
 	//unbind program - deactivate shader
-	cubeMapShader.unbind();
-	textureShader.unbind();
-	skyBoxShader.unbind();
+	geometryShader.unbind();
+	geometryCubemapShader.unbind();
+	geometrySkyboxShader.unbind();
+	lightingShader.unbind();
+	postProcShader.unbind();
 
 	//deallocate programs
-	cubeMapShader.freeProgram();
-	textureShader.freeProgram();
-	skyBoxShader.freeProgram();
+	geometryShader.freeProgram();
+	geometryCubemapShader.freeProgram();
+	geometrySkyboxShader.freeProgram();
+	lightingShader.freeProgram();
+	postProcShader.freeProgram();
 
 	printf("Shutting down ImGui...\n");
 	ImGui_ImplOpenGL3_Shutdown();

@@ -89,17 +89,14 @@ class Engine3D
 		//OpenGL context
 		SDL_GLContext gContext;
 
-		//shader programs
-		ArtificeShaderProgram textureShader;
-		ArtificeShaderProgram cubeMapShader;
-		ArtificeShaderProgram skyBoxShader;
+		//shader programs to implement a 3-step shader pipeline for deferred rendering: geometry pass, lighting pass, post-processing pass
 		ArtificeShaderProgram geometryShader;
 		ArtificeShaderProgram geometryCubemapShader;
 		ArtificeShaderProgram geometrySkyboxShader;
 		ArtificeShaderProgram lightingShader;
 		ArtificeShaderProgram postProcShader;
 
-		//to render
+		//textures, lightmaps, normalmaps, displacementmaps
 		std::vector<std::string> texturePaths;
 		std::map<std::string, GLuint> textureIdsMap;
 		std::map<std::string, GLuint> lightmapIdsMap;
@@ -115,15 +112,14 @@ class Engine3D
 		std::map<std::string, GLuint> cubeDisplacementmapIdsMap;
 		std::vector<std::string> cubemapNames;
 
-		//shader related
-		GLuint gCubeMapProgramID = 0;
-		GLuint gSkyBoxProgramID = 0;
-		GLuint gTextureProgramID = 0;
+		//shader IDs
 		GLuint gGeometryProgramID = 0;
 		GLuint gGeometryCubemapProgramID = 0;
 		GLuint gGeometrySkyboxProgramID = 0;
 		GLuint gLightingProgramID = 0;
 		GLuint gPostProcProgramID = 0;
+
+		//buffer object IDs
 		GLuint gVBO = 0;
 		GLuint gIBO = 0;
 		GLuint gVAO = 0;
@@ -148,7 +144,7 @@ class Engine3D
 		GLuint depthRenderBO = 0; //depth buffer (renderbuffer)
 
 		GLuint lightingBO = 0; //lighting buffer for post-processing
-		GLuint screenTexture = 0; //lighting buffer texture
+		GLuint screenTexture = 0; //lighting buffer texture, input to the post-processing step
 		GLuint scrQuadVAO = 0;
 		GLuint scrQuadVBO = 0;
 
