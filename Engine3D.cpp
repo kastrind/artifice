@@ -136,11 +136,11 @@ void Engine3D::renderingThread()
 			return;
 		}
 		//initialize ImGui
-		if (!initUI() )
-		{
-			printf( "Unable to initialize ImGui!\n" );
-			return;
-		}
+		// if (!initUI() )
+		// {
+		// 	printf( "Unable to initialize ImGui!\n" );
+		// 	return;
+		// }
 	}
 
 	while (isActive)
@@ -404,7 +404,7 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::m
 
 				//declare texture
 				glGenTextures(1, &(*idsMap)[filename]);
-				std::cout << filename << ": " << (*idsMap)[filename] << std::endl;
+				//std::cout << filename << ": " << (*idsMap)[filename] << std::endl;
 				//bind texture
 				glBindTexture(GL_TEXTURE_2D, (*idsMap)[filename]);
 
@@ -715,7 +715,7 @@ void Engine3D::render()
 
 	mtx.unlock();
 
-	renderUI();
+	//renderUI();
 
 	//update screen
 	SDL_GL_SwapWindow( gWindow );
@@ -1280,10 +1280,10 @@ bool Engine3D::onUserDestroy()
 	lightingShader.freeProgram();
 	postProcShader.freeProgram();
 
-	printf("Shutting down ImGui...\n");
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplSDL2_Shutdown();
-	ImGui::DestroyContext();
+	// printf("Shutting down ImGui...\n");
+	// ImGui_ImplOpenGL3_Shutdown();
+	// ImGui_ImplSDL2_Shutdown();
+	// ImGui::DestroyContext();
 
 	return true;
 }

@@ -3,8 +3,8 @@
 IMGUI_SRCS = imgui/imgui.cpp imgui/imgui_impl_sdl2.cpp imgui/imgui_impl_opengl3.cpp imgui/imgui_tables.cpp imgui/imgui_widgets.cpp imgui/imgui_draw.cpp imgui/imgui_stdlib.cpp imgui/imgui_demo.cpp
 IMGUI_OBJS = imgui.o imgui_impl_sdl2.o imgui_impl_opengl3.o  imgui_tables.o imgui_widgets.o imgui_draw.o imgui_stdlib.o imgui_demo.o
 
-SRCS = main.cpp Initiator.cpp Level.cpp ShaderProgram.cpp ArtificeShaderProgram.cpp EventController.cpp Engine3D.cpp Engine3DEd.cpp $(IMGUI_SRCS)
-OBJS = main.o Initiator.o Level.o ShaderProgram.o ArtificeShaderProgram.o EventController.o Engine3D.o Engine3DEd.o $(IMGUI_OBJS)
+SRCS = main.cpp Initiator.cpp Level.cpp ShaderProgram.cpp ArtificeShaderProgram.cpp EventController.cpp Engine3D.cpp Engine3DEd.cpp #$(IMGUI_SRCS)
+OBJS = main.o Initiator.o Level.o ShaderProgram.o ArtificeShaderProgram.o EventController.o Engine3D.o Engine3DEd.o #$(IMGUI_OBJS)
 
 #CC specifies which compiler we're using
 CC = g++
