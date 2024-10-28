@@ -54,10 +54,11 @@ event :
 engine :
 	$(CC) -c Engine3D.cpp Engine3DEd.cpp $(COMPILER_FLAGS)
 
-clean : 
+clean :
 	rm *.o *.exe || true
 
-objs : clean gui main init level shader event engine
+#objs : clean gui main init level shader event engine
+objs : clean main init level shader event engine
 
 build : objs link
 

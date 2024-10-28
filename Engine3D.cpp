@@ -508,6 +508,7 @@ void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::m
 	}
 }
 
+/*
 bool Engine3D::initUI()
 {
 	bool success = false;
@@ -525,6 +526,7 @@ bool Engine3D::initUI()
 	success = ImGui_ImplOpenGL3_Init();
 	return success;
 }
+*/
 
 void Engine3D::renderScreenQuad()
 {
@@ -839,6 +841,7 @@ void Engine3D::updateVertices()
 	std::cout << "Updated vertices" << std::endl;
 }
 
+/*
 void Engine3D::renderUI()
 {
 	//(after event loop)
@@ -856,6 +859,7 @@ void Engine3D::renderUI()
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
+*/
 
 bool Engine3D::onUserCreate()
 {

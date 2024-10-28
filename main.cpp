@@ -83,7 +83,7 @@ int main( int argc, char* args[] )
 				else if( e.type == SDL_KEYDOWN || e.type == SDL_KEYUP || e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP  || e.type == SDL_MOUSEWHEEL)
 				{
 					eventController.decodeEvent(&e);
-					ImGui_ImplSDL2_ProcessEvent(&e); // Forward your event to backend
+					//ImGui_ImplSDL2_ProcessEvent(&e); // Forward your event to backend
 				}
 
 				//just a temporary proof-of-concept to modify world on user input

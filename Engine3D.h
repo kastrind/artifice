@@ -271,7 +271,7 @@ class Engine3D
 
 		void loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::map<std::string, GLuint>& cubeLightmapIdsMap, std::map<std::string, GLuint>& cubeNormalmapIdsMap, std::map<std::string, GLuint>& cubeDisplacementmapIdsMap);
 
-		bool initUI();
+		//bool initUI();
 
 		void render();
 
@@ -279,7 +279,7 @@ class Engine3D
 
 		void updateVertices();
 
-		void renderUI();
+		//void renderUI();
 
 		void captureInput();
 
