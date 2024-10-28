@@ -147,14 +147,6 @@ class Engine3D
 		GLuint gViewDir = 0; //view dir color buffer texture
 		GLuint depthRenderBO = 0; //depth buffer (renderbuffer)
 
-		GLuint gCubeBO = 0; //G-Buffer for deferred rendering of cubemaps
-		GLuint gCubePosition = 0; //position color buffer texture
-		GLuint gCubeNormal = 0; //normal color buffer texture
-		GLuint gCubeAlbedo = 0; //color buffer texture
-		GLuint gCubeLightmap = 0; //normal map color buffer texture
-		GLuint gCubeViewDir = 0; //view dir color buffer texture
-		GLuint gCubeDepth = 0; //depth buffer
-
 		GLuint lightingBO = 0; //lighting buffer for post-processing
 		GLuint screenTexture = 0; //lighting buffer texture
 		GLuint scrQuadVAO = 0;

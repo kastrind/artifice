@@ -203,17 +203,11 @@ bool Engine3D::initGL()
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		gCubeMapProgramID = cubeMapShader.getProgramID();
-		std::cout << "cspID: " << gCubeMapProgramID << std::endl;
 		gSkyBoxProgramID = skyBoxShader.getProgramID();
-		std::cout << "sspID: " << gSkyBoxProgramID << std::endl;
 		gTextureProgramID = textureShader.getProgramID();
-		std::cout << "tspID: " << gTextureProgramID << std::endl;
 		gGeometryProgramID = geometryShader.getProgramID();
-		std::cout << "gspID: " << gGeometryProgramID << std::endl;
 		gGeometryCubemapProgramID = geometryCubemapShader.getProgramID();
-		std::cout << "gcspID: " << gGeometryCubemapProgramID << std::endl;
 		gGeometrySkyboxProgramID = geometrySkyboxShader.getProgramID();
-		std::cout << "gsspID: " << gGeometrySkyboxProgramID << std::endl;
 		gLightingProgramID = lightingShader.getProgramID();
 		gPostProcProgramID = postProcShader.getProgramID();
 
@@ -302,179 +296,6 @@ bool Engine3D::initGL()
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		}
-
-
-
-
-
-// // Configure G-Buffer for deferred rendering of cubemaps
-// glGenFramebuffers(1, &gCubeBO);
-// glBindFramebuffer(GL_FRAMEBUFFER, gCubeBO);
-
-// // Position color buffer for cubemaps
-// glGenTextures(1, &gCubePosition);
-// glBindTexture(GL_TEXTURE_CUBE_MAP, gCubePosition);
-// for (GLuint i = 0; i < 6; i++) {
-//     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, 1024, 1024, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-// }
-// glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-// glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-// glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-// glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-// glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-// // Attach one face (you'll attach a different face each render pass)
-// glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X, gCubePosition, 0);
-// //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gCubePosition, 0);
-
-// // // Depth renderbuffer for depth testing
-// // glGenRenderbuffers(1, &gCubeDepth);
-// // glBindRenderbuffer(GL_RENDERBUFFER, gCubeDepth);
-// // glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT);
-// // glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, gCubeDepth);
-
-// // Set draw buffer (only one color attachment here)
-// GLuint attachmentsCube[1] = { GL_COLOR_ATTACHMENT0 };
-// glDrawBuffers(1, attachmentsCube);
-
-// // Finally, check if framebuffer is complete
-// GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-// if (status != GL_FRAMEBUFFER_COMPLETE)
-// {
-// 	    switch(status) {
-//         case GL_FRAMEBUFFER_UNDEFINED:
-//             std::cout << "GL_FRAMEBUFFER_UNDEFINED" << std::endl;
-//             break;
-//         case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-//             std::cout << "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT" << std::endl;
-//             break;
-//         case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-//             std::cout << "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT" << std::endl;
-//             break;
-//         case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-//             std::cout << "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER" << std::endl;
-//             break;
-//         case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-//             std::cout << "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER" << std::endl;
-//             break;
-//         case GL_FRAMEBUFFER_UNSUPPORTED:
-//             std::cout << "GL_FRAMEBUFFER_UNSUPPORTED" << std::endl;
-//             break;
-//         case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
-//             std::cout << "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE" << std::endl;
-//             break;
-//         case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
-//             std::cout << "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS" << std::endl;
-//             break;
-//         default:
-//             std::cout << "Unknown error" << std::endl;
-//     }
-// }
-
-// glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-
-
-
-
-
-
-
-
-		//configure G-Buffer for deferred rendering of cubemaps
-		glGenFramebuffers(1, &gCubeBO);
-		glBindFramebuffer(GL_FRAMEBUFFER, gCubeBO);
-		unsigned int cubemapFaceSize = 1024;
-
-		//position color buffer for cubemaps
-		glGenTextures(1, &gCubePosition);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, gCubePosition);
-		for (GLuint i = 0; i < 6; i++) {
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA16F, cubemapFaceSize, cubemapFaceSize, 0, GL_RGBA, GL_FLOAT, NULL);
-		}
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		//for (GLuint i = 0; i < 6; i++) {
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X, gCubePosition, 0);
-		//}
-
-		//normal color buffer for cubemaps
-		glGenTextures(1, &gCubeNormal);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, gCubeNormal);
-		for (GLuint i = 0; i < 6; i++) {
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA16F, cubemapFaceSize, cubemapFaceSize, 0, GL_RGBA, GL_FLOAT, NULL);
-		}
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		// for (GLuint i = 0; i < 6; i++) {
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_CUBE_MAP_POSITIVE_X, gCubeNormal, 0);
-		// }
-
-		//albedo color buffer for cubemaps
-		glGenTextures(1, &gCubeAlbedo);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, gCubeAlbedo);
-		for (GLuint i = 0; i < 6; i++) {
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, cubemapFaceSize, cubemapFaceSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-		}
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		// for (GLuint i = 0; i < 6; i++) {
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_CUBE_MAP_POSITIVE_X, gCubeAlbedo, 0);
-		// }
-
-		//lightmap color buffer for cubemaps
-		glGenTextures(1, &gCubeLightmap);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, gCubeLightmap);
-		for (GLuint i = 0; i < 6; i++) {
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, cubemapFaceSize, cubemapFaceSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-		}
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		// for (GLuint i = 0; i < 6; i++) {
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_CUBE_MAP_POSITIVE_X, gCubeLightmap, 0);
-		// }
-
-		//view dir color buffer for cubemaps
-		glGenTextures(1, &gCubeViewDir);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, gCubeViewDir);
-		for (GLuint i = 0; i < 6; i++) {
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA16F, cubemapFaceSize, cubemapFaceSize, 0, GL_RGBA, GL_FLOAT, NULL);
-		}
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		// for (GLuint i = 0; i < 6; i++) {
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_CUBE_MAP_POSITIVE_X, gCubeViewDir, 0);
-		// }
-
-		//depth buffer for cubemaps
-		glGenRenderbuffers(1, &gCubeDepth);
-		glBindRenderbuffer(GL_RENDERBUFFER, gCubeDepth);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, cubemapFaceSize, cubemapFaceSize);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, gCubeDepth);
-
-		GLuint attachmentsCube[5] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 };
-		glDrawBuffers(5, attachmentsCube);
-
-		//finally check if framebuffer is complete
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-			std::cout << "G Cube Framebuffer not complete!" << std::endl;
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		//configure G-Buffer for deferred rendering
 		glGenFramebuffers(1, &gBO);
@@ -756,23 +577,14 @@ void Engine3D::renderScreenQuad()
 
 void Engine3D::render()
 {
-	if (updateVerticesFlag) updateVertices();
-	//if (finalCubeModelsToRender.size() == 0) return;
-
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
+	if (updateVerticesFlag) updateVertices();
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	//clear color buffer
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//set texture shader uniforms
-	// glEnable(GL_CULL_FACE);
-	// glCullFace(GL_FRONT);
-
-
-	// glBindFramebuffer(GL_FRAMEBUFFER, lightingBO);
-	// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	//write geometry to the multisampling buffer or the regular one
 	if (cfg.MSAA && cfg.MSAA_SAMPLES > 1) {
 		glEnable(GL_MULTISAMPLE);
 		glBindFramebuffer(GL_FRAMEBUFFER, gBOMS);
@@ -781,24 +593,18 @@ void Engine3D::render()
 	}
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-
-
-	//set skybox shader uniforms
+	//render skybox
+	glDepthMask(GL_FALSE);
+	glDepthFunc(GL_LEQUAL);
 	geometrySkyboxShader.bind();
 	geometrySkyboxShader.setMat4("projection", getProjectionMatrix());
 	geometrySkyboxShader.setMat4("view", getViewMatrixNoTranslation());
-	glDepthMask(GL_FALSE);
-	glDepthFunc(GL_LEQUAL);
 	if (finalSkyBoxToRender != nullptr)
 	{
 		cubeModel& cm = *finalSkyBoxToRender;
 		cm.render(&geometrySkyboxShader, gCubeVAO, gCubeIBO, cubemapIdsMap[cm.texture], 0, 0, 0);
 	}
 	geometrySkyboxShader.unbind();
-
-
-
 
 	//render cubemaps
 	glDepthMask(GL_TRUE);
@@ -856,6 +662,7 @@ void Engine3D::render()
 	}
 	finalTransparentModelsToRender.clear();
 
+	//resolve multisampling
 	if (cfg.MSAA && cfg.MSAA_SAMPLES > 1) {
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, gBOMS);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gBO);
@@ -877,6 +684,7 @@ void Engine3D::render()
 		glBlitFramebuffer(0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	}
 
+	//lighting pass
 	glBindFramebuffer(GL_FRAMEBUFFER, lightingBO);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_BLEND);
@@ -905,6 +713,7 @@ void Engine3D::render()
 
 	renderScreenQuad();
 
+	//post-processing pass
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
