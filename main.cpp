@@ -97,7 +97,7 @@ int main( int argc, char* args[] )
 			}
 
 			//sleep for 3 milliseconds
-    		std::this_thread::sleep_for(duration_milliseconds);
+			std::this_thread::sleep_for(duration_milliseconds);
 		}
 
 		//disable text input

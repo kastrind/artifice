@@ -182,6 +182,7 @@ bool Engine3D::initGL()
 	else
 	{
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glFrontFace(GL_CCW);
 
 		gGeometryProgramID = geometryShader.getProgramID();
 		gGeometryCubemapProgramID = geometryCubemapShader.getProgramID();
@@ -559,6 +560,7 @@ void Engine3D::render()
 {
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
 	if (updateVerticesFlag) updateVertices();
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	//clear color buffer
@@ -576,6 +578,7 @@ void Engine3D::render()
 	//render skybox
 	glDepthMask(GL_FALSE);
 	glDepthFunc(GL_LEQUAL);
+	glCullFace(GL_FRONT);
 	geometrySkyboxShader.bind();
 	geometrySkyboxShader.setMat4("projection", getProjectionMatrix());
 	geometrySkyboxShader.setMat4("view", getViewMatrixNoTranslation());
@@ -585,6 +588,8 @@ void Engine3D::render()
 		cm.render(&geometrySkyboxShader, gCubeVAO, gCubeIBO, cubemapIdsMap[cm.texture], 0, 0, 0);
 	}
 	geometrySkyboxShader.unbind();
+
+	glCullFace(GL_BACK);
 
 	//render cubemaps
 	glDepthMask(GL_TRUE);
@@ -1016,7 +1021,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			glm::vec3 line1 = collidingTriPts[1] - collidingTriPts[0];
 			glm::vec3 line2 = collidingTriPts[2] - collidingTriPts[0];
 			glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
-			// std::cout << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
+			//std::cout << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
 
 			//based on dp and normal, determine if able to slide and the desired motion
 			float dpFront = glm::dot(cameraFront, normal);
@@ -1026,8 +1031,9 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			float dpBack = glm::dot(-cameraFront, normal);
 
 			//normal is up means collision with floor
-			if (collidingTriPts[0].y <= cameraPos.y && normal.y < normal.z && normal.y < normal.x) {
+			if (collidingTriPts[0].y <= cameraPos.y && normal.y > normal.z && normal.y > normal.x) {
 				hasLanded = true;
+				//std::cout << "LANDED!" << std::endl;
 			//else collision with wall
 			}else if (modelDistance < collidingDistance && maxModelDist < collidingDistance * 1.5f) {
 				canSlide = absDP < 0.8f && absDP > 0.0f;
@@ -1035,10 +1041,10 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 				//std::cout << "maxModelDist: " << maxModelDist << std::endl;
 				//std::cout << "modelDistance: " << modelDistance << std::endl;
 				collides = true;
-				if (!collidesFront) collidesFront = dpFront < dpRight && dpFront < dpLeft && dpFront < dpBack;
-				if (!collidesBack)  collidesBack  = dpBack < dpRight && dpBack < dpLeft && dpBack < dpFront;
-				if (!collidesRight) collidesRight = dpRight < dpLeft && dpRight < dpFront && dpRight < dpBack;
-				if (!collidesLeft)  collidesLeft  = dpLeft < dpRight && dpLeft < dpFront && dpLeft < dpBack;
+				if (!collidesFront) collidesFront = dpFront > dpRight && dpFront > dpLeft && dpFront > dpBack;
+				if (!collidesBack)  collidesBack  = dpBack > dpRight && dpBack > dpLeft && dpBack > dpFront;
+				if (!collidesRight) collidesRight = dpRight > dpLeft && dpRight > dpFront && dpRight > dpBack;
+				if (!collidesLeft)  collidesLeft  = dpLeft > dpRight && dpLeft > dpFront && dpLeft > dpBack;
 				//std::cout << "front: " << collidesFront << ", right: " << collidesRight << ", left: " << collidesLeft << ", back: " << collidesBack << std::endl;
 				glm::vec3 undesiredMotion = normal * dpFront;
 				desiredMotion = cameraFront - undesiredMotion;

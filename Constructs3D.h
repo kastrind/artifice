@@ -239,10 +239,20 @@ typedef struct rectangle : public shape
 	private:
 
 		inline void toTriangles() override {
-			//triangle tri1{ { {p.x, p.y, p.z, 1.0f}, {p.x, p.y + h, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 1.0f} } };
-			//triangle tri2{ { {p.x, p.y, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
-			triangle tri1{ { {p.x + w, p.y + h, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f}, {p.x, p.y + h, p.z, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
-			triangle tri2{ { {p.x, p.y + h, p.z, 1.0f},     {p.x + w, p.y, p.z, 1.0f}, {p.x, p.y, p.z, 1.0f} },        { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
+			//CCW WINDING ORDER
+			// 2---1
+			// \   |
+			//  \  |
+			//   \ |
+			//     3
+			triangle tri1{ { {p.x + w, p.y + h, p.z, 1.0f}, {p.x, p.y + h, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f}  },    { {1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
+			//ALWAYS CCW WINDING ORDER
+			// 1
+			// | \ 
+			// |  \ 
+			// |   \ 
+			// 2--- 3
+			triangle tri2{ { {p.x, p.y + h, p.z, 1.0f},     {p.x, p.y, p.z, 1.0f},     {p.x + w, p.y, p.z, 1.0f}  },    { {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
 			tri1.calcTangent(); tri2.calcTangent();
 			triangles.push_back(tri1);
 			triangles.push_back(tri2);
@@ -267,39 +277,40 @@ typedef struct cuboid : public shape
 	private:
 
 		inline void toTriangles() override {
+			//ALWAYS CCW WINDING ORDER - SEE COMMENTS ABOVE FOR RECTANGLE
 			//SOUTH
-			triangle south1{ { {p.x + w, p.y + h, p.z + d, 1.0f}, {p.x + w, p.y, p.z + d, 1.0f}, {p.x, p.y + h, p.z + d, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
-			triangle south2{ { {p.x, p.y + h, p.z + d, 1.0f},     {p.x + w, p.y, p.z + d, 1.0f}, {p.x, p.y, p.z + d, 1.0f} },        { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
+			triangle south1{ { {p.x + w, p.y + h, p.z + d, 1.0f}, {p.x, p.y + h, p.z + d, 1.0f}, {p.x + w, p.y, p.z + d, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
+			triangle south2{ { {p.x, p.y + h, p.z + d, 1.0f},     {p.x, p.y, p.z + d, 1.0f},     {p.x + w, p.y, p.z + d, 1.0f} },    { {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
 			south1.calcTangent(); south2.calcTangent();
 			triangles.push_back(south1);
 			triangles.push_back(south2);
 			//EAST
-			triangle east1{ { {p.x + w, p.y + h, p.z, 1.0f},     {p.x + w, p.y, p.z, 1.0f}, {p.x + w, p.y + h, p.z + d, 1.0f } },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
-			triangle east2{ { {p.x + w, p.y + h, p.z + d, 1.0f}, {p.x + w, p.y, p.z, 1.0f}, {p.x + w, p.y, p.z + d,    1.0f } },     { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
+			triangle east1{ { {p.x + w, p.y + h, p.z, 1.0f},     {p.x + w, p.y + h, p.z + d, 1.0f }, {p.x + w, p.y, p.z, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
+			triangle east2{ { {p.x + w, p.y + h, p.z + d, 1.0f}, {p.x + w, p.y, p.z + d, 1.0f }, {p.x + w, p.y, p.z, 1.0f} },        { {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
 			east1.calcTangent(); east2.calcTangent();
 			triangles.push_back(east1);
 			triangles.push_back(east2);
 			//NORTH
-			triangle north1{ { {p.x, p.y + h, p.z, 1.0f},     {p.x, p.y, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
-			triangle north2{ { {p.x + w, p.y + h, p.z, 1.0f}, {p.x, p.y, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f} },        { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
+			triangle north1{ { {p.x, p.y + h, p.z, 1.0f},     {p.x + w, p.y + h, p.z, 1.0f}, {p.x, p.y, p.z, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
+			triangle north2{ { {p.x + w, p.y + h, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f},     {p.x, p.y, p.z, 1.0f} },    { {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
 			north1.calcTangent(); north2.calcTangent();
 			triangles.push_back(north1);
 			triangles.push_back(north2);
 			//WEST
-			triangle west1{ { {p.x, p.y + h, p.z + d, 1.0f}, {p.x, p.y, p.z + d, 1.0f}, {p.x, p.y + h, p.z, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
-			triangle west2{ { {p.x, p.y + h, p.z, 1.0f},     {p.x, p.y, p.z + d, 1.0f}, {p.x, p.y, p.z, 1.0f} },        { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
+			triangle west1{ { {p.x, p.y + h, p.z + d, 1.0f}, {p.x, p.y + h, p.z, 1.0f}, {p.x, p.y, p.z + d, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
+			triangle west2{ { {p.x, p.y + h, p.z, 1.0f},     {p.x, p.y, p.z, 1.0f},     {p.x, p.y, p.z + d, 1.0f} },    { {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
 			west1.calcTangent(); west2.calcTangent();
 			triangles.push_back(west1);
 			triangles.push_back(west2);
 			//TOP
-			triangle top1{ { {p.x, p.y + h, p.z + d, 1.0f},     {p.x, p.y + h, p.z, 1.0f}, {p.x + w, p.y + h, p.z + d, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
-			triangle top2{ { {p.x + w, p.y + h, p.z + d, 1.0f}, {p.x, p.y + h, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f} },        { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 1.0f} } };
+			triangle top1{ { {p.x, p.y + h, p.z + d, 1.0f},     {p.x + w, p.y + h, p.z + d, 1.0f}, {p.x, p.y + h, p.z, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
+			triangle top2{ { {p.x + w, p.y + h, p.z + d, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f}, {p.x, p.y + h, p.z, 1.0f} },        { {1.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
 			top1.calcTangent(); top2.calcTangent();
 			triangles.push_back(top1);
 			triangles.push_back(top2);
 			//BOTTOM
-			triangle bottom1{ { {p.x, p.y, p.z + d, 1.0f}, {p.x + w, p.y, p.z + d, 1.0f}, {p.x, p.y, p.z, 1.0f} },    { {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
-			triangle bottom2{ { {p.x, p.y, p.z, 1.0f}, {p.x + w, p.y, p.z + d, 1.0f}, {p.x + w, p.y, p.z, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
+			triangle bottom1{ { {p.x, p.y, p.z + d, 1.0f}, {p.x, p.y, p.z, 1.0f},     {p.x + w, p.y, p.z + d, 1.0f} },    { {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f} } };
+			triangle bottom2{ { {p.x, p.y, p.z, 1.0f},     {p.x + w, p.y, p.z, 1.0f}, {p.x + w, p.y, p.z + d, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f} } };
 			bottom1.calcTangent(); bottom2.calcTangent();
 			triangles.push_back(bottom1);
 			triangles.push_back(bottom2);
@@ -325,39 +336,40 @@ typedef struct cube : public shape
 
 		inline void toTriangles() override {
 			float s = size / 2.0f;
+			//ALWAYS CCW WINDING ORDER - SEE COMMENTS ABOVE FOR RECTANGLE
 			//RIGHT
-			triangle east1{ { {p.x + s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y + s, p.z - s, 1.0f}, {p.x + s, p.y - s, p.z - s, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
-			triangle east2{ { {p.x + s, p.y - s, p.z + s, 1.0f}, {p.x + s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z - s, 1.0f} },    { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
+			triangle east1{ { {p.x + s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z - s, 1.0f}, {p.x + s, p.y + s, p.z - s, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
+			triangle east2{ { {p.x + s, p.y - s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z - s, 1.0f}, {p.x + s, p.y + s, p.z + s, 1.0f} },    { {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
 			east1.calcTangent(); east2.calcTangent();
 			triangles.push_back(east1);
 			triangles.push_back(east2);
 			//LEFT
-			triangle west1{ { {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z + s, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
-			triangle west2{ { {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z + s, 1.0f}, {p.x - s, p.y - s, p.z + s, 1.0f} },    { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
+			triangle west1{ { {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z + s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f}, },    { {1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
+			triangle west2{ { {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y - s, p.z + s, 1.0f}, {p.x - s, p.y + s, p.z + s, 1.0f}, },    { {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
 			west1.calcTangent(); west2.calcTangent();
 			triangles.push_back(west1);
 			triangles.push_back(west2);
 			//TOP
-			triangle top1{ { {p.x - s, p.y + s, p.z + s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f}, {p.x + s, p.y + s, p.z + s, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
-			triangle top2{ { {p.x + s, p.y + s, p.z + s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f}, {p.x + s, p.y + s, p.z - s, 1.0f} },    { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 1.0f} } };
+			triangle top1{ { {p.x - s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y + s, p.z + s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
+			triangle top2{ { {p.x + s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y + s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f} },    { {1.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
 			top1.calcTangent(); top2.calcTangent();
 			triangles.push_back(top1);
 			triangles.push_back(top2);
 			//BOTTOM
-			triangle bottom1{ { {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y - s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z + s, 1.0f} },    { {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
-			triangle bottom2{ { {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x + s, p.y - s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z - s, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
+			triangle bottom1{ { {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x + s, p.y - s, p.z + s, 1.0f}, {p.x - s, p.y - s, p.z + s, 1.0f} },    { {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f} } };
+			triangle bottom2{ { {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x + s, p.y - s, p.z - s, 1.0f}, {p.x + s, p.y - s, p.z + s, 1.0f} },    { {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f} } };
 			bottom1.calcTangent(); bottom2.calcTangent();
 			triangles.push_back(bottom1);
 			triangles.push_back(bottom2);
 			//BACK
-			triangle back1{ { {p.x + s, p.y - s, p.z - s, 1.0f}, {p.x + s, p.y + s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
-			triangle back2{ { {p.x + s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f}, {p.x - s, p.y - s, p.z - s, 1.0f} },    { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
+			triangle back1{ { {p.x + s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f}, {p.x + s, p.y + s, p.z - s, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
+			triangle back2{ { {p.x + s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y - s, p.z - s, 1.0f}, {p.x - s, p.y + s, p.z - s, 1.0f} },    { {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
 			back1.calcTangent(); back2.calcTangent();
 			triangles.push_back(back1);
 			triangles.push_back(back2);
 			//FRONT
-			triangle front1{ { {p.x - s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z + s, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
-			triangle front2{ { {p.x - s, p.y - s, p.z + s, 1.0f}, {p.x - s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z + s, 1.0f} },    { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
+			triangle front1{ { {p.x - s, p.y + s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z + s, 1.0f}, {p.x + s, p.y + s, p.z + s, 1.0f} },    { {1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
+			triangle front2{ { {p.x - s, p.y - s, p.z + s, 1.0f}, {p.x + s, p.y - s, p.z + s, 1.0f}, {p.x - s, p.y + s, p.z + s, 1.0f} },    { {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
 			front1.calcTangent(); front2.calcTangent();
 			triangles.push_back(front1);
 			triangles.push_back(front2);
@@ -424,6 +436,9 @@ typedef struct model {
 
 		virtual void render(ArtificeShaderProgram* geometryShader, GLuint gVAO, GLuint gIBO, GLuint textureId, GLuint lightmapId, GLuint normalmapId, GLuint displacementmapId)
 		{
+			if (modelMesh.shape == shapetype::RECTANGLE && glIsEnabled(GL_CULL_FACE)) {
+				glDisable(GL_CULL_FACE);
+			}
 			// std::cout << "rendering model" << std::endl;
 			geometryShader->bind();
 			geometryShader->setInt("material.diffuseTexture", 0);
@@ -454,6 +469,9 @@ typedef struct model {
 			glBindVertexArray(gVAO);
 			glDrawElements(GL_TRIANGLES, this->modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)(( this->sn ) * sizeof(GL_UNSIGNED_INT)));
 			glBindVertexArray(0);
+			if (modelMesh.shape == shapetype::RECTANGLE && !glIsEnabled(GL_CULL_FACE)) {
+				glEnable(GL_CULL_FACE);
+			}
 		}
 
 		virtual ~model() {}
