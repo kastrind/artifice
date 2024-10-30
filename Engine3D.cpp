@@ -709,7 +709,6 @@ void Engine3D::render()
 
 	renderScreenQuad();
 
-
 	// glBindFramebuffer(GL_READ_FRAMEBUFFER, gBO);
 	// glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
 	// // blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
@@ -754,8 +753,7 @@ void Engine3D::updateVertices()
 		{
 			glm::vec3 line1 = tri.p[1] - tri.p[0];
 			glm::vec3 line2 = tri.p[2] - tri.p[0];
-			//glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
-			glm::vec3 normal = glm::cross(line1, line2);
+			glm::vec3 normal = glm::normalize(glm::cross(line2, line1));
 			tri.tang = tri.calcTangent();
 
 			for (int i = 0; i < 3; i++)
@@ -896,6 +894,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 	canSlide = false;
 	hasLanded = false;
+	shouldClimb = false;
 
 	modelsInFocus.clear();
 
@@ -1019,30 +1018,26 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		//mark out-of-DOF models to avoid needless rendering
 		model.isInDOF = modelDistance < dof;
 
+		//get the triangle normal
 		glm::vec3 line1 = collidingTriPts[1] - collidingTriPts[0];
 		glm::vec3 line2 = collidingTriPts[2] - collidingTriPts[0];
 		glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
+		//std::cout << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
 
-		//normal is up means collision with floor
+		//detect collision with floor (normal is up means collision with floor)
 		if (model.isSolid && minModelDist < collidingDistance * 1.5f && normal.y > normal.z && normal.y > normal.x) {
 			hasLanded = true;
-			if (!shouldClimb && cameraPos.y - cfg.PERSON_HEIGHT*0.9f < highestYOfModel && highestYOfModel < cameraPos.y/2.0f) {
+			//determine whether to climb (stairs, ramps, etc.): if the highest Y is above ground and lower than half the person height
+			if (cameraPos.y - cfg.PERSON_HEIGHT*0.85f < highestYOfModel && highestYOfModel < cameraPos.y/2.0f) {
 				shouldClimb = true;
-				climbToY = highestYOfModel + cfg.PERSON_HEIGHT;
 			}
-			std::cout << "cameraPos.y = " << cameraPos.y << ", minModelDist = " << minModelDist << ", highestYOfModel = " << highestYOfModel << ", cameraPos.y - highestYOfModel = " << (cameraPos.y - highestYOfModel) << std::endl;
+			//std::cout << "cameraPos.y = " << cameraPos.y << ", minModelDist = " << minModelDist << ", highestYOfModel = " << highestYOfModel << std::endl;
 		}
 
 		//detect if colliding with the model
 		if (model.isSolid && modelDistance <= collidingDistance * 1.5f)
 		{
 			//std::cout << "modelDistance: " << modelDistance << std::endl;
-
-			//get the triangle normal
-			glm::vec3 line1 = collidingTriPts[1] - collidingTriPts[0];
-			glm::vec3 line2 = collidingTriPts[2] - collidingTriPts[0];
-			glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
-			//std::cout << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
 
 			//based on dp and normal, determine if able to slide and the desired motion
 			float dpFront = glm::dot(cameraFront, normal);
@@ -1058,10 +1053,10 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 				//std::cout << "maxModelDist: " << maxModelDist << std::endl;
 				//std::cout << "modelDistance: " << modelDistance << std::endl;
 				collides = true;
-				if (!collidesFront) collidesFront = dpFront > dpRight && dpFront > dpLeft && dpFront > dpBack;
-				if (!collidesBack)  collidesBack  = dpBack > dpRight && dpBack > dpLeft && dpBack > dpFront;
-				if (!collidesRight) collidesRight = dpRight > dpLeft && dpRight > dpFront && dpRight > dpBack;
-				if (!collidesLeft)  collidesLeft  = dpLeft > dpRight && dpLeft > dpFront && dpLeft > dpBack;
+				if (!collidesFront) collidesFront = dpFront < dpRight && dpFront < dpLeft && dpFront < dpBack;
+				if (!collidesBack)  collidesBack  = dpBack < dpRight && dpBack < dpLeft && dpBack < dpFront;
+				if (!collidesRight) collidesRight = dpRight < dpLeft && dpRight < dpFront && dpRight < dpBack;
+				if (!collidesLeft)  collidesLeft  = dpLeft < dpRight && dpLeft < dpFront && dpLeft < dpBack;
 				//std::cout << "front: " << collidesFront << ", right: " << collidesRight << ", left: " << collidesLeft << ", back: " << collidesBack << std::endl;
 				glm::vec3 undesiredMotion = normal * dpFront;
 				desiredMotion = cameraFront - undesiredMotion;
@@ -1114,7 +1109,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 	edit(elapsedTime);
 
-	//std::cout << "cameraPosY? " << cameraPos.y << ", collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
+	//std::cout <<"collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
 	return true;
 }
 
@@ -1156,12 +1151,12 @@ void Engine3D::move(float elapsedTime)
 {
 	float cameraSpeed = static_cast<float>(cameraSpeedFactor * elapsedTime);
 
+	//falling
 	cameraPos += !hasLanded ? gravitationalPull * cameraSpeed * glm::vec3(0, -1, 0) : glm::vec3(0, 0, 0);
 
+	//climbing (stairs, ramps, etc.)
 	if (shouldClimb && userMode == UserMode::PLAYER) {
-		cameraPos.y += cameraSpeed * (climbToY - cameraPos.y);
-		shouldClimb = false;
-		std::cout << "CLIMBED!" << std::endl;
+		cameraPos += 0.5f * cameraSpeed * glm::vec3(0, 1, 0);
 	}
 
 	if (eventController != nullptr)
@@ -1180,7 +1175,7 @@ void Engine3D::move(float elapsedTime)
 			desiredMotion.y = 0;
 			cameraPos += 0.5f * cameraSpeed * desiredMotion;
 
-		} else if (keysPressed[SupportedKeys::W] && hasLanded && !collides) {
+		} else if (keysPressed[SupportedKeys::W] && hasLanded && (!collides || !collidesFront)) {
 			cameraFront.y = 0;
 			cameraPos += cameraSpeed * cameraFront;
 
@@ -1191,7 +1186,7 @@ void Engine3D::move(float elapsedTime)
 			desiredMotion.y = 0;
 			cameraPos -= 0.5f * cameraSpeed * desiredMotion;
 
-		} else if (keysPressed[SupportedKeys::S] && hasLanded && !collides) {
+		} else if (keysPressed[SupportedKeys::S] && hasLanded && (!collides || !collidesBack)) {
 			cameraFront.y = 0;
 			cameraPos -= cameraSpeed * cameraFront;
 
