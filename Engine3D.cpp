@@ -881,6 +881,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	glm::vec3 center{ 0, 0, 0 };
 	float modelDistance = dof;
 	float maxModelDist = 0.0f;
+	float minModelDist = 0.0f;
 	glm::vec4 collidingTriPts[3];
 
 	move(elapsedTime);
@@ -959,12 +960,14 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			float dist2 = glm::distance(cameraPos, glm::vec3(pt[1]));
 			float dist3 = glm::distance(cameraPos, glm::vec3(pt[2]));
 			float maxDist = std::max(dist1, std::max(dist2, dist3));
+			float minDist = std::min(dist1, std::min(dist2, dist3));
 			float highestYInTri = std::max(pt[0].y, std::max(pt[1].y, pt[2].y));
 			if (highestYOfModel < highestYInTri) { highestYOfModel = highestYInTri; }
 			//std::cout << "maxDist: " << maxDist << std::endl;
 			if (avgDist < modelDistance) {
 				modelDistance =  avgDist;
 				maxModelDist = maxDist;
+				minModelDist = minDist;
 				collidingTriPts[0] = pt[0];
 				collidingTriPts[1] = pt[1];
 				collidingTriPts[2] = pt[2];
@@ -1021,13 +1024,13 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
 
 		//normal is up means collision with floor
-		if (model.isSolid && modelDistance < collidingDistance * 1.5f && normal.y > normal.z && normal.y > normal.x) {
+		if (model.isSolid && minModelDist < collidingDistance * 1.5f && normal.y > normal.z && normal.y > normal.x) {
 			hasLanded = true;
-			if (cameraPos.y - cfg.PERSON_HEIGHT < highestYOfModel ) {
+			if (cameraPos.y - cfg.PERSON_HEIGHT*0.9f < highestYOfModel && highestYOfModel < cameraPos.y) {
 				shouldClimb = true;
-				climbToY = highestYOfModel + cfg.PERSON_HEIGHT;
-				std::cout << "cameraPos.y = " << (cameraPos.y) << std::endl;
+				climbToY = highestYOfModel;
 			}
+			std::cout << "cameraPos.y = " << cameraPos.y << ", minModelDist = " << minModelDist << ", highestYOfModel = " << highestYOfModel << ", cameraPos.y - highestYOfModel = " << (cameraPos.y - highestYOfModel) << std::endl;
 		}
 
 		//detect if colliding with the model
@@ -1156,8 +1159,9 @@ void Engine3D::move(float elapsedTime)
 	cameraPos += !hasLanded ? gravitationalPull * cameraSpeed * glm::vec3(0, -1, 0) : glm::vec3(0, 0, 0);
 
 	if (shouldClimb && userMode == UserMode::PLAYER) {
-		cameraPos.y = climbToY;
+		cameraPos.y = climbToY + cfg.PERSON_HEIGHT;
 		shouldClimb = false;
+		std::cout << "CLIMBED!" << std::endl;
 	}
 
 	if (eventController != nullptr)
