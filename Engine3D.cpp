@@ -936,6 +936,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		mtx.unlock();
 
 		modelDistance = dof;
+		
+		float highestYOfModel = -100;
 
 		for (auto tri : model.modelMesh.tris)
 		{
@@ -957,6 +959,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			float dist2 = glm::distance(cameraPos, glm::vec3(pt[1]));
 			float dist3 = glm::distance(cameraPos, glm::vec3(pt[2]));
 			float maxDist = std::max(dist1, std::max(dist2, dist3));
+			float highestYInTri = std::max(pt[0].y, std::max(pt[1].y, pt[2].y));
+			if (highestYOfModel < highestYInTri) { highestYOfModel = highestYInTri; }
 			//std::cout << "maxDist: " << maxDist << std::endl;
 			if (avgDist < modelDistance) {
 				modelDistance =  avgDist;
@@ -1012,6 +1016,20 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		//mark out-of-DOF models to avoid needless rendering
 		model.isInDOF = modelDistance < dof;
 
+		glm::vec3 line1 = collidingTriPts[1] - collidingTriPts[0];
+		glm::vec3 line2 = collidingTriPts[2] - collidingTriPts[0];
+		glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
+
+		//normal is up means collision with floor
+		if (model.isSolid && modelDistance < collidingDistance * 1.5f && normal.y > normal.z && normal.y > normal.x) {
+			hasLanded = true;
+			if (cameraPos.y - cfg.PERSON_HEIGHT < highestYOfModel ) {
+				shouldClimb = true;
+				climbToY = highestYOfModel + cfg.PERSON_HEIGHT;
+				std::cout << "cameraPos.y = " << (cameraPos.y) << std::endl;
+			}
+		}
+
 		//detect if colliding with the model
 		if (model.isSolid && modelDistance <= collidingDistance * 1.5f)
 		{
@@ -1030,12 +1048,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			float dpLeft = glm::dot(-cameraRight, normal);
 			float dpBack = glm::dot(-cameraFront, normal);
 
-			//normal is up means collision with floor
-			if (collidingTriPts[0].y <= cameraPos.y && normal.y > normal.z && normal.y > normal.x) {
-				hasLanded = true;
-				//std::cout << "LANDED!" << std::endl;
-			//else collision with wall
-			}else if (modelDistance < collidingDistance && maxModelDist < collidingDistance * 1.5f) {
+			//collision with wall
+			if (modelDistance < collidingDistance && maxModelDist < collidingDistance * 1.5f) {
 				canSlide = absDP < 0.8f && absDP > 0.0f;
 				//std::cout << "dpFront: " << dpFront << std::endl;
 				//std::cout << "maxModelDist: " << maxModelDist << std::endl;
@@ -1097,7 +1111,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 	edit(elapsedTime);
 
-	//std::cout << "collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
+	//std::cout << "cameraPosY? " << cameraPos.y << ", collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
 	return true;
 }
 
@@ -1140,6 +1154,11 @@ void Engine3D::move(float elapsedTime)
 	float cameraSpeed = static_cast<float>(cameraSpeedFactor * elapsedTime);
 
 	cameraPos += !hasLanded ? gravitationalPull * cameraSpeed * glm::vec3(0, -1, 0) : glm::vec3(0, 0, 0);
+
+	if (shouldClimb && userMode == UserMode::PLAYER) {
+		cameraPos.y = climbToY;
+		shouldClimb = false;
+	}
 
 	if (eventController != nullptr)
 	{

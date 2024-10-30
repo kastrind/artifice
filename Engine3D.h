@@ -187,6 +187,9 @@ class Engine3D
 
 		bool hasLanded = false;
 
+		bool shouldClimb = false;
+		float climbToY = 0;
+
 		glm::vec3 desiredMotion;
 
 		glm::mat4 projectionMatrix;

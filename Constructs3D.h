@@ -420,6 +420,9 @@ typedef struct model {
 		float speed = 0.0f;
 		glm::vec3 front = glm::vec3(0.0, 1.0, 0.0);
 
+		bool highestYComputed = false;
+		float highestY = 0.0f;
+
 
 		model() {}
 
@@ -472,6 +475,15 @@ typedef struct model {
 			if (modelMesh.shape == shapetype::RECTANGLE && !glIsEnabled(GL_CULL_FACE)) {
 				glEnable(GL_CULL_FACE);
 			}
+		}
+
+		float computeHighestY() {
+			for (triangle& tri : modelMesh.tris) {
+				float highestYInTri = std::max(tri.p[0].y, std::max(tri.p[1].y, tri.p[2].y));
+				if (highestY < highestYInTri) { highestY = highestYInTri; }
+			}
+			highestYComputed = true;
+			return highestY;
 		}
 
 		virtual ~model() {}

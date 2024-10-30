@@ -56,6 +56,8 @@ typedef struct Configuration
 
 	float CAMERA_SPEED_FACTOR = 1.5f;
 
+	float PERSON_HEIGHT = 0.15f;
+
 	//precomputed constants follow
 
 	float FOV_RADIANS = (float) FOV * M_PI / 180;
