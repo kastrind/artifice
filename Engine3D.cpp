@@ -1026,9 +1026,9 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		//normal is up means collision with floor
 		if (model.isSolid && minModelDist < collidingDistance * 1.5f && normal.y > normal.z && normal.y > normal.x) {
 			hasLanded = true;
-			if (cameraPos.y - cfg.PERSON_HEIGHT*0.9f < highestYOfModel && highestYOfModel < cameraPos.y) {
+			if (!shouldClimb && cameraPos.y - cfg.PERSON_HEIGHT*0.9f < highestYOfModel && highestYOfModel < cameraPos.y/2.0f) {
 				shouldClimb = true;
-				climbToY = highestYOfModel;
+				climbToY = highestYOfModel + cfg.PERSON_HEIGHT;
 			}
 			std::cout << "cameraPos.y = " << cameraPos.y << ", minModelDist = " << minModelDist << ", highestYOfModel = " << highestYOfModel << ", cameraPos.y - highestYOfModel = " << (cameraPos.y - highestYOfModel) << std::endl;
 		}
@@ -1159,7 +1159,7 @@ void Engine3D::move(float elapsedTime)
 	cameraPos += !hasLanded ? gravitationalPull * cameraSpeed * glm::vec3(0, -1, 0) : glm::vec3(0, 0, 0);
 
 	if (shouldClimb && userMode == UserMode::PLAYER) {
-		cameraPos.y = climbToY + cfg.PERSON_HEIGHT;
+		cameraPos.y += cameraSpeed * (climbToY - cameraPos.y);
 		shouldClimb = false;
 		std::cout << "CLIMBED!" << std::endl;
 	}
