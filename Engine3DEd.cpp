@@ -153,48 +153,60 @@ void Engine3D::edit(float elapsedTime)
 		} else if (editOptions[editOptionIndex] == "width" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
 			editingWidth = std::max(editingWidth - 0.1f, 0.1f);
 			std::cout << "width: " << editingWidth << std::endl;
+			isEdited = true;
 		} else if (editOptions[editOptionIndex] == "width" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
 			editingWidth += 0.1f;
 			std::cout << "width: " << editingWidth << std::endl;
+			isEdited = true;
 
 		// increases/decreases height
 		} else if (editOptions[editOptionIndex] == "height" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
 			editingHeight = std::max(editingHeight - 0.1f, 0.1f);
 			std::cout << "height: " << editingHeight << std::endl;
+			isEdited = true;
 		} else if (editOptions[editOptionIndex] == "height" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
 			editingHeight += 0.1f;
 			std::cout << "height: " << editingHeight << std::endl;
+			isEdited = true;
 
 		// increases/decreases depth
 		} else if (editOptions[editOptionIndex] == "depth" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
 			editingDepth = std::max(editingDepth - 0.1f, 0.1f);
 			std::cout << "depth: " << editingDepth << std::endl;
+			isEdited = true;
 		} else if (editOptions[editOptionIndex] == "depth" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
 			editingDepth += 0.1f;
 			std::cout << "depth: " << editingDepth << std::endl;
+			isEdited = true;
 
 		// increases/decreases X rotation
 		} else if (editOptions[editOptionIndex] == "rotationX" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
 			editingRotationX = std::max(editingRotationX - 0.1f, -1.57075f);
+			if (std::abs(editingRotationX) > 0 && std::abs(editingRotationX) < 0.1f) { editingRotationX = 0.0f; }
 			std::cout << "rotationX: " << editingRotationX << std::endl;
 		} else if (editOptions[editOptionIndex] == "rotationX" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
 			editingRotationX = std::min(editingRotationX + 0.1f, 1.57075f);
+			if (std::abs(editingRotationX) > 0 && std::abs(editingRotationX) < 0.1f) { editingRotationX = 0.0f; }
 			std::cout << "rotationX: " << editingRotationX << std::endl;
 
 		// increases/decreases Y rotation
 		} else if (editOptions[editOptionIndex] == "rotationY" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
 			editingRotationY = std::max(editingRotationY - 0.1f, -1.57075f);
+			if (std::abs(editingRotationY) > 0 && std::abs(editingRotationY) < 0.1f) { editingRotationY = 0.0f; }
 			std::cout << "rotationY: " << editingRotationY << std::endl;
 		} else if (editOptions[editOptionIndex] == "rotationY" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
 			editingRotationY = std::min(editingRotationY + 0.1f, 1.57075f);
+			if (std::abs(editingRotationY) > 0 && std::abs(editingRotationY) < 0.1f) { editingRotationY = 0.0f; }
 			std::cout << "rotationY: " << editingRotationY << std::endl;
 
 		// increases/decreases Z rotation
 		} else if (editOptions[editOptionIndex] == "rotationZ" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
 			editingRotationZ = std::max(editingRotationZ - 0.1f, -1.57075f);
+			if (std::abs(editingRotationZ) > 0 && std::abs(editingRotationZ) < 0.1f) { editingRotationZ = 0.0f; }
 			std::cout << "rotationZ: " << editingRotationZ << std::endl;
 		} else if (editOptions[editOptionIndex] == "rotationZ" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
 			editingRotationZ = std::min(editingRotationZ + 0.1f, 1.57075f);
+			if (std::abs(editingRotationZ) > 0 && std::abs(editingRotationZ) < 0.1f) { editingRotationZ = 0.0f; }
 			std::cout << "rotationZ: " << editingRotationZ << std::endl;
 
 		// cycles through textures
@@ -258,14 +270,20 @@ void Engine3D::edit(float elapsedTime)
 				model m = *(copyingModel);
 				m.position = position;
 				addModel(m);
-				copyingModel.reset();			
+				copyingModel.reset();
 			}
 			cameraSpeedFactor /= 100;
 			isEdited = true;
 		}
 		
+		// there is a spawned model about to be placed
 		if (editingModel != nullptr) {
+			//real-time update of transformation, texture and isSolid
 			editingModel->position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
+			editingModel->rotate(editingRotationX, editingRotationY, editingRotationZ);
+			editingModel->scale(editingWidth, editingHeight, editingDepth);
+			editingModel->texture = editingModel->modelMesh.shape == shapetype::CUBE ? cubemapNames[editingCubemapNameIndex] : textureNames[editingTextureNameIndex];
+			editingModel->isSolid = editingIsSolid;
 		}
 
 		// releasing left mouse click places a new model

@@ -954,12 +954,12 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			//finds distance from model
 			glm::vec4 avgP = ( (pt[0]) + (pt[1]) + (pt[2]) ) / 3.0f;
 			float avgDist = glm::distance(cameraPos, glm::vec3(avgP));
-			model.distance = avgDist;
 			float dist1 = glm::distance(cameraPos, glm::vec3(pt[0]));
 			float dist2 = glm::distance(cameraPos, glm::vec3(pt[1]));
 			float dist3 = glm::distance(cameraPos, glm::vec3(pt[2]));
 			float maxDist = std::max(dist1, std::max(dist2, dist3));
 			float minDist = std::min(dist1, std::min(dist2, dist3));
+			model.distance = minDist;
 			float highestYInTri = std::max(pt[0].y, std::max(pt[1].y, pt[2].y));
 			if (highestYOfModel < highestYInTri) { highestYOfModel = highestYInTri; }
 			//std::cout << "maxDist: " << maxDist << std::endl;

@@ -178,7 +178,7 @@ typedef struct triangle
 
 		//check if sum of A1, A2 and A3 is same as A
 		//return (ABC_area == PBC_area + PAC_area + PAB_area);
-		return std::abs(ABC_area - PBC_area - PAC_area - PAB_area) < 0.01f;
+		return std::abs(ABC_area - PBC_area - PAC_area - PAB_area) < 0.0001f;
 	}
 
 	glm::vec3 calcTangent() {
@@ -215,6 +215,14 @@ typedef struct shape
 		}
 
 		shape(shape& s) : thetaRotX(s.thetaRotX), thetaRotY(s.thetaRotY), thetaRotZ(s.thetaRotZ), triangles(s.triangles), rotationMatrix(s.rotationMatrix) {}
+
+		void rotate(float thetaRotationX, float thetaRotationY,float thetaRotationZ) {
+			thetaRotX = thetaRotationX; thetaRotY = thetaRotationY; thetaRotZ = thetaRotationZ;
+			rotationMatrix = glm::mat4(1.0f);
+			rotationMatrix = glm::rotate(rotationMatrix, thetaRotX, glm::vec3(1.0f, 0.0f, 0.0f));
+			rotationMatrix = glm::rotate(rotationMatrix, thetaRotY, glm::vec3(0.0f, 1.0f, 0.0f));
+			rotationMatrix = glm::rotate(rotationMatrix, thetaRotZ, glm::vec3(0.0f, 0.0f, 1.0f));
+		}
 
 	private:
 
@@ -477,13 +485,21 @@ typedef struct model {
 			}
 		}
 
-		float computeHighestY() {
-			for (triangle& tri : modelMesh.tris) {
-				float highestYInTri = std::max(tri.p[0].y, std::max(tri.p[1].y, tri.p[2].y));
-				if (highestY < highestYInTri) { highestY = highestYInTri; }
+		void rotate(float thetaRotationX, float thetaRotationY, float thetaRotationZ) {
+			rotationMatrix = glm::mat4(1.0f);
+			rotationMatrix = glm::rotate(rotationMatrix, thetaRotationX, glm::vec3(1.0f, 0.0f, 0.0f));
+			rotationMatrix = glm::rotate(rotationMatrix, thetaRotationY, glm::vec3(0.0f, 1.0f, 0.0f));
+			rotationMatrix = glm::rotate(rotationMatrix, thetaRotationZ, glm::vec3(0.0f, 0.0f, 1.0f));
+		}
+
+		virtual void scale(float width, float height, float depth) {
+			if (modelMesh.shape == shapetype::RECTANGLE) {
+				rectangle rectangle(width, height, 0.0f, 0.0f, 0.0f);
+				modelMesh.tris = rectangle.triangles;
+			}else if (modelMesh.shape == shapetype::CUBOID) {
+				cuboid cuboid(width, height, depth, 0.0f, 0.0f, 0.0f);
+				modelMesh.tris = cuboid.triangles;
 			}
-			highestYComputed = true;
-			return highestY;
 		}
 
 		virtual ~model() {}
@@ -528,6 +544,11 @@ typedef struct cubeModel : public model {
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gCubeIBO);
 			glBindVertexArray(gCubeVAO);
 			glDrawElements(GL_TRIANGLES, this->modelMesh.tris.size() * 3, GL_UNSIGNED_INT, (void*)((this->sn) * sizeof(GL_UNSIGNED_INT)));
+		}
+
+		virtual void scale(float width, float height, float depth) {
+			cube cube(std::max(width, std::max(height, depth)), 0.0f, 0.0f, 0.0f);
+			modelMesh.tris = cube.triangles;
 		}
 
 		virtual ~cubeModel() {}
