@@ -1,5 +1,5 @@
 # player position positionX positionY positionZ
-player_position,0.253268,0.318228,7.39936
+player_position,0.354598,-0.682468,3.16034
 # light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity
 light,0.264035,-0.34048,-2.60431,128,128,128,0.3,0.4,0.9
 # id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ

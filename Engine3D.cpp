@@ -878,13 +878,11 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	glm::vec3 prevCameraPos = cameraPos;
 	glm::vec3 center{ 0, 0, 0 };
 	float modelDistance = dof;
-	float maxModelDist = 0.0f;
-	float minModelDist = 0.0f;
+	float maxModelDist = dof;
+	float minModelDist = dof;
 	glm::vec4 collidingTriPts[3];
 
 	move(elapsedTime);
-
-	if (modelsInFocus.size()) { prevModelInFocus = *(modelsInFocus.begin()); }
 
 	collides = false;
 	collidesFront = false;
@@ -906,29 +904,29 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	for (auto &ptrModel : ptrModelsToRender)
 	{
 		if (!ptrModel) continue;
-		model& model = *ptrModel;
+		model& mdl = *ptrModel;
 
 		mtx.lock();
 		glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
-		modelMatrix = glm::translate(modelMatrix, model.position);
-		modelMatrix = modelMatrix * model.rotationMatrix;
-		model.modelMatrix = modelMatrix;
+		modelMatrix = glm::translate(modelMatrix, mdl.position);
+		modelMatrix = modelMatrix * mdl.rotationMatrix;
+		mdl.modelMatrix = modelMatrix;
 
-		model.inFocus = false;
+		mdl.inFocus = false;
 		bool checkAgainForFocus = true;
-		model.isInFOV = false;
+		mdl.isInFOV = false;
 		bool checkAgainForFOV = true;
 		float minX = 1.0f, maxX = -1.0f, minY = 1.0f, maxY = -1.0f, minZ = 100000.0f, maxZ = -100000.0f;
 
 		//if cube is skybox, then do not process further
-		if (model.modelMesh.shape == shapetype::CUBE)
+		if (mdl.modelMesh.shape == shapetype::CUBE)
 		{
-			cubeModel& cube = dynamic_cast<cubeModel &>(model);
+			cubeModel& cube = dynamic_cast<cubeModel &>(mdl);
 			if (cube.isSkyBox)
 			{
-				model.isInDOF = true;
-				model.isInFOV = true;
-				model.isCovered = false;
+				mdl.isInDOF = true;
+				mdl.isInFOV = true;
+				mdl.isCovered = false;
 				mtx.unlock();
 				continue;
 			}
@@ -936,10 +934,13 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		mtx.unlock();
 
 		modelDistance = dof;
+		maxModelDist = dof;
+		minModelDist = dof;
 		
-		float highestYOfModel = -100;
+		//initialize highest Y position of model
+		float highestYOfModel = (modelMatrix * mdl.modelMesh.tris[0].p[0]).y;
 
-		for (auto tri : model.modelMesh.tris)
+		for (auto tri : mdl.modelMesh.tris)
 		{
 			glm::vec4 pt[3];
 			pt[0] = tri.p[0];
@@ -959,14 +960,13 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			float dist3 = glm::distance(cameraPos, glm::vec3(pt[2]));
 			float maxDist = std::max(dist1, std::max(dist2, dist3));
 			float minDist = std::min(dist1, std::min(dist2, dist3));
-			model.distance = minDist;
 			float highestYInTri = std::max(pt[0].y, std::max(pt[1].y, pt[2].y));
-			if (highestYOfModel < highestYInTri) { highestYOfModel = highestYInTri; }
-			//std::cout << "maxDist: " << maxDist << std::endl;
+			if (highestYOfModel < highestYInTri) { highestYOfModel = highestYInTri; mdl.highestY = highestYInTri; }
 			if (avgDist < modelDistance) {
-				modelDistance =  avgDist;
+				modelDistance = avgDist;
 				maxModelDist = maxDist;
 				minModelDist = minDist;
+				mdl.distance = minDist;
 				collidingTriPts[0] = pt[0];
 				collidingTriPts[1] = pt[1];
 				collidingTriPts[2] = pt[2];
@@ -987,7 +987,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			//determines whether looking at the current model
 			if (checkAgainForFocus && tri.contains(glm::vec4(center, 1.0f)))
 			{
-				model.inFocus = true;
+				mdl.inFocus = true;
 				mtx.lock();
 				modelsInFocus.insert(ptrModel);
 				mtx.unlock();
@@ -1010,13 +1010,13 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		maxY = (std::min(1.0f, maxY) + 1) / 2.0f;
 		//std::cout << "X: " << minX << " - "<< maxX << ", Y: " << minY << " - " << maxY << ", Z: " << minZ << " - " << maxZ << std::endl;
 		boundingbox bbox = { minX, maxX, minY, maxY, minZ, maxZ };
-		model.bbox = bbox;
+		mdl.bbox = bbox;
 
 		//mark out-of-FOV models to avoid needless rendering
-		model.isInFOV = ((model.bbox.minX > 0 && model.bbox.minX < 1) || (model.bbox.maxX > 0 && model.bbox.maxX < 1)) && ((model.bbox.minY > 0 && model.bbox.minY < 1) || (model.bbox.maxY > 0 && model.bbox.maxY < 1));
+		mdl.isInFOV = ((mdl.bbox.minX > 0 && mdl.bbox.minX < 1) || (mdl.bbox.maxX > 0 && mdl.bbox.maxX < 1)) && ((mdl.bbox.minY > 0 && mdl.bbox.minY < 1) || (mdl.bbox.maxY > 0 && mdl.bbox.maxY < 1));
 
 		//mark out-of-DOF models to avoid needless rendering
-		model.isInDOF = modelDistance < dof;
+		mdl.isInDOF = modelDistance < dof;
 
 		//get the triangle normal
 		glm::vec3 line1 = collidingTriPts[1] - collidingTriPts[0];
@@ -1025,7 +1025,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		//std::cout << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
 
 		//detect collision with floor (normal is up means collision with floor)
-		if (model.isSolid && minModelDist < collidingDistance * 1.5f && normal.y > normal.z && normal.y > normal.x) {
+		if (mdl.isSolid && minModelDist < collidingDistance * 1.5f && normal.y > normal.z && normal.y > normal.x) {
 			hasLanded = true;
 			//determine whether to climb (stairs, ramps, etc.): if the highest Y is above ground and lower than half the person height
 			if (cameraPos.y - cfg.PERSON_HEIGHT*0.85f < highestYOfModel && highestYOfModel < cameraPos.y/2.0f) {
@@ -1035,7 +1035,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		}
 
 		//detect if colliding with the model
-		if (model.isSolid && modelDistance <= collidingDistance * 1.5f)
+		if (mdl.isSolid && modelDistance <= collidingDistance * 1.5f)
 		{
 			//std::cout << "modelDistance: " << modelDistance << std::endl;
 
@@ -1065,15 +1065,14 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			}
 		}
 
-		if (model.isSolid && modelDistance < collidingDistance * 0.5f)
+		if (mdl.isSolid && modelDistance < collidingDistance * 0.5f)
 		{
 			float camY = cameraPos.y; // to be able to fall if collided in the air
 			cameraPos = prevCameraPos;
 			cameraPos.y = camY;
 		}
-	}
-	//lightPos = cameraFront;
 
+	}
 	
 	//mark covered models to avoid needless rendering
 	//disabled to achieve transparency

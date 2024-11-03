@@ -322,15 +322,32 @@ void Engine3D::edit(float elapsedTime)
 
 			model m = *editingModel;
 			bool isGlued = false;
+			//glued placement
 			if (keysPressed[SupportedKeys::LEFT_CTRL] && modelInFocusTmp.inFocus) {
+				//position the model or snap it to the closest in focus
 				m.position = modelInFocusTmp.position + editingDepth * pos;
+				if (!modelsInFocus.empty()) {
+					auto modelInFocus = *(modelsInFocus.begin());
+					if (modelInFocus->id != editingModel->id && modelInFocus->distance < editingDepth + originalCollidingDistance) {
+						editingModel->snapTo(cameraFront, editingModel);
+					}
+				}
 				modelInFocusTmp.inFocus = false;
 				removeModel(ptrModelsToRender.back());
 				addModel(m);
 				isGlued = true;
 				std::cout << "glued placement" << std::endl;
+			//standard placement
 			}else {
+				//position the model or snap it to the closest in focus
 				editingModel->position = cameraPos + (editingDepth + originalCollidingDistance) * cameraFront;
+				if (!modelsInFocus.empty()) {
+					auto modelInFocus = *(modelsInFocus.begin());
+					if (modelInFocus->id != editingModel->id && modelInFocus->distance < editingDepth + originalCollidingDistance) {
+						editingModel->snapTo(cameraFront, modelInFocus);
+					}
+				}
+
 				std::cout << "standard placement" << std::endl;
 			}
 
