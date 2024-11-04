@@ -27,7 +27,8 @@ int main( int argc, char* args[] )
 		//instantiate the game engine
 		Engine3D* artificeEngine = new Engine3D(gWindow, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT,
 												cfg.NEAR, cfg.FAR, cfg.FOV, cfg.DOF,
-												cfg.COLLIDING_DISTANCE,
+												cfg.PERSON_WIDTH, //horizontal colliding distance
+												cfg.PERSON_HEIGHT, //vertical colliding distance
 												cfg.GRAVITATIONAL_PULL,
 												cfg.JUMP_SPEED_FACTOR,
 												cfg.CAMERA_SPEED_FACTOR,

@@ -135,9 +135,6 @@ void Initiator::loadConfiguration()
 				} else if (tokens[0] == "DOF") {
 					cfg->DOF = std::stof(tokens[1]);
 					std::cout << "DOF = " << cfg->DOF << std::endl;
-				} else if (tokens[0] == "COLLIDING_DISTANCE") {
-					cfg->COLLIDING_DISTANCE = std::stof(tokens[1]);
-					std::cout << "COLLIDING_DISTANCE = " << cfg->COLLIDING_DISTANCE << std::endl;
 				} else if (tokens[0] == "GRAVITATIONAL_PULL") {
 					cfg->GRAVITATIONAL_PULL = std::stof(tokens[1]);
 					std::cout << "GRAVITATIONAL_PULL = " << cfg->GRAVITATIONAL_PULL << std::endl;
@@ -147,6 +144,12 @@ void Initiator::loadConfiguration()
 				} else if (tokens[0] == "CAMERA_SPEED_FACTOR") {
 					cfg->CAMERA_SPEED_FACTOR = std::stof(tokens[1]);
 					std::cout << "CAMERA_SPEED_FACTOR = " << cfg->CAMERA_SPEED_FACTOR << std::endl;
+				} else if (tokens[0] == "PERSON_HEIGHT") {
+					cfg->PERSON_HEIGHT = std::stof(tokens[1]);
+					std::cout << "PERSON_HEIGHT = " << cfg->PERSON_HEIGHT << std::endl;
+				} else if (tokens[0] == "PERSON_WIDTH") {
+					cfg->PERSON_WIDTH = std::stof(tokens[1]);
+					std::cout << "PERSON_WIDTH = " << cfg->PERSON_WIDTH << std::endl;
 				}
 			}
 		}

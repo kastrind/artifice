@@ -67,8 +67,9 @@ void main()
 		FragColor = vec4(FXAA(TexCoord), 1.0);
 	}
 
+	// White dot in the middle, center
 	if (round(TexCoord.x * SCREEN_WIDTH) == SCREEN_WIDTH/2 && round(TexCoord.y * SCREEN_HEIGHT) == SCREEN_HEIGHT/2) {
-		FragColor = vec4(1, 0, 0, 1);
+		FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 	}
 
 }

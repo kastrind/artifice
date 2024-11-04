@@ -51,7 +51,8 @@ class Engine3D
 				int width = 320, int height = 240,
 				float near = 0.1f, float far = 1000.0f,
 				float fov = 90.0f, float dof = 20.0f,
-				float collidingDistance = 0.2f,
+				float collidingDistanceH = 0.2f,
+				float collidingDistanceV = 0.1f,
 				float gravitationalPull = 0.1f,
 				float jumpSpeedFactor = 5.0f,
 				float cameraSpeedFactor = 1.5f,
@@ -168,7 +169,8 @@ class Engine3D
 		float dof;
 
 		//for collide-and-slide
-		float collidingDistance;
+		float collidingDistanceH;
+		float collidingDistanceV;
 		bool canSlide = false;
 		bool collides = false;
 		bool collidesFront = false;
@@ -217,7 +219,8 @@ class Engine3D
 		//editor user mode specific
 		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX", "rotationY", "rotationZ", "texture", "isSolid", "collationHeight", "collationWidth"};
 		unsigned short editOptionIndex = 0;
-		float originalCollidingDistance;
+		float originalCollidingDistanceH;
+		float originalCollidingDistanceV;
 		unsigned int collationHeight = 1;
 		unsigned int collationWidth = 1;
 		float editingWidth = 0.1f;

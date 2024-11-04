@@ -535,6 +535,10 @@ typedef struct model {
 				pt[0] = modelMatrix * modelMesh.tris[2].p[0];
 				pt[1] = modelMatrix * modelMesh.tris[2].p[1];
 				return pt[1].z - pt[0].z;
+			}else if (modelMesh.shape == shapetype::RECTANGLE) {
+				pt[0] = modelMatrix * modelMesh.tris[0].p[0];
+				pt[1] = modelMatrix * modelMesh.tris[0].p[2];
+				return pt[1].z - pt[0].z;
 			}
 			return 0;
 		}
@@ -548,7 +552,7 @@ typedef struct model {
 			float absDpY = std::abs(dpY);
 			float absDpZ = std::abs(dpZ);
 			//std::cout << "dpX: " << dpX << ", dpY: " << dpY << ", dpZ: " << dpZ << std::endl;
-			//std::cout << "model in focus w h d: " << modelInFocus->getWidth() << ", " << modelInFocus->getHeight() << ", " << modelInFocus->getDepth() << std::endl;
+			//std::cout << "snapping to model with w h d: " << m->getWidth() << ", " << m->getHeight() << ", " << m->getDepth() << std::endl;
 			if (absDpX > absDpY && absDpX > absDpZ) { position.x += (dpX / absDpX) * m->getWidth(); }
 			if (absDpY > absDpX && absDpY > absDpZ) { position.y += (dpY / absDpY) * m->getHeight(); }
 			if (absDpZ > absDpX && absDpZ > absDpY) { position.z += (dpZ / absDpZ) * m->getDepth(); }

@@ -7,7 +7,8 @@ Engine3D::Engine3D(
 				   int width, int height,
 				   float near, float far,
 				   float fov, float dof,
-				   float collidingDistance,
+				   float collidingDistanceH,
+				   float collidingDistanceV,
 				   float gravitationalPull,
 				   float jumpSpeedFactor,
 				   float cameraSpeedFactor,
@@ -17,7 +18,8 @@ Engine3D::Engine3D(
 				   width(width), height(height),
 				   near(near), far(far),
 				   fov(fov), dof(dof),
-				   collidingDistance(collidingDistance),
+				   collidingDistanceH(collidingDistanceH),
+				   collidingDistanceV(collidingDistanceV),
 				   gravitationalPull(gravitationalPull),
 				   jumpSpeedFactor(jumpSpeedFactor),
 				   cameraSpeedFactor(cameraSpeedFactor),
@@ -40,8 +42,10 @@ Engine3D::Engine3D(
 	if (userMode == UserMode::EDITOR)
 	{
 		this->gravitationalPull = 0.0f;
-		originalCollidingDistance = this->collidingDistance;
-		this->collidingDistance = -0.1f;
+		originalCollidingDistanceH = this->collidingDistanceH;
+		this->collidingDistanceH = -0.1f;
+		originalCollidingDistanceV = this->collidingDistanceV;
+		this->collidingDistanceV = -0.1f;
 	}
 
 	cubemapFaceIndexMap["right"] = 0;
@@ -971,6 +975,10 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 				collidingTriPts[1] = pt[1];
 				collidingTriPts[2] = pt[2];
 			}
+			if (minDist < minModelDist) {
+				minModelDist = minDist;
+				mdl.distance = minDist;
+			}
 			//std::cout << "modelDistance: " << modelDistance << std::endl;
 
 			//camera/view transformation
@@ -1022,33 +1030,36 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		glm::vec3 line1 = collidingTriPts[1] - collidingTriPts[0];
 		glm::vec3 line2 = collidingTriPts[2] - collidingTriPts[0];
 		glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
-		//std::cout << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
+		float dpBottom = glm::dot(cameraUp, normal); //dot product is near to 1 means collision with floor
 
-		//detect collision with floor (normal is up means collision with floor)
-		if (mdl.isSolid && minModelDist < collidingDistance * 1.5f && normal.y > normal.z && normal.y > normal.x) {
+		//detect vertical collision (floor)
+		if (mdl.isSolid && minModelDist < collidingDistanceV * 1.5f && std::abs(dpBottom) > 0.5f && highestYOfModel < cameraPos.y/2.0f) {
 			hasLanded = true;
 			//determine whether to climb (stairs, ramps, etc.): if the highest Y is above ground and lower than half the person height
-			if (cameraPos.y - cfg.PERSON_HEIGHT*0.85f < highestYOfModel && highestYOfModel < cameraPos.y/2.0f) {
+			if (cameraPos.y - collidingDistanceV < highestYOfModel) {
 				shouldClimb = true;
+				//std::cout << "SHOULD CLIMB... " << std::endl;
 			}
 			//std::cout << "cameraPos.y = " << cameraPos.y << ", minModelDist = " << minModelDist << ", highestYOfModel = " << highestYOfModel << std::endl;
+			//std::cout << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
 		}
-
-		//detect if colliding with the model
-		if (mdl.isSolid && modelDistance <= collidingDistance * 1.5f)
+		//detect horizontal collision (wall)
+		if (!collides && mdl.isSolid && modelDistance <= collidingDistanceH * 1.5f && std::abs(dpBottom) <= 0.5f)
 		{
 			//std::cout << "modelDistance: " << modelDistance << std::endl;
+			//std::cout << "dpBottom: " << dpBottom << std::endl;
 
-			//based on dp and normal, determine if able to slide and the desired motion
-			float dpFront = glm::dot(cameraFront, normal);
-			float absDP = std::abs(dpFront);
-			float dpRight = glm::dot(cameraRight, normal);
-			float dpLeft = glm::dot(-cameraRight, normal);
-			float dpBack = glm::dot(-cameraFront, normal);
+			//if (maxModelDist < collidingDistanceH * 1.5f) {
 
-			//collision with wall
-			if (modelDistance < collidingDistance && maxModelDist < collidingDistance * 1.5f) {
+				//based on dp and normal, determine if able to slide and the desired motion
+				float dpFront = glm::dot(cameraFront, normal);
+				float absDP = std::abs(dpFront);
+				float dpRight = glm::dot(cameraRight, normal);
+				float dpLeft = glm::dot(-cameraRight, normal);
+				float dpBack = glm::dot(-cameraFront, normal);
+
 				canSlide = absDP < 0.8f && absDP > 0.0f;
+				//std::cout << "absDP: " << absDP << std::endl;
 				//std::cout << "dpFront: " << dpFront << std::endl;
 				//std::cout << "maxModelDist: " << maxModelDist << std::endl;
 				//std::cout << "modelDistance: " << modelDistance << std::endl;
@@ -1062,10 +1073,10 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 				desiredMotion = cameraFront - undesiredMotion;
 				desiredMotion = glm::normalize(desiredMotion);
 				//std::cout << desiredMotion.x << ", " << desiredMotion.z << std::endl;
-			}
+			//}
 		}
 
-		if (mdl.isSolid && modelDistance < collidingDistance * 0.5f)
+		if (mdl.isSolid && modelDistance < collidingDistanceH * 0.5f)
 		{
 			float camY = cameraPos.y; // to be able to fall if collided in the air
 			cameraPos = prevCameraPos;

@@ -48,15 +48,15 @@ typedef struct Configuration
 
 	float DOF = 20.0f; //depth of field
 
-	float COLLIDING_DISTANCE = 0.2f;
-
 	float GRAVITATIONAL_PULL = 0.1f;
 
 	float JUMP_SPEED_FACTOR = 5.0f;
 
 	float CAMERA_SPEED_FACTOR = 1.5f;
 
-	float PERSON_HEIGHT = 0.15f;
+	float PERSON_HEIGHT = 0.15f; //vertical colliding distance
+
+	float PERSON_WIDTH = 0.05f; //horizontal colliding distance
 
 	//precomputed constants follow
 
