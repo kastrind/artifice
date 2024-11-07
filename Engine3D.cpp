@@ -11,7 +11,7 @@ Engine3D::Engine3D(
 					float collidingDistanceV,
 					float gravitationalPull,
 					float jumpSpeedFactor,
-					float cameraSpeedFactor,
+					float personSpeedFactor,
 					UserMode userMode, EventController* ec
 					)
 					: gWindow(gWindow), camera(cam),
@@ -22,7 +22,7 @@ Engine3D::Engine3D(
 					collidingDistanceV(collidingDistanceV),
 					gravitationalPull(gravitationalPull),
 					jumpSpeedFactor(jumpSpeedFactor),
-					cameraSpeedFactor(cameraSpeedFactor),
+					personSpeedFactor(personSpeedFactor),
 					userMode(userMode), eventController(ec)
 {
 	isActive = false;
@@ -46,6 +46,8 @@ Engine3D::Engine3D(
 	{
 		setCameraPos(camera.position);
 		setCameraFront(camera.front);
+		setCameraRight(glm::vec3(1.0f, 0.0f, 0.0f));
+		setCameraUp(glm::vec3(0.0f, 1.0f, 0.0f));
 	} else if (camera.positionMode == camerapositionmode::ATTACHED_TO_PERSON)
 	{
 		setCameraOffset(camera.offset);
@@ -919,6 +921,9 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		if (!ptrModel) continue;
 		model& mdl = *ptrModel;
 
+		//ignore for some loops
+		if (mdl.ignoreForCycles > 0) { mdl.ignoreForCycles--; continue; }
+
 		if (mdl.id == 4088797665) {
 			mdl.isSolid = false;
 			mdl.position = getPersonPos();
@@ -1041,7 +1046,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		mdl.isInFOV = ((mdl.bbox.minX > 0 && mdl.bbox.minX < 1) || (mdl.bbox.maxX > 0 && mdl.bbox.maxX < 1)) && ((mdl.bbox.minY > 0 && mdl.bbox.minY < 1) || (mdl.bbox.maxY > 0 && mdl.bbox.maxY < 1));
 
 		//mark out-of-DOF models to avoid needless rendering
-		mdl.isInDOF = modelDistance < dof;
+		mdl.isInDOF = (camera.positionMode == camerapositionmode::ATTACHED_TO_PERSON) ? modelDistance < dof : glm::distance(camera.position, mdl.position) < dof;
 
 		//get the triangle normal
 		glm::vec3 line1 = collidingTriPts[1] - collidingTriPts[0];
@@ -1099,8 +1104,11 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		{
 			float personPosY = personPos.y; // to be able to fall if collided in the air
 			setPersonPos(glm::vec3(prevPersonPos.x, personPosY, prevPersonPos.z));
-			std::cout << "HERE!" << std::endl;
 		}
+
+		//models that are far away will be ignored for some loops
+		float camDist = glm::distance(getCameraPos(), mdl.position);
+		if (mdl.ignoreForCycles == 0 && camDist > dof/5.0f) { mdl.ignoreForCycles = camDist * 3; }
 
 	}
 	
@@ -1126,7 +1134,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		{
 			if (ptrModel->modelMesh.shape == shapetype::CUBE) finalCubeModelsToRender.insert(ptrModel);
 			else finalModelsToRender.insert(ptrModel);
-		}else
+		} else
 		{
 			if (ptrModel->modelMesh.shape == shapetype::CUBE) finalCubeModelsToRender.erase(ptrModel);
 			else finalModelsToRender.erase(ptrModel);
@@ -1178,16 +1186,16 @@ void Engine3D::markCoveredModels()
 
 void Engine3D::move(float elapsedTime)
 {
-	float cameraSpeed = static_cast<float>(cameraSpeedFactor * elapsedTime);
+	float personSpeed = static_cast<float>(personSpeedFactor * elapsedTime);
 
 	//falling
 	if (!hasLanded) {
-		setPersonPos(personPos + gravitationalPull * cameraSpeed * glm::vec3(0, -1, 0));
+		setPersonPos(personPos + static_cast<float>(gravitationalPull * elapsedTime) * glm::vec3(0, -1, 0));
 	}
 
 	//climbing (stairs, ramps, etc.)
 	if (shouldClimb && userMode == UserMode::PLAYER) {
-		setPersonPos(personPos + 0.5f * cameraSpeed * glm::vec3(0, 1, 0));
+		setPersonPos(personPos + 0.5f * personSpeed * glm::vec3(0, 1, 0));
 	}
 
 	if (eventController != nullptr)
@@ -1204,43 +1212,43 @@ void Engine3D::move(float elapsedTime)
 		//WSAD camera movement here
 		if (keysPressed[SupportedKeys::W] && hasLanded && collides && canSlide) {
 			desiredMotion.y = 0;
-			setPersonPos(personPos + 0.5f * cameraSpeed * desiredMotion);
+			setPersonPos(personPos + 0.5f * personSpeed * desiredMotion);
 
 		} else if (keysPressed[SupportedKeys::W] && hasLanded && (!collides || !collidesFront)) {
 			personFront.y = 0;
-			setPersonPos(personPos + cameraSpeed * personFront);
+			setPersonPos(personPos + personSpeed * personFront);
 
 		} else if (keysPressed[SupportedKeys::W] && (/*!hasLanded ||*/ userMode == UserMode::EDITOR)) {
-			setPersonPos(personPos + cameraSpeed * personFront);
+			setPersonPos(personPos + personSpeed * personFront);
 
 		} else if (keysPressed[SupportedKeys::S] && hasLanded && collides && canSlide) {
 			desiredMotion.y = 0;
-			setPersonPos(personPos - 0.5f * cameraSpeed * desiredMotion);
+			setPersonPos(personPos - 0.5f * personSpeed * desiredMotion);
 
 		} else if (keysPressed[SupportedKeys::S] && hasLanded && (!collides || !collidesBack)) {
 			personFront.y = 0;
-			setPersonPos(personPos - cameraSpeed * personFront);
+			setPersonPos(personPos - personSpeed * personFront);
 
 		} else if (keysPressed[SupportedKeys::S] && (/*!hasLanded ||*/ userMode == UserMode::EDITOR)) {
-			setPersonPos(personPos - cameraSpeed * personFront);
+			setPersonPos(personPos - personSpeed * personFront);
 		}
 		if (keysPressed[SupportedKeys::A] && hasLanded && collides && !collidesLeft) {
 			desiredMotion.y = 0;
 			bool desiresRight = glm::dot(personRight, desiredMotion) < 0;
-			if (desiresRight) setPersonPos(personPos + 0.5f * cameraSpeed * desiredMotion);
-			else setPersonPos(personPos - 0.5f * cameraSpeed * desiredMotion);
+			if (desiresRight) setPersonPos(personPos + 0.5f * personSpeed * desiredMotion);
+			else setPersonPos(personPos - 0.5f * personSpeed * desiredMotion);
 		
 		} else if (keysPressed[SupportedKeys::A] && (hasLanded && !collides || userMode == UserMode::EDITOR)) {
-			setPersonPos(personPos - glm::normalize(glm::cross(personFront, personUp)) * cameraSpeed);
+			setPersonPos(personPos - glm::normalize(glm::cross(personFront, personUp)) * personSpeed);
 		
 		} else if (keysPressed[SupportedKeys::D] && hasLanded && collides && !collidesRight) {
 			desiredMotion.y = 0;
 			bool desiresRight = glm::dot(personRight, desiredMotion) < 0;
-			if (desiresRight) setPersonPos(personPos - 0.5f * cameraSpeed * desiredMotion);
-			else setPersonPos(personPos + 0.5f * cameraSpeed * desiredMotion);
+			if (desiresRight) setPersonPos(personPos - 0.5f * personSpeed * desiredMotion);
+			else setPersonPos(personPos + 0.5f * personSpeed * desiredMotion);
 
 		} else if (keysPressed[SupportedKeys::D] && (hasLanded && !collides || userMode == UserMode::EDITOR)) {
-			setPersonPos(personPos + glm::normalize(glm::cross(personFront, personUp)) * cameraSpeed);
+			setPersonPos(personPos + glm::normalize(glm::cross(personFront, personUp)) * personSpeed);
 		}
 
 		//jumping
@@ -1260,7 +1268,7 @@ void Engine3D::move(float elapsedTime)
 			jumpSpeed -= jumpSpeed * elapsedTime;
 			if (!collides) { //if not colliding, move forward too
 				personFront.y = 0;
-				setPersonPos(personPos + 0.5f * cameraSpeed * personFrontOnJump);
+				setPersonPos(personPos + 0.5f * personSpeed * personFrontOnJump);
 			}
 		}
 		//std::cout << "jumpSpeed" << jumpSpeed << std::endl;
@@ -1269,14 +1277,14 @@ void Engine3D::move(float elapsedTime)
 		if (userMode == UserMode::EDITOR)
 		{
 			if (keysPressed[SupportedKeys::LEFT_ARROW]) {
-				setPersonPos(personPos - glm::normalize(glm::cross(personFront, personUp)) * cameraSpeed);
+				setPersonPos(personPos - glm::normalize(glm::cross(personFront, personUp)) * personSpeed);
 			} else if (keysPressed[SupportedKeys::RIGHT_ARROW]) {
-				setPersonPos(personPos + glm::normalize(glm::cross(personFront, personUp)) * cameraSpeed);
+				setPersonPos(personPos + glm::normalize(glm::cross(personFront, personUp)) * personSpeed);
 			}
 			if (keysPressed[SupportedKeys::UP_ARROW]) {
-				setPersonPos(personPos - glm::normalize(glm::cross(personFront, personRight)) * cameraSpeed);
+				setPersonPos(personPos - glm::normalize(glm::cross(personFront, personRight)) * personSpeed);
 			} else if (keysPressed[SupportedKeys::DOWN_ARROW]) {
-				setPersonPos(personPos + glm::normalize(glm::cross(personFront, personRight)) * cameraSpeed);
+				setPersonPos(personPos + glm::normalize(glm::cross(personFront, personRight)) * personSpeed);
 			}
 		}
 
@@ -1309,8 +1317,13 @@ void Engine3D::move(float elapsedTime)
 		front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
 		front.y = sin(glm::radians(pitch));
 		front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-		setPersonFront(glm::normalize(front));
-		setPersonRight(glm::normalize(glm::cross(personFront, personUp)));
+		if (camera.positionMode == camerapositionmode::ATTACHED_TO_PERSON) {
+			setPersonFront(glm::normalize(front));
+			setPersonRight(glm::normalize(glm::cross(personFront, personUp)));
+		} else if (camera.positionMode == camerapositionmode::FIXED) {
+			setCameraFront(glm::normalize(front));
+			setCameraRight(glm::normalize(glm::cross(personFront, personUp)));
+		}
 		setPersonPos(getPersonPos());
 	}
 }
@@ -1382,9 +1395,19 @@ glm::vec3 Engine3D::getCameraFront() const
 	return cameraFront;
 }
 
+void Engine3D::setCameraUp(glm::vec3 pos)
+{
+	cameraUp = pos;
+}
+
 glm::vec3 Engine3D::getCameraUp() const
 {
 	return cameraUp;
+}
+
+void Engine3D::setCameraRight(glm::vec3 pos)
+{
+	cameraRight = pos;
 }
 
 glm::vec3 Engine3D::getCameraRight() const
@@ -1412,6 +1435,8 @@ void Engine3D::setPersonFront(glm::vec3 pos)
 	if (camera.positionMode == camerapositionmode::ATTACHED_TO_PERSON) {
 		glm::vec3 worldOffset = (cameraOffset.x * getPersonRight()) + (cameraOffset.y * getPersonUp()) + (cameraOffset.z * getPersonFront());
 		cameraFront = glm::normalize(personFront - worldOffset);
+	} else if (camera.positionMode == camerapositionmode::FIXED) {
+		cameraFront = personFront;
 	}
 }
 
@@ -1422,12 +1447,11 @@ glm::vec3 Engine3D::getPersonFront() const
 
 void Engine3D::setPersonUp(glm::vec3 pos)
 {
-	personUp = pos;
 	if (camera.positionMode == camerapositionmode::ATTACHED_TO_PERSON) {
-		glm::vec3 worldOffset = (cameraOffset.x * getPersonRight()) + (cameraOffset.y * getPersonUp()) + (cameraOffset.z * getPersonFront());
-		cameraUp = glm::normalize(personUp - worldOffset);
+		cameraUp = personUp = pos;
+	} else if (camera.positionMode == camerapositionmode::FIXED) {
+		personUp = pos;
 	}
-	cameraUp = personUp;
 }
 
 glm::vec3 Engine3D::getPersonUp() const
@@ -1437,12 +1461,11 @@ glm::vec3 Engine3D::getPersonUp() const
 
 void Engine3D::setPersonRight(glm::vec3 pos)
 {
-	personRight = pos;
 	if (camera.positionMode == camerapositionmode::ATTACHED_TO_PERSON) {
-		glm::vec3 worldOffset = (cameraOffset.x * getPersonRight()) + (cameraOffset.y * getPersonUp()) + (cameraOffset.z * getPersonFront());
-		cameraRight = glm::normalize(personRight - worldOffset);
+		cameraRight = personRight = pos;
+	} else if (camera.positionMode == camerapositionmode::FIXED) {
+		personRight = pos;
 	}
-	cameraRight = personRight;
 }
 
 glm::vec3 Engine3D::getPersonRight() const

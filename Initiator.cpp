@@ -141,9 +141,9 @@ void Initiator::loadConfiguration()
 				} else if (tokens[0] == "JUMP_SPEED_FACTOR") {
 					cfg->JUMP_SPEED_FACTOR = std::stof(tokens[1]);
 					std::cout << "JUMP_SPEED_FACTOR = " << cfg->JUMP_SPEED_FACTOR << std::endl;
-				} else if (tokens[0] == "CAMERA_SPEED_FACTOR") {
-					cfg->CAMERA_SPEED_FACTOR = std::stof(tokens[1]);
-					std::cout << "CAMERA_SPEED_FACTOR = " << cfg->CAMERA_SPEED_FACTOR << std::endl;
+				} else if (tokens[0] == "PERSON_SPEED_FACTOR") {
+					cfg->PERSON_SPEED_FACTOR = std::stof(tokens[1]);
+					std::cout << "PERSON_SPEED_FACTOR = " << cfg->PERSON_SPEED_FACTOR << std::endl;
 				} else if (tokens[0] == "PERSON_HEIGHT") {
 					cfg->PERSON_HEIGHT = std::stof(tokens[1]);
 					std::cout << "PERSON_HEIGHT = " << cfg->PERSON_HEIGHT << std::endl;

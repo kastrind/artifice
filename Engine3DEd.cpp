@@ -272,7 +272,7 @@ void Engine3D::edit(float elapsedTime)
 				addModel(m);
 				copyingModel.reset();
 			}
-			cameraSpeedFactor /= 100;
+			personSpeedFactor /= 100;
 			isEdited = true;
 		}
 		
@@ -289,7 +289,7 @@ void Engine3D::edit(float elapsedTime)
 		// releasing left mouse click places a new model
 		if (editingModel != nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]==false) {
 			
-			cameraSpeedFactor *= 100;
+			personSpeedFactor *= 100;
 			axis heightAlongAxis = axis::Y;
 			axis widthAlongAxis = axis::X;
 			short dirX = personFront.x / std::abs(personFront.x);

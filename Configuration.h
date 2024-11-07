@@ -52,7 +52,7 @@ typedef struct Configuration
 
 	float JUMP_SPEED_FACTOR = 5.0f;
 
-	float CAMERA_SPEED_FACTOR = 1.5f;
+	float PERSON_SPEED_FACTOR = 1.5f;
 
 	float PERSON_HEIGHT = 0.15f; //vertical colliding distance
 

@@ -26,7 +26,7 @@ int main( int argc, char* args[] )
 
 		//create a default camera object
 		Camera camera;
-		camera.offset = glm::vec3(0.0f, 0.5f, -0.8f);
+		//camera.offset = glm::vec3(0.0f, 0.5f, -0.8f);
 		
 		//instantiate the game engine
 		Engine3D* artificeEngine = new Engine3D(gWindow, camera,
@@ -36,7 +36,7 @@ int main( int argc, char* args[] )
 												cfg.PERSON_HEIGHT, //vertical colliding distance
 												cfg.GRAVITATIONAL_PULL,
 												cfg.JUMP_SPEED_FACTOR,
-												cfg.CAMERA_SPEED_FACTOR,
+												cfg.PERSON_SPEED_FACTOR,
 												cfg.USER_MODE, &eventController);
 
 		Level level;

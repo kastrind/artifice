@@ -77,7 +77,7 @@ class Engine3D
 				float collidingDistanceV = 0.1f,
 				float gravitationalPull = 0.1f,
 				float jumpSpeedFactor = 5.0f,
-				float cameraSpeedFactor = 1.5f,
+				float personSpeedFactor = 1.5f,
 				UserMode userMode = UserMode::PLAYER,
 				EventController* eventController = nullptr
 				);
@@ -104,7 +104,11 @@ class Engine3D
 
 		glm::vec3 getCameraFront() const;
 
+		void setCameraUp(glm::vec3 pos);
+
 		glm::vec3 getCameraUp() const;
+
+		void setCameraRight(glm::vec3 pos);
 
 		glm::vec3 getCameraRight() const;
 
@@ -303,6 +307,8 @@ class Engine3D
 
 		glm::vec3 personRight;
 
+		float personSpeedFactor;
+
 		//camera
 		Camera camera;
 
@@ -315,8 +321,6 @@ class Engine3D
 		glm::vec3 cameraUp;
 
 		glm::vec3 cameraRight;
-
-		float cameraSpeedFactor;
 
 		glm::mat4 viewMatrix;
 
