@@ -23,9 +23,14 @@ int main( int argc, char* args[] )
 
 		//input event controller
 		EventController eventController;
+
+		//create a default camera object
+		Camera camera;
+		camera.offset = glm::vec3(0.0f, 0.5f, -0.8f);
 		
 		//instantiate the game engine
-		Engine3D* artificeEngine = new Engine3D(gWindow, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT,
+		Engine3D* artificeEngine = new Engine3D(gWindow, camera,
+												cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT,
 												cfg.NEAR, cfg.FAR, cfg.FOV, cfg.DOF,
 												cfg.PERSON_WIDTH, //horizontal colliding distance
 												cfg.PERSON_HEIGHT, //vertical colliding distance

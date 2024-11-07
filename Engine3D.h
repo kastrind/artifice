@@ -40,6 +40,28 @@
 #include <algorithm>
 #include <memory>
 
+typedef enum camerapositionmode {
+	ATTACHED_TO_PERSON,
+	FIXED
+} camerapositionmode;
+
+class Camera
+{
+	public:
+
+		camerapositionmode positionMode = camerapositionmode::ATTACHED_TO_PERSON;
+		glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
+		glm::vec3 offset   = glm::vec3(0.0f, 0.0f, 0.0f);
+		glm::vec3 front    = glm::vec3(0.0f, 0.0f, -1.0f);
+
+		Camera(camerapositionmode positionMode, glm::vec3 position, glm::vec3 offset, glm::vec3 front)
+			: positionMode(positionMode), position(position), offset(offset), front(front) {}
+
+		Camera() {}
+
+		virtual ~Camera() {}
+};
+
 class Engine3D
 {
 	public:
@@ -47,7 +69,7 @@ class Engine3D
 		std::atomic<bool> isActive;
 
 		Engine3D(
-				SDL_Window* gWindow,
+				SDL_Window* gWindow, Camera camera,
 				int width = 320, int height = 240,
 				float near = 0.1f, float far = 1000.0f,
 				float fov = 90.0f, float dof = 20.0f,
@@ -70,11 +92,37 @@ class Engine3D
 
 		glm::mat4 getProjectionMatrix() const;
 
+		void setCameraPos(glm::vec3 pos);
+
 		glm::vec3 getCameraPos() const;
+
+		void setCameraOffset(glm::vec3 pos);
+
+		glm::vec3 getCameraOffset() const;
+
+		void setCameraFront(glm::vec3 pos);
 
 		glm::vec3 getCameraFront() const;
 
 		glm::vec3 getCameraUp() const;
+
+		glm::vec3 getCameraRight() const;
+
+		void setPersonPos(glm::vec3 pos);
+
+		glm::vec3 getPersonPos() const;
+
+		void setPersonFront(glm::vec3 pos);
+
+		glm::vec3 getPersonFront() const;
+
+		void setPersonUp(glm::vec3 pos);
+
+		glm::vec3 getPersonUp() const;
+
+		void setPersonRight(glm::vec3 pos);
+
+		glm::vec3 getPersonRight() const;
 
 		glm::vec3 getLightPos() const;
 
@@ -181,7 +229,7 @@ class Engine3D
 		float gravitationalPull;
 		float jumpSpeedFactor;
 		float jumpSpeed = 0;
-		glm::vec3 cameraFrontOnJump;
+		glm::vec3 personFrontOnJump;
 
 		UserMode userMode;
 
@@ -246,8 +294,21 @@ class Engine3D
 
 		std::shared_ptr<Level> level = nullptr;
 
+		//person
+		glm::vec3 personPos;
+
+		glm::vec3 personFront;
+
+		glm::vec3 personUp;
+
+		glm::vec3 personRight;
+
 		//camera
+		Camera camera;
+
 		glm::vec3 cameraPos;
+
+		glm::vec3 cameraOffset;
 
 		glm::vec3 cameraFront;
 
@@ -290,7 +351,6 @@ class Engine3D
 		void markCoveredModels();
 
 		void move(float elapsedTime);
-
 
 		//editor user mode specific
 

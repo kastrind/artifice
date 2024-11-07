@@ -430,6 +430,7 @@ typedef struct model {
 		float speed = 0.0f;
 		glm::vec3 front = glm::vec3(0.0, 1.0, 0.0);
 		float highestY = 0.0f;
+		float lowestY = 0.0f;
 
 		model() {}
 

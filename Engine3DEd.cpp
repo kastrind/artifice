@@ -254,14 +254,14 @@ void Engine3D::edit(float elapsedTime)
 				level->modelPointsCnt = modelPointsCnt;
 				level->cubePointsCnt = cubePointsCnt;
 				level->models = ptrModelsToRender;
-				level->playerPosition = cameraPos;
+				level->playerPosition = getPersonPos();
 				level->save();
 			}
 			mtx.unlock();
 		}
 
 		if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
-			glm::vec3 position = cameraPos + (editingDepth + originalCollidingDistanceH) * cameraFront;
+			glm::vec3 position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
 			if (copyingModel == nullptr)
 			{
 				addModel(editingWidth, editingHeight, editingDepth, editingRotationX, editingRotationY, editingRotationZ, editingCubemapNameIndex, editingTextureNameIndex, editingIsSolid, editingShape, position);
@@ -279,7 +279,7 @@ void Engine3D::edit(float elapsedTime)
 		// there is a spawned model about to be placed
 		if (editingModel != nullptr) {
 			//real-time update of transformation, texture and isSolid
-			editingModel->position = cameraPos + (editingDepth + originalCollidingDistanceH) * cameraFront;
+			editingModel->position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
 			editingModel->rotate(editingRotationX, editingRotationY, editingRotationZ);
 			editingModel->scale(editingWidth, editingHeight, editingDepth);
 			editingModel->texture = editingModel->modelMesh.shape == shapetype::CUBE ? cubemapNames[editingCubemapNameIndex] : textureNames[editingTextureNameIndex];
@@ -292,24 +292,24 @@ void Engine3D::edit(float elapsedTime)
 			cameraSpeedFactor *= 100;
 			axis heightAlongAxis = axis::Y;
 			axis widthAlongAxis = axis::X;
-			short dirX = cameraFront.x / std::abs(cameraFront.x);
-			short dirY = cameraFront.y / std::abs(cameraFront.y);
-			short dirZ = cameraFront.z / std::abs(cameraFront.z);
+			short dirX = personFront.x / std::abs(personFront.x);
+			short dirY = personFront.y / std::abs(personFront.y);
+			short dirZ = personFront.z / std::abs(personFront.z);
 
 			glm::vec3 pos = glm::vec3(0, 0, 0);
-			if (std::abs(cameraFront.z) > std::abs(cameraFront.x)*1.2f && std::abs(cameraFront.z) > std::abs(cameraFront.y)*1.2f)
+			if (std::abs(personFront.z) > std::abs(personFront.x)*1.2f && std::abs(personFront.z) > std::abs(personFront.y)*1.2f)
 			{
 				heightAlongAxis = axis::Y;
 				widthAlongAxis = axis::Z;
 				pos.z = dirZ;
-			} else if (std::abs(cameraFront.x) > std::abs(cameraFront.y)*1.2f && std::abs(cameraFront.x) > std::abs(cameraFront.z)*1.2f)
+			} else if (std::abs(personFront.x) > std::abs(personFront.y)*1.2f && std::abs(personFront.x) > std::abs(personFront.z)*1.2f)
 			{
 				heightAlongAxis = axis::Y;
 				widthAlongAxis = axis::X;
 				pos.x = dirX;
-			} else if (std::abs(cameraFront.y) > std::abs(cameraFront.x)*1.2f && std::abs(cameraFront.y) > std::abs(cameraFront.z)*1.2f)
+			} else if (std::abs(personFront.y) > std::abs(personFront.x)*1.2f && std::abs(personFront.y) > std::abs(personFront.z)*1.2f)
 			{
-				if (std::abs(cameraFront.x) > std::abs(cameraFront.z)) {
+				if (std::abs(personFront.x) > std::abs(personFront.z)) {
 					heightAlongAxis = axis::X;
 					widthAlongAxis = axis::Z;
 					pos.z = dirZ;
@@ -329,7 +329,7 @@ void Engine3D::edit(float elapsedTime)
 				if (!modelsInFocus.empty()) {
 					auto modelInFocus = *(modelsInFocus.begin());
 					if (modelInFocus->id != editingModel->id && modelInFocus->distance < editingDepth + originalCollidingDistanceH) {
-						m.snapTo(cameraFront, modelInFocus);
+						m.snapTo(personFront, modelInFocus);
 					}
 				}
 				modelInFocusTmp.inFocus = false;
@@ -340,11 +340,11 @@ void Engine3D::edit(float elapsedTime)
 			//standard placement
 			}else {
 				//position the model or snap it to the closest in focus
-				editingModel->position = cameraPos + (editingDepth + originalCollidingDistanceH) * cameraFront;
+				editingModel->position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
 				if (!modelsInFocus.empty()) {
 					auto modelInFocus = *(modelsInFocus.begin());
 					if (modelInFocus->id != editingModel->id && modelInFocus->distance < editingDepth + originalCollidingDistanceH) {
-						editingModel->snapTo(cameraFront, modelInFocus);
+						editingModel->snapTo(personFront, modelInFocus);
 					}
 				}
 				std::cout << "standard placement" << std::endl;
@@ -384,7 +384,7 @@ void Engine3D::edit(float elapsedTime)
 			// std::cout << "model placed has sn: " << editingModel->sn << std::endl;
 			editingModel = nullptr;
 			isEdited = true;
-			//std::cout << "added cube!" << cameraFront.x << cameraFront.y << cameraFront.z << std::endl;
+			//std::cout << "added cube!" << personFront.x << personFront.y << personFront.z << std::endl;
 
 		// right mouse click deletes the model currently in focus
 		}else if (deletingModel == nullptr && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] && modelsInFocus.size() > 0) {
