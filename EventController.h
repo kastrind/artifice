@@ -112,6 +112,9 @@ class EventController
 
 		std::mutex mtx;
 
+		int mouseRelX;
+		int mouseRelY;
+
 	private:
 
 		bool isMouseClicked();

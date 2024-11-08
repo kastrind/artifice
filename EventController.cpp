@@ -39,6 +39,8 @@ void EventController::clearMouseMotionState()
 	keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] = false;
 	mouseDistanceX = 0;
 	mouseDistanceY = 0;
+	mouseRelX = 0;
+	mouseRelY = 0;
 }
 
 bool EventController::isMouseClicked() {
@@ -161,6 +163,8 @@ void EventController::decodeEvent(SDL_Event* e)
 	if (e->type == SDL_MOUSEMOTION) {
 		//get mouse position
 		//SDL_GetMouseState( &mousePosX, &mousePosY );
+		mouseRelX = e->motion.xrel;
+		mouseRelY = e->motion.yrel;
 		SDL_GetRelativeMouseState( &mousePosX, &mousePosY );
 		int tmpMouseDistanceX = std::abs(mousePosX - prevMousePosX);
 		int tmpMouseDistanceY = std::abs(mousePosY - prevMousePosY);

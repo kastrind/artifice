@@ -1288,17 +1288,31 @@ void Engine3D::move(float elapsedTime)
 			}
 		}
 
+		//std::cout << "x: " << (eventController->mouseRelX) << std::endl;
+
+		if (eventController->mouseRelX > 0) {
+			yaw += ((float)eventController->mouseRelX / width) * 180;
+		} else if (eventController->mouseRelX < 0) {
+			yaw += ((float)eventController->mouseRelX / width) * 180;
+		}
+
+		if (eventController->mouseRelY > 0) {
+			pitch -= ((float)eventController->mouseRelY / height) * 180;
+		} else if (eventController->mouseRelY < 0) {
+			pitch -= ((float)eventController->mouseRelY / height) * 180;
+		}
+
 		//mouse motion
 		if (keysPressed[SupportedKeys::MOUSE_LEFT]) {
-			yaw -= multiplierX * elapsedTime;
+			//yaw -= multiplierX * elapsedTime;
 		} else if (keysPressed[SupportedKeys::MOUSE_RIGHT]) {
-			yaw += multiplierX * elapsedTime;
+			//yaw += multiplierX * elapsedTime;
 		}
 
 		if (keysPressed[SupportedKeys::MOUSE_UP]) {
-			pitch += multiplierY * elapsedTime;
+			//pitch += multiplierY * elapsedTime;
 		} else if (keysPressed[SupportedKeys::MOUSE_DOWN]) {
-			pitch -= multiplierY * elapsedTime;
+			//pitch -= multiplierY * elapsedTime;
 		}
 
 		//make sure that when pitch is out of bounds, screen doesn't get flipped
