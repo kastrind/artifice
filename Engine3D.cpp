@@ -70,12 +70,12 @@ Engine3D::Engine3D(
 std::thread Engine3D::startEngine()
 {
 	//start thread
-	std::thread t = std::thread(&Engine3D::engineThread, this);
+	std::thread t = std::thread(&Engine3D::engineLoop, this);
 
 	return t;
 }
 
-void Engine3D::engineThread()
+void Engine3D::engineLoop()
 {
 	//create user resources as part of this thread
 	if (!onUserCreate())
@@ -83,7 +83,7 @@ void Engine3D::engineThread()
 	else
 		isActive = true;
 
-	rendererThread = startRendering();
+	renderingThread = startRendering();
 
 	auto tp1 = std::chrono::system_clock::now();
 	auto tp2 = std::chrono::system_clock::now();
@@ -117,12 +117,12 @@ void Engine3D::engineThread()
 std::thread Engine3D::startRendering()
 {
 	//start thread
-	std::thread t = std::thread(&Engine3D::renderingThread, this);
+	std::thread t = std::thread(&Engine3D::renderingLoop, this);
 
 	return t;
 }
 
-void Engine3D::renderingThread()
+void Engine3D::renderingLoop()
 {
 	//create context
 	printf( "Creating OpenGL context...\n" );
@@ -134,6 +134,12 @@ void Engine3D::renderingThread()
 	}
 	else
 	{
+		//use Vsync
+		printf( "Setting VSync...\n" );
+		if( SDL_GL_SetSwapInterval( 1 ) < 0 )
+		{
+			printf( "Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError() );
+		}
 		//initialize GLEW
 		printf( "Initializing GLEW...\n" );
 		glewExperimental = GL_TRUE; 
@@ -893,7 +899,6 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	glm::vec3 prevPersonPos = personPos;
 	glm::vec3 center{ 0, 0, 0 };
 	float modelDistance = dof;
-	float maxModelDist = dof;
 	float minModelDist = dof;
 	glm::vec4 collidingTriPts[3];
 
@@ -915,6 +920,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 	mtx.unlock();
 
+	int cnt = 0;
+
 	//for each model to render
 	for (auto &ptrModel : ptrModelsToRender)
 	{
@@ -922,11 +929,38 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		model& mdl = *ptrModel;
 
 		//ignore for some loops
-		if (mdl.ignoreForCycles > 0) { mdl.ignoreForCycles--; continue; }
+		if (mdl.ignoreForCycles > 0) {
+			mdl.ignoreForCycles--;
+			continue;
+		}
 
-		if (mdl.id == 4088797665) {
-			mdl.isSolid = false;
-			mdl.position = getPersonPos();
+		float camDist = glm::distance(getCameraPos(), mdl.position);
+
+		//mark out-of-DOF models to avoid needless rendering
+		mdl.isInDOF = camDist < dof;
+		if (!mdl.isInDOF) { continue; }
+
+		//vertical and horizontal model to camera angle for FOV calculation
+		glm::vec3 directionToModel = glm::normalize(mdl.position - cameraPos);
+		glm::vec2 cameraFrontXZ = glm::normalize(glm::vec2(cameraFront.x, cameraFront.z));
+		glm::vec2 directionToModelXZ = glm::normalize(glm::vec2(directionToModel.x, directionToModel.z));
+		float angleV = glm::degrees( atan2( directionToModel.y, glm::length(directionToModelXZ) ) - atan2( cameraFront.y, glm::length(cameraFrontXZ) ) );
+		float angleH = glm::degrees( acos( glm::dot(cameraFrontXZ, directionToModelXZ) ) );
+		//if (mdl.id == 633205944) std::cout << "angleH: "<<angleH << std::endl;
+		//if (mdl.id == 633205944) std::cout << "angleV: "<< angleV << std::endl;
+
+		//mark far and out-of-FOV models to avoid needless rendering
+		//mdl.isInFOV = ((mdl.bbox.minX > 0 && mdl.bbox.minX < 1) || (mdl.bbox.maxX > 0 && mdl.bbox.maxX < 1)) && ((mdl.bbox.minY > 0 && mdl.bbox.minY < 1) || (mdl.bbox.maxY > 0 && mdl.bbox.maxY < 1));
+		if ((camDist > 5.0f * collidingDistanceH &&  camDist > 5.0f * collidingDistanceV && (std::abs(angleV) > (fov * (width/height))/2 || std::abs(angleH) > fov))) {
+			mdl.isInFOV = false;
+			continue;
+		}else {
+			mdl.isInFOV = true;
+		}
+
+		//models that are far away will be ignored for next two loops
+		if (mdl.ignoreForCycles == 0 && camDist > 5.0f * collidingDistanceH && camDist > 5.0f * collidingDistanceV) {
+			mdl.ignoreForCycles = 2;
 		}
 
 		mtx.lock();
@@ -937,8 +971,6 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 		mdl.inFocus = false;
 		bool checkAgainForFocus = true;
-		mdl.isInFOV = false;
-		bool checkAgainForFOV = true;
 		float minX = 1.0f, maxX = -1.0f, minY = 1.0f, maxY = -1.0f, minZ = 100000.0f, maxZ = -100000.0f;
 
 		//if cube is skybox, then do not process further
@@ -957,7 +989,6 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		mtx.unlock();
 
 		modelDistance = dof;
-		maxModelDist = dof;
 		minModelDist = dof;
 		
 		//initialize highest and lowest Y positions of model
@@ -990,7 +1021,6 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			if (lowestYOfModel > lowestYInTri) { lowestYOfModel = lowestYInTri; mdl.lowestY = lowestYInTri; }
 			if (avgDist < modelDistance) {
 				modelDistance = avgDist;
-				maxModelDist = maxDist;
 				minModelDist = minDist;
 				mdl.distance = minDist;
 				collidingTriPts[0] = pt[0];
@@ -1042,12 +1072,6 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		boundingbox bbox = { minX, maxX, minY, maxY, minZ, maxZ };
 		mdl.bbox = bbox;
 
-		//mark out-of-FOV models to avoid needless rendering
-		mdl.isInFOV = ((mdl.bbox.minX > 0 && mdl.bbox.minX < 1) || (mdl.bbox.maxX > 0 && mdl.bbox.maxX < 1)) && ((mdl.bbox.minY > 0 && mdl.bbox.minY < 1) || (mdl.bbox.maxY > 0 && mdl.bbox.maxY < 1));
-
-		//mark out-of-DOF models to avoid needless rendering
-		mdl.isInDOF = (camera.positionMode == camerapositionmode::ATTACHED_TO_PERSON) ? modelDistance < dof : glm::distance(camera.position, mdl.position) < dof;
-
 		//get the triangle normal
 		glm::vec3 line1 = collidingTriPts[1] - collidingTriPts[0];
 		glm::vec3 line2 = collidingTriPts[2] - collidingTriPts[0];
@@ -1060,7 +1084,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			//determine whether to climb (stairs, ramps, etc.): if the highest Y is above ground and lower than half the person height
 			if (personPos.y - collidingDistanceV < highestYOfModel) {
 				shouldClimb = true;
-				//std::cout << "SHOULD CLIMB... " << std::endl;
+				//std::cout << "SHOULD CLIMB" << std::endl;
 			}
 			//std::cout << "personPos.y = " << personPos.y << ", minModelDist = " << minModelDist << ", highestYOfModel = " << highestYOfModel << std::endl;
 			//std::cout << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
@@ -1073,31 +1097,27 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			//std::cout << "modelDistance: " << modelDistance << std::endl;
 			//std::cout << "dpBottom: " << dpBottom << std::endl;
 
-			//if (maxModelDist < collidingDistanceH * 1.5f) {
+			//based on dp and normal, determine if able to slide and the desired motion
+			float dpFront = glm::dot(personFront, normal);
+			float absDP = std::abs(dpFront);
+			float dpRight = glm::dot(personRight, normal);
+			float dpLeft = glm::dot(-personRight, normal);
+			float dpBack = glm::dot(-personFront, normal);
 
-				//based on dp and normal, determine if able to slide and the desired motion
-				float dpFront = glm::dot(personFront, normal);
-				float absDP = std::abs(dpFront);
-				float dpRight = glm::dot(personRight, normal);
-				float dpLeft = glm::dot(-personRight, normal);
-				float dpBack = glm::dot(-personFront, normal);
-
-				canSlide = absDP < 0.8f && absDP > 0.0f;
-				//std::cout << "absDP: " << absDP << std::endl;
-				//std::cout << "dpFront: " << dpFront << std::endl;
-				//std::cout << "maxModelDist: " << maxModelDist << std::endl;
-				//std::cout << "modelDistance: " << modelDistance << std::endl;
-				collides = true;
-				if (!collidesFront) collidesFront = dpFront < dpRight && dpFront < dpLeft && dpFront < dpBack;
-				if (!collidesBack)  collidesBack  = dpBack < dpRight && dpBack < dpLeft && dpBack < dpFront;
-				if (!collidesRight) collidesRight = dpRight < dpLeft && dpRight < dpFront && dpRight < dpBack;
-				if (!collidesLeft)  collidesLeft  = dpLeft < dpRight && dpLeft < dpFront && dpLeft < dpBack;
-				//std::cout << "front: " << collidesFront << ", right: " << collidesRight << ", left: " << collidesLeft << ", back: " << collidesBack << std::endl;
-				glm::vec3 undesiredMotion = normal * dpFront;
-				desiredMotion = personFront - undesiredMotion;
-				desiredMotion = glm::normalize(desiredMotion);
-				//std::cout << desiredMotion.x << ", " << desiredMotion.z << std::endl;
-			//}
+			canSlide = absDP < 0.8f && absDP > 0.0f;
+			//std::cout << "absDP: " << absDP << std::endl;
+			//std::cout << "dpFront: " << dpFront << std::endl;
+			//std::cout << "modelDistance: " << modelDistance << std::endl;
+			collides = true;
+			if (!collidesFront) collidesFront = dpFront < dpRight && dpFront < dpLeft && dpFront < dpBack;
+			if (!collidesBack)  collidesBack  = dpBack < dpRight && dpBack < dpLeft && dpBack < dpFront;
+			if (!collidesRight) collidesRight = dpRight < dpLeft && dpRight < dpFront && dpRight < dpBack;
+			if (!collidesLeft)  collidesLeft  = dpLeft < dpRight && dpLeft < dpFront && dpLeft < dpBack;
+			//std::cout << "front: " << collidesFront << ", right: " << collidesRight << ", left: " << collidesLeft << ", back: " << collidesBack << std::endl;
+			glm::vec3 undesiredMotion = normal * dpFront;
+			desiredMotion = personFront - undesiredMotion;
+			desiredMotion = glm::normalize(desiredMotion);
+			//std::cout << desiredMotion.x << ", " << desiredMotion.z << std::endl;
 		}
 
 		if (mdl.isSolid && modelDistance < collidingDistanceH * 0.5f)
@@ -1106,12 +1126,8 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			setPersonPos(glm::vec3(prevPersonPos.x, personPosY, prevPersonPos.z));
 		}
 
-		//models that are far away will be ignored for some loops
-		float camDist = glm::distance(getCameraPos(), mdl.position);
-		if (mdl.ignoreForCycles == 0 && camDist > dof/5.0f) { mdl.ignoreForCycles = camDist * 3; }
-
 	}
-	
+
 	//mark covered models to avoid needless rendering
 	//disabled to achieve transparency
 	//mtx.lock();
@@ -1152,7 +1168,6 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 void Engine3D::captureInput()
 {
-	//listen for input
 	std::memcpy(prevKeysPressed, keysPressed, SupportedKeys::ALL_KEYS * sizeof(bool));
 	std::memcpy(keysPressed, eventController->getKeysPressed(), SupportedKeys::ALL_KEYS * sizeof(bool));
 }
@@ -1201,13 +1216,10 @@ void Engine3D::move(float elapsedTime)
 	if (eventController != nullptr)
 	{
 		//bool* keysPressed = eventController->getKeysPressed();
-
-		int mouseDistanceX = eventController->getMouseDistanceX();
-		int mouseDistanceY = eventController->getMouseDistanceY();
-		//std::cout << "mouseDistX: " << mouseDistanceX << ", mouseDistY: " << mouseDistanceY << std::endl;
+		//std::cout << "mouseRelX: " << eventController->getMouseRelX() << ", mouseRelY: " << eventController->getMouseRelY() << std::endl;
 		//std::cout << "left: " << keysPressed[SupportedKeys::MOUSE_LEFT] << ", right: " << keysPressed[SupportedKeys::MOUSE_RIGHT] << ", up: " << keysPressed[SupportedKeys::MOUSE_UP] << ", down: " << keysPressed[SupportedKeys::MOUSE_DOWN] << std::endl;
-		float multiplierX = (float)mouseDistanceX * 5;
-		float multiplierY = (float)mouseDistanceY * 5;
+		//std::cout << "prev wheel up: " << prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] << ", wheel down: " << prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] << std::endl;
+		//std::cout << "wheel up: " << keysPressed[SupportedKeys::MOUSE_WHEEL_UP] << ", wheel down: " << keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] << std::endl;
 
 		//WSAD camera movement here
 		if (keysPressed[SupportedKeys::W] && hasLanded && collides && canSlide) {
@@ -1281,38 +1293,22 @@ void Engine3D::move(float elapsedTime)
 			} else if (keysPressed[SupportedKeys::RIGHT_ARROW]) {
 				setPersonPos(personPos + glm::normalize(glm::cross(personFront, personUp)) * personSpeed);
 			}
-			if (keysPressed[SupportedKeys::UP_ARROW]) {
+			if (eventController->ascend(keysPressed)) {
 				setPersonPos(personPos - glm::normalize(glm::cross(personFront, personRight)) * personSpeed);
 			} else if (keysPressed[SupportedKeys::DOWN_ARROW]) {
 				setPersonPos(personPos + glm::normalize(glm::cross(personFront, personRight)) * personSpeed);
 			}
 		}
 
-		//std::cout << "x: " << (eventController->mouseRelX) << std::endl;
-
-		if (eventController->mouseRelX > 0) {
-			yaw += ((float)eventController->mouseRelX / width) * 180;
-		} else if (eventController->mouseRelX < 0) {
-			yaw += ((float)eventController->mouseRelX / width) * 180;
+		//controls yaw and pitch
+		int mouseRelX = eventController->getMouseRelX();
+		if (std::abs(mouseRelX) > 0) {
+			yaw += ((float)mouseRelX) * elapsedTime * eventController->getMouseSensitivityX();
 		}
 
-		if (eventController->mouseRelY > 0) {
-			pitch -= ((float)eventController->mouseRelY / height) * 180;
-		} else if (eventController->mouseRelY < 0) {
-			pitch -= ((float)eventController->mouseRelY / height) * 180;
-		}
-
-		//mouse motion
-		if (keysPressed[SupportedKeys::MOUSE_LEFT]) {
-			//yaw -= multiplierX * elapsedTime;
-		} else if (keysPressed[SupportedKeys::MOUSE_RIGHT]) {
-			//yaw += multiplierX * elapsedTime;
-		}
-
-		if (keysPressed[SupportedKeys::MOUSE_UP]) {
-			//pitch += multiplierY * elapsedTime;
-		} else if (keysPressed[SupportedKeys::MOUSE_DOWN]) {
-			//pitch -= multiplierY * elapsedTime;
+		int mouseRelY = eventController->getMouseRelY();
+		if (std::abs(mouseRelY) > 0) {
+			pitch -= ((float)mouseRelY) * elapsedTime * eventController->getMouseSensitivityY();
 		}
 
 		//make sure that when pitch is out of bounds, screen doesn't get flipped
@@ -1348,7 +1344,7 @@ bool Engine3D::onUserDestroy()
 
 	printf("Stopping rendering thread...\n");
 
-	rendererThread.join();
+	renderingThread.join();
 
 	printf("Unbinding and deleting shader programs...\n");
 

@@ -22,7 +22,7 @@ int main( int argc, char* args[] )
 		SDL_Rect* windowRect = &init.windowRect;
 
 		//input event controller
-		EventController eventController;
+		EventController eventController(cfg.MOUSE_SENSITIVITY_X, cfg.MOUSE_SENSITIVITY_Y);
 
 		//create a default camera object
 		Camera camera;
@@ -89,6 +89,8 @@ int main( int argc, char* args[] )
 				else if( e.type == SDL_KEYDOWN || e.type == SDL_KEYUP || e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP  || e.type == SDL_MOUSEWHEEL)
 				{
 					eventController.decodeEvent(&e);
+					//eventController.bufferKeysPressed();
+
 					//ImGui_ImplSDL2_ProcessEvent(&e); // Forward your event to backend
 				}
 
@@ -101,7 +103,7 @@ int main( int argc, char* args[] )
 				// 	}
 				// }
 			}
-
+			
 			//sleep for 3 milliseconds
 			std::this_thread::sleep_for(duration_milliseconds);
 		}

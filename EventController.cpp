@@ -7,9 +7,7 @@ bool* EventController::getKeysPressed()
 		BoolArray ba = keysPressedQueue.front();
 		for (size_t i = 0; i < ba.size; ++i)
 		{
-			if (isMouseButton((SupportedKeys)i))
-				poppedKeysPressed[i] = keysPressed[i];	
-			else poppedKeysPressed[i] = ba.array[i];
+			poppedKeysPressed[i] = ba.array[i];
 		}
 		mtx.lock();
 		keysPressedQueue.pop();
@@ -19,14 +17,39 @@ bool* EventController::getKeysPressed()
 	return keysPressed;
 }
 
-int EventController::getMouseDistanceX()
+void EventController::setMouseSensitivityX(float mouseSensitivityX)
 {
-	return mouseDistanceX;
+	this->mouseSensitivityX = mouseSensitivityX;
 }
 
-int EventController::getMouseDistanceY()
+float EventController::getMouseSensitivityX()
 {
-	return mouseDistanceY;
+	return mouseSensitivityX;
+}
+
+void EventController::setMouseSensitivityY(float mouseSensitivityY)
+{
+	this->mouseSensitivityY = mouseSensitivityY;
+}
+
+float EventController::getMouseSensitivityY()
+{
+	return mouseSensitivityY;
+}
+
+int EventController::getMouseRelX()
+{
+	return mouseRelX;
+}
+
+int EventController::getMouseRelY()
+{
+	return mouseRelY;
+}
+
+int EventController::getMouseWheelY()
+{
+	return mouseWheelY;
 }
 
 void EventController::clearMouseMotionState()
@@ -37,27 +60,17 @@ void EventController::clearMouseMotionState()
 	keysPressed[SupportedKeys::MOUSE_RIGHT] = false;
 	keysPressed[SupportedKeys::MOUSE_WHEEL_UP] = false;
 	keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] = false;
-	mouseDistanceX = 0;
-	mouseDistanceY = 0;
 	mouseRelX = 0;
 	mouseRelY = 0;
-}
-
-bool EventController::isMouseClicked() {
-	return keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] || keysPressed[SupportedKeys::MOUSE_MIDDLE_CLICK] || keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] ||
-		   keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] || keysPressed[SupportedKeys::MOUSE_WHEEL_UP];
-}
-
-bool EventController::isMouseButton(SupportedKeys btn) {
-	return btn == keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] ||
-		   btn == keysPressed[SupportedKeys::MOUSE_MIDDLE_CLICK] ||
-		   btn == keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] ||
-		   btn == keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] ||
-		   btn == keysPressed[SupportedKeys::MOUSE_WHEEL_UP];
+	mouseWheelY = 0;
+	prevMouseWheelY = 0;
 }
 
 void EventController::decodeEvent(SDL_Event* e)
 {
+	bool prevKeysPressed[SupportedKeys::ALL_KEYS];
+	std::memcpy(prevKeysPressed, keysPressed, SupportedKeys::ALL_KEYS * sizeof(bool));
+
 	unsigned short mouseBtnTest = SDL_BUTTON(SDL_GetMouseState(NULL, NULL));
 
 	//user scrolls up or down
@@ -65,17 +78,15 @@ void EventController::decodeEvent(SDL_Event* e)
 	{
 		if (e->wheel.y > 0)
 		{
-			keysPressed[SupportedKeys::MOUSE_WHEEL_UP] = true;
+			mouseWheelY = e->wheel.y;
+			keysPressed[SupportedKeys::MOUSE_WHEEL_UP] = mouseWheelY > prevMouseWheelY;
 		}
 		else if (e->wheel.y < 0)
 		{
-			keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] = true;
+			mouseWheelY = e->wheel.y;
+			keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] = mouseWheelY < prevMouseWheelY;
 		}
-	}
-	else
-	{
-		keysPressed[SupportedKeys::MOUSE_WHEEL_UP] = false;
-		keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] = false;
+		prevMouseWheelY = mouseWheelY;
 	}
 
 	//user pressed mouse button
@@ -161,35 +172,14 @@ void EventController::decodeEvent(SDL_Event* e)
 	}
 
 	if (e->type == SDL_MOUSEMOTION) {
-		//get mouse position
-		//SDL_GetMouseState( &mousePosX, &mousePosY );
 		mouseRelX = e->motion.xrel;
 		mouseRelY = e->motion.yrel;
-		SDL_GetRelativeMouseState( &mousePosX, &mousePosY );
-		int tmpMouseDistanceX = std::abs(mousePosX - prevMousePosX);
-		int tmpMouseDistanceY = std::abs(mousePosY - prevMousePosY);
-		if (tmpMouseDistanceX > 0) {
-			if (mousePosX < prevMousePosX) {
-				keysPressed[SupportedKeys::MOUSE_RIGHT] = true;
-				keysPressed[SupportedKeys::MOUSE_LEFT] = false;
-			}else if (mousePosX > prevMousePosX) {
-				keysPressed[SupportedKeys::MOUSE_LEFT] = true;
-				keysPressed[SupportedKeys::MOUSE_RIGHT] = false;
-			}
-			prevMousePosX = mousePosX;
-			mouseDistanceX = tmpMouseDistanceX;
-		}
-		if (tmpMouseDistanceY > 0) {
-			if (mousePosY < prevMousePosY) {
-				keysPressed[SupportedKeys::MOUSE_DOWN] = true;
-				keysPressed[SupportedKeys::MOUSE_UP] = false;
-			}else if (mousePosY > prevMousePosY) {
-				keysPressed[SupportedKeys::MOUSE_UP] = true;
-				keysPressed[SupportedKeys::MOUSE_DOWN] = false;
-			}
-			prevMousePosY = mousePosY;
-			mouseDistanceY = tmpMouseDistanceY;
-		}
+		
+		keysPressed[SupportedKeys::MOUSE_RIGHT] = mouseRelX > 0;
+		keysPressed[SupportedKeys::MOUSE_LEFT] = mouseRelX < 0;
+
+		keysPressed[SupportedKeys::MOUSE_UP] = mouseRelY < 0;
+		keysPressed[SupportedKeys::MOUSE_DOWN] = mouseRelY > 0;
 	}
 
 	//user presses a key
@@ -312,8 +302,23 @@ void EventController::decodeEvent(SDL_Event* e)
 			keysPressed[SupportedKeys::SPACE] = false;
 		}
 	}
-	//buffer mouse clicks
-	if (isMouseClicked()) bufferKeysPressed();
+
+	//buffer keys on key state change (key press and key release - NOT mouse movements)
+	for (size_t i = 0; i < SupportedKeys::ALL_KEYS; i++) {
+		if (prevKeysPressed[(SupportedKeys)i] != keysPressed[(SupportedKeys)i] &&
+			(SupportedKeys)i != SupportedKeys::MOUSE_LEFT &&
+			(SupportedKeys)i != SupportedKeys::MOUSE_RIGHT &&
+			(SupportedKeys)i != SupportedKeys::MOUSE_UP &&
+			(SupportedKeys)i != SupportedKeys::MOUSE_DOWN
+			) {
+			bufferKeysPressed();
+			break;
+		}
+	}
+}
+
+bool EventController::ascend(bool * keysPressed) {
+	return keysPressed[keyMappings[KeyActions::ASCEND]];
 }
 
 void EventController::bufferKeysPressed()

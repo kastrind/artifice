@@ -119,7 +119,7 @@ void Engine3D::edit(float elapsedTime)
 			if (--editOptionIndex > editOptions.size() - 1) editOptionIndex = editOptions.size() - 1;
 			std::cout << "editing: " << editOptions[editOptionIndex] << std::endl;
 
-		} else if (keysPressed[SupportedKeys::LEFT_CTRL] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+		} else if (keysPressed[SupportedKeys::LEFT_CTRL] && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP]==true && keysPressed[SupportedKeys::MOUSE_WHEEL_UP]==false) {
 			if (++editOptionIndex > editOptions.size() - 1) editOptionIndex = 0;
 			std::cout << "editing: " << editOptions[editOptionIndex] << std::endl;
 

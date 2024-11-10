@@ -36,15 +36,6 @@ bool Initiator::init()
 			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
 			success = false;
 		}
-		else
-		{
-			//use Vsync
-			printf( "Setting VSync...\n" );
-			if( SDL_GL_SetSwapInterval( 1 ) < 0 )
-			{
-				printf( "Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError() );
-			}
-		}
 	}
 
 	initiated = success;
@@ -150,6 +141,12 @@ void Initiator::loadConfiguration()
 				} else if (tokens[0] == "PERSON_WIDTH") {
 					cfg->PERSON_WIDTH = std::stof(tokens[1]);
 					std::cout << "PERSON_WIDTH = " << cfg->PERSON_WIDTH << std::endl;
+				} else if (tokens[0] == "MOUSE_SENSITIVITY_X") {
+					cfg->MOUSE_SENSITIVITY_X = std::stof(tokens[1]);
+					std::cout << "MOUSE_SENSITIVITY_X = " << cfg->MOUSE_SENSITIVITY_X << std::endl;
+				} else if (tokens[0] == "MOUSE_SENSITIVITY_Y") {
+					cfg->MOUSE_SENSITIVITY_Y = std::stof(tokens[1]);
+					std::cout << "MOUSE_SENSITIVITY_Y = " << cfg->MOUSE_SENSITIVITY_Y << std::endl;
 				}
 			}
 		}

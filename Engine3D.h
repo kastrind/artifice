@@ -16,6 +16,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/vector_angle.hpp> // required for glm::angle
 
 #include "ArtificeShaderProgram.h"
 #include "Configuration.h"
@@ -326,13 +327,13 @@ class Engine3D
 
 		std::map<std::string, unsigned int> cubemapFaceIndexMap;
 				
-		std::thread rendererThread;
+		std::thread renderingThread;
 
-		void engineThread();
+		void engineLoop();
 
 		std::thread startRendering();
 
-		void renderingThread();
+		void renderingLoop();
 
 		bool initGL();
 

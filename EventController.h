@@ -7,6 +7,7 @@
 #include <queue>
 #include <cstring>
 #include <mutex>
+#include <map>
 
 
 typedef enum 
@@ -36,6 +37,28 @@ typedef enum
 	SPACE,
 	ALL_KEYS
 } SupportedKeys;
+
+typedef enum 
+{
+	ASCEND,
+	DESCEND,
+	STRAFE_LEFT,
+	STRAFE_RIGHT,
+	FORWARD,
+	BACKWARD,
+	COPY,
+	PASTE,
+	PAN_LEFT,
+	PAN_RIGHT,
+	PAN_UP,
+	PAN_DOWN,
+	PLACE,
+	REMOVE,
+	NEXT,
+	PREVIOUS,
+	JUMP,
+	ALL_ACTIONS
+} KeyActions;
 
 struct BoolArray {
 	bool* array;
@@ -92,36 +115,46 @@ class EventController
 {
 	public:
 
-		EventController()
+		EventController(float mouseSensitivityX = 1.0f, float mouseSensitivityY = 1.0f)
+						: mouseSensitivityX(mouseSensitivityX), mouseSensitivityY(mouseSensitivityY)
 		{
 			for (int i = 0; i < SupportedKeys::ALL_KEYS; i++)
 			{
 				keysPressed[i] = false;
 			}
+			//initialize default key mappings
+			this->keyMappings[KeyActions::ASCEND] = SupportedKeys::UP_ARROW;
 		}
 
 		bool* getKeysPressed();
 
-		int getMouseDistanceX();
+		void setMouseSensitivityX(float mouseSensitivityX);
 
-		int getMouseDistanceY();
+		float getMouseSensitivityX();
+
+		void setMouseSensitivityY(float mouseSensitivityY);
+
+		float getMouseSensitivityY();
+
+		int getMouseRelX();
+
+		int getMouseRelY();
+
+		int getMouseWheelY();
 
 		void clearMouseMotionState();
 
 		void decodeEvent(SDL_Event* e);
 
-		std::mutex mtx;
+		bool ascend(bool * keysPressed);
 
-		int mouseRelX;
-		int mouseRelY;
+		std::mutex mtx;
 
 	private:
 
-		bool isMouseClicked();
-
-		bool isMouseButton(SupportedKeys btn);
-
 		void bufferKeysPressed();
+
+		std::map<KeyActions, SupportedKeys> keyMappings;
 
 		bool keysPressed[SupportedKeys::ALL_KEYS];
 
@@ -129,12 +162,12 @@ class EventController
 
 		std::queue<BoolArray> keysPressedQueue;
 
-		int mousePosX = 0;
-		int prevMousePosX = 0;
+		float mouseSensitivityX;
+		float mouseSensitivityY;
 
-		int mousePosY = 0;
-		int prevMousePosY = 0;
+		int mouseRelX;
+		int mouseRelY;
 
-		int mouseDistanceX = 0;
-		int mouseDistanceY = 0;		
+		int mouseWheelY;
+		int prevMouseWheelY;
 };

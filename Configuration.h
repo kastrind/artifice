@@ -58,6 +58,10 @@ typedef struct Configuration
 
 	float PERSON_WIDTH = 0.05f; //horizontal colliding distance
 
+	float MOUSE_SENSITIVITY_X = 1.0f;
+
+	float MOUSE_SENSITIVITY_Y = 1.0f;
+
 	//precomputed constants follow
 
 	float FOV_RADIANS = (float) FOV * M_PI / 180;
