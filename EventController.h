@@ -146,7 +146,9 @@ class EventController
 
 		void decodeEvent(SDL_Event* e);
 
-		bool ascend(bool * keysPressed);
+		bool ascend(bool* keysPressed);
+
+		bool descend(bool* keysPressed);
 
 		std::mutex mtx;
 

@@ -321,6 +321,10 @@ bool EventController::ascend(bool * keysPressed) {
 	return keysPressed[keyMappings[KeyActions::ASCEND]];
 }
 
+bool EventController::descend(bool * keysPressed) {
+	return keysPressed[keyMappings[KeyActions::DESCEND]];
+}
+
 void EventController::bufferKeysPressed()
 {
 	mtx.lock();

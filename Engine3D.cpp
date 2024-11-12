@@ -25,6 +25,10 @@ Engine3D::Engine3D(
 					personSpeedFactor(personSpeedFactor),
 					userMode(userMode), eventController(ec)
 {
+	fovHalf = fov/2;
+	fovH = glm::degrees( 2 * atan( tan( glm::radians(fov) / 2) * ((float) width / height ) ) );
+	fovHHalf = fovH/2;
+
 	isActive = false;
 
 	updateVerticesFlag = false;
@@ -940,23 +944,9 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		mdl.isInDOF = camDist < dof;
 		if (!mdl.isInDOF) { continue; }
 
-		//vertical and horizontal model to camera angle for FOV calculation
-		glm::vec3 directionToModel = glm::normalize(mdl.position - cameraPos);
-		glm::vec2 cameraFrontXZ = glm::normalize(glm::vec2(cameraFront.x, cameraFront.z));
-		glm::vec2 directionToModelXZ = glm::normalize(glm::vec2(directionToModel.x, directionToModel.z));
-		float angleV = glm::degrees( atan2( directionToModel.y, glm::length(directionToModelXZ) ) - atan2( cameraFront.y, glm::length(cameraFrontXZ) ) );
-		float angleH = glm::degrees( acos( glm::dot(cameraFrontXZ, directionToModelXZ) ) );
-		//if (mdl.id == 633205944) std::cout << "angleH: "<<angleH << std::endl;
-		//if (mdl.id == 633205944) std::cout << "angleV: "<< angleV << std::endl;
-
 		//mark far and out-of-FOV models to avoid needless rendering
-		//mdl.isInFOV = ((mdl.bbox.minX > 0 && mdl.bbox.minX < 1) || (mdl.bbox.maxX > 0 && mdl.bbox.maxX < 1)) && ((mdl.bbox.minY > 0 && mdl.bbox.minY < 1) || (mdl.bbox.maxY > 0 && mdl.bbox.maxY < 1));
-		if ((camDist > 5.0f * collidingDistanceH &&  camDist > 5.0f * collidingDistanceV && (std::abs(angleV) > (fov * (width/height))/2 || std::abs(angleH) > fov))) {
-			mdl.isInFOV = false;
-			continue;
-		}else {
-			mdl.isInFOV = true;
-		}
+		mdl.isInFOV = isInFOV(mdl);
+		if (!mdl.isInFOV) { continue; }
 
 		//models that are far away will be ignored for next two loops
 		if (mdl.ignoreForCycles == 0 && camDist > 5.0f * collidingDistanceH && camDist > 5.0f * collidingDistanceV) {
@@ -1164,6 +1154,18 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 	//std::cout <<"collides? " << collides << ", canSlide? " << canSlide << ", hasLanded? " << hasLanded << std::endl;
 	return true;
+}
+
+bool Engine3D::isInFOV(model& m)
+{
+	glm::vec3 directionToModel = glm::normalize(m.position - cameraPos);
+	glm::vec3 camUp = glm::normalize(glm::cross(cameraRight, cameraFront));
+	//horizontal and vertical model to camera angle to determine whether in FOV
+	float angle  = glm::degrees(glm::angle(cameraFront, directionToModel));
+	float angleH = glm::degrees(glm::angle(cameraRight, directionToModel));
+	float angleV = glm::degrees(glm::angle(camUp, glm::normalize(directionToModel - glm::dot(directionToModel, cameraRight) * cameraRight)));
+
+	return !(angle > fov || angleH > 90 + fovHHalf + 5 || angleH < 90 - fovHHalf - 5 || angleV > 90 + fovHalf + 5 || angleV < 90 - fovHalf - 5);
 }
 
 void Engine3D::captureInput()

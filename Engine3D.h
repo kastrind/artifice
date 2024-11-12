@@ -219,6 +219,9 @@ class Engine3D
 		float near;
 		float far;
 		float fov;
+		float fovH;
+		float fovHalf;
+		float fovHHalf;
 		float dof;
 
 		//for collide-and-slide
@@ -350,6 +353,8 @@ class Engine3D
 		void updateVertices();
 
 		//void renderUI();
+
+		bool isInFOV(model& m);
 
 		void captureInput();
 
