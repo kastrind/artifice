@@ -9,8 +9,6 @@ void Engine3D::addModel(float editingWidth, float editingHeight, float editingDe
 		cubePointsCnt += mdl.modelMesh.tris.size() * 3;
 		std::cout << "about to place model with id = " << mdl.id << std::endl;
 		mtx.lock();
-		if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
-		//ptrModelsToRender.push_back(std::make_shared<model>(mdl));
 		ptrModelsToRender.push_back(std::make_shared<cubeModel>(mdl));
 		editingModel = ptrModelsToRender.back();
 		std::cout << "placed model has sn = " << editingModel->sn << std::endl;
@@ -32,8 +30,6 @@ void Engine3D::addModel(float editingWidth, float editingHeight, float editingDe
 		modelPointsCnt += m.modelMesh.tris.size() * 3;
 		std::cout << "about to place model with id = " << m.id << std::endl;
 		mtx.lock();
-		if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
-		//ptrModelsToRender.push_back(std::make_shared<model>(mdl));
 		ptrModelsToRender.push_back(std::make_shared<model>(m));
 		editingModel = ptrModelsToRender.back();
 		std::cout << "placed model has sn = " << editingModel->sn << std::endl;
@@ -50,7 +46,6 @@ void Engine3D::addModel(model& mdl)
 		mdl.sn = cubePointsCnt;
 		cubePointsCnt += mdl.modelMesh.tris.size() * 3;
 		mtx.lock();
-		if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
 		ptrModelsToRender.push_back(std::make_shared<cubeModel>(mdl));
 		editingModel = ptrModelsToRender.back();
 		std::cout << "placed model has sn = " << editingModel->sn << std::endl;
@@ -60,7 +55,6 @@ void Engine3D::addModel(model& mdl)
 		mdl.sn = modelPointsCnt;
 		modelPointsCnt += mdl.modelMesh.tris.size() * 3;
 		mtx.lock();
-		if (modelsInFocus.size() > 0) { modelInFocusTmp = **(modelsInFocus.begin()); }
 		ptrModelsToRender.push_back(std::make_shared<model>(mdl));
 		editingModel = ptrModelsToRender.back();
 		std::cout << "placed model has sn = " << editingModel->sn << std::endl;
@@ -288,7 +282,7 @@ void Engine3D::edit(float elapsedTime)
 
 		// releasing left mouse click places a new model
 		if (editingModel != nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]==false) {
-			
+			std::cout << "starting model placement" << std::endl;
 			personSpeedFactor *= 100;
 			axis heightAlongAxis = axis::Y;
 			axis widthAlongAxis = axis::X;
@@ -321,79 +315,54 @@ void Engine3D::edit(float elapsedTime)
 			}
 
 			model m = *editingModel;
-			bool isGlued = false;
-			//glued placement
-			if (keysPressed[SupportedKeys::LEFT_CTRL] && modelInFocusTmp.inFocus) {
-				//position the model or snap it to the closest in focus
-				m.position = modelInFocusTmp.position + editingDepth * pos;
-				if (!modelsInFocus.empty()) {
-					auto modelInFocus = *(modelsInFocus.begin());
-					if (modelInFocus->id != editingModel->id && modelInFocus->distance < editingDepth + originalCollidingDistanceH) {
-						m.snapTo(personFront, modelInFocus);
-					}
+			//position the model or snap it to the closest in focus
+			m.position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
+			if (!modelsInFocus.empty()) {
+				auto modelInFocus = *(modelsInFocus.begin());
+				//std::cout << "model in focus id: " << modelInFocus->id << ", editing model id: " << editingModel->id << ", distance: " << modelInFocus->distance << ", editingDepth: " << editingDepth << ", originalCollidingDistanceH: " << originalCollidingDistanceH << std::endl;
+				if (modelInFocus->id != editingModel->id && modelInFocus->distance < editingDepth + originalCollidingDistanceH) {
+					std::cout << "snapping to model in focus!" << std::endl;
+					m.snapTo(getCameraFront(), modelInFocus);
 				}
-				modelInFocusTmp.inFocus = false;
-				removeModel(ptrModelsToRender.back());
-				addModel(m);
-				isGlued = true;
-				std::cout << "glued placement" << std::endl;
-			//standard placement
-			}else {
-				//position the model or snap it to the closest in focus
-				editingModel->position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
-				if (!modelsInFocus.empty()) {
-					auto modelInFocus = *(modelsInFocus.begin());
-					if (modelInFocus->id != editingModel->id && modelInFocus->distance < editingDepth + originalCollidingDistanceH) {
-						editingModel->snapTo(personFront, modelInFocus);
-					}
-				}
-				std::cout << "standard placement" << std::endl;
 			}
+			removeModel(ptrModelsToRender.back());
+			addModel(m);
 
-			glm::vec3 initialPos = m.position;
+			//glm::vec3 initialPos = m.position;
+			glm::vec3 initialPos = editingModel->position;
 			std::cout << "dir X Y Z : " << dirX << ", " << dirY << ", " << dirZ << std::endl;
 			//mtx.lock();
-			//std::cout << "models size before: " << modelsToRender.size() << std::endl;
 			std::cout << "models size before: " << ptrModelsToRender.size() << std::endl;
 			for (unsigned int i = 0; i < collationWidth; i++) {
 				unsigned int j = i > 0 ? 0 : 1;
 				for (j; j < collationHeight; j++) {
 					std::cout << "into collation height loop!" << std::endl;
-					//std::cout << "repeating for model " << i;
-					//m.position.y += editingHeight;
 					if (heightAlongAxis == axis::Y) m.position.y += editingHeight;
 					else if (heightAlongAxis == axis::X) m.position.x += dirX * editingWidth;
 					else if (heightAlongAxis == axis::Z) m.position.z += dirZ *  editingDepth;
-					//m.sn = cubePointsCnt;
-					//cubePointsCnt += m.modelMesh.tris.size() * 3;
-					//ptrModelsToRender.push_back(std::make_shared<cubeModel>(m));
 					addModel(m);
 				}
 				if (widthAlongAxis == axis::Z) m.position.z += dirZ * editingDepth;
 				else if (widthAlongAxis == axis::X) m.position.x += dirX * editingWidth;
 				else if (widthAlongAxis == axis::Y) m.position.y += editingHeight;
-				//m.position.y = initialPos.y - editingHeight;
 				if (heightAlongAxis == axis::Y) m.position.y = initialPos.y - editingHeight;
 				else if (heightAlongAxis == axis::X) m.position.x = initialPos.x - dirX * editingWidth;
 				else if (heightAlongAxis == axis::Z) m.position.z = initialPos.z - dirZ * editingDepth;
 			}
 			//mtx.unlock();
-			//std::cout << "models size after: " << modelsToRender.size() << std::endl;
 			std::cout << "models size after: " << ptrModelsToRender.size() << std::endl;
-
-			// std::cout << "model placed has sn: " << editingModel->sn << std::endl;
 			editingModel = nullptr;
 			isEdited = true;
-			//std::cout << "added cube!" << personFront.x << personFront.y << personFront.z << std::endl;
+			std::cout << "ended model placement" << std::endl;
 
 		// right mouse click deletes the model currently in focus
-		}else if (deletingModel == nullptr && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] && modelsInFocus.size() > 0) {
+		} else if (deletingModel == nullptr && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] && modelsInFocus.size() > 0) {
 			mtx.lock();
 			auto modelInFocus = *(modelsInFocus.begin());
 			deletingModel = modelInFocus;
 			mtx.unlock();
 
-		}else if (deletingModel != nullptr && deletingModel->removeFlag==false && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK]==false) {
+		} else if (deletingModel != nullptr && deletingModel->removeFlag==false && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK]==false) {
 			removeModel(deletingModel);
 			deletingModel.reset();
 			isEdited = true;

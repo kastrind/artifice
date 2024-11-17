@@ -147,6 +147,39 @@ void Initiator::loadConfiguration()
 				} else if (tokens[0] == "MOUSE_SENSITIVITY_Y") {
 					cfg->MOUSE_SENSITIVITY_Y = std::stof(tokens[1]);
 					std::cout << "MOUSE_SENSITIVITY_Y = " << cfg->MOUSE_SENSITIVITY_Y << std::endl;
+				} else if (tokens[0] == "KEY_ASCEND") {
+					cfg->KEY_ASCEND = tokens[1];
+					std::cout << "KEY_ASCEND = " << cfg->KEY_ASCEND << std::endl;
+				} else if (tokens[0] == "KEY_DESCEND") {
+					cfg->KEY_DESCEND = tokens[1];
+					std::cout << "KEY_DESCEND = " << cfg->KEY_DESCEND << std::endl;
+				} else if (tokens[0] == "KEY_LEFT") {
+					cfg->KEY_LEFT = tokens[1];
+					std::cout << "KEY_LEFT = " << cfg->KEY_LEFT << std::endl;
+				} else if (tokens[0] == "KEY_RIGHT") {
+					cfg->KEY_RIGHT = tokens[1];
+					std::cout << "KEY_RIGHT = " << cfg->KEY_RIGHT << std::endl;
+				} else if (tokens[0] == "KEY_FORWARD") {
+					cfg->KEY_FORWARD = tokens[1];
+					std::cout << "KEY_FORWARD = " << cfg->KEY_FORWARD << std::endl;
+				} else if (tokens[0] == "KEY_BACKWARD") {
+					cfg->KEY_BACKWARD = tokens[1];
+					std::cout << "KEY_BACKWARD = " << cfg->KEY_BACKWARD << std::endl;
+				} else if (tokens[0] == "KEY_PLACE") {
+					cfg->KEY_PLACE = tokens[1];
+					std::cout << "KEY_PLACE = " << cfg->KEY_PLACE << std::endl;
+				} else if (tokens[0] == "KEY_REMOVE") {
+					cfg->KEY_REMOVE = tokens[1];
+					std::cout << "KEY_REMOVE = " << cfg->KEY_REMOVE << std::endl;
+				} else if (tokens[0] == "KEY_NEXT") {
+					cfg->KEY_NEXT = tokens[1];
+					std::cout << "KEY_NEXT = " << cfg->KEY_NEXT << std::endl;
+				} else if (tokens[0] == "KEY_PREVIOUS") {
+					cfg->KEY_PREVIOUS = tokens[1];
+					std::cout << "KEY_PREVIOUS = " << cfg->KEY_PREVIOUS << std::endl;
+				} else if (tokens[0] == "KEY_JUMP") {
+					cfg->KEY_JUMP = tokens[1];
+					std::cout << "KEY_JUMP = " << cfg->KEY_JUMP << std::endl;
 				}
 			}
 		}

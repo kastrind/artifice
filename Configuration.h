@@ -62,6 +62,28 @@ typedef struct Configuration
 
 	float MOUSE_SENSITIVITY_Y = 1.0f;
 
+	std::string KEY_ASCEND = "UP_ARROW";
+
+	std::string KEY_DESCEND = "DOWN_ARROW";
+
+	std::string KEY_LEFT = "A";
+
+	std::string KEY_RIGHT = "D";
+
+	std::string KEY_FORWARD = "W";
+
+	std::string KEY_BACKWARD = "S";
+
+	std::string KEY_PLACE = "MOUSE_LEFT_CLICK";
+
+	std::string KEY_REMOVE = "MOUSE_RIGHT_CLICK";
+
+	std::string KEY_NEXT = "MOUSE_WHEEL_UP";
+
+	std::string KEY_PREVIOUS = "MOUSE_WHEEL_DOWN";
+
+	std::string KEY_JUMP = "SPACE";
+
 	//precomputed constants follow
 
 	float FOV_RADIANS = (float) FOV * M_PI / 180;

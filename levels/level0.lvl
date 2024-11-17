@@ -1,5 +1,5 @@
 # player position positionX positionY positionZ
-player_position,0.354598,-0.682468,3.16034
+player_position,-0.131614,-0.871393,1.85856
 # light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity
 light,0.264035,-0.34048,-2.60431,128,128,128,0.3,0.4,0.9
 # id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ
@@ -433,3 +433,10 @@ light,0.264035,-0.34048,-2.60431,128,128,128,0.3,0.4,0.9
 3749899194,cuboid,walnut,0.1,0.1,0.1,true,-0,0,-0,0.742407,-1.00289,3.06241
 3749927257,cuboid,walnut,0.1,0.1,0.1,true,-0,0,-0,0.740995,-0.976427,2.96262
 3749945993,cuboid,walnut,0.1,0.1,0.1,true,-0,0,-0,0.737961,-0.940029,2.86247
+873217423,cube,box,0.1,0.1,0.1,true,-0,0,-0,0.647514,-0.633544,4.53488
+922406410,cube,box,0.1,0.1,0.1,true,-0,0,-0,0.747514,-0.633544,4.53488
+922408987,cube,box,0.1,0.1,0.1,true,-0,0,-0,0.847514,-0.633544,4.53488
+922415847,cube,box,0.1,0.1,0.1,true,-0,0,-0,0.947514,-0.633544,4.53488
+922418941,cube,box,0.1,0.1,0.1,true,-0,0,-0,1.04751,-0.633544,4.53488
+922420986,cube,box,0.1,0.1,0.1,true,-0,0,-0,1.14751,-0.633544,4.53488
+967645177,rectangle,walnut,0.1,0.1,0,true,-1.5708,0,-0,-0.131721,-1.0115,2.77629

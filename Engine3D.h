@@ -256,10 +256,10 @@ class Engine3D
 		float pitch = 0;
 
 		struct ModelDistanceComparator {
-			bool operator()(std::shared_ptr<model> a, std::shared_ptr<model> b) const { return a->distance < b->distance; };
+			bool operator()(const std::shared_ptr<model>& a, const std::shared_ptr<model>& b) const { return (a != b) ? a->position != b->position && a->distance < b->distance : a.get() < b.get(); };
 		};
 		struct ModelDescendingDistanceComparator {
-			bool operator()(std::shared_ptr<model> a, std::shared_ptr<model> b) const { return a->distance > b->distance; };
+			bool operator()(const std::shared_ptr<model>& a, const std::shared_ptr<model>& b) const { return (a != b) ?  a->position != b->position && a->distance > b->distance : a.get() > b.get(); };
 		};
 		std::set<std::shared_ptr<model>, ModelDistanceComparator> modelsInFocus;
 
@@ -275,8 +275,8 @@ class Engine3D
 		//editor user mode specific
 		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX", "rotationY", "rotationZ", "texture", "isSolid", "collationHeight", "collationWidth"};
 		unsigned short editOptionIndex = 0;
-		float originalCollidingDistanceH;
-		float originalCollidingDistanceV;
+		float originalCollidingDistanceH = 0;
+		float originalCollidingDistanceV = 0;
 		unsigned int collationHeight = 1;
 		unsigned int collationWidth = 1;
 		float editingWidth = 0.1f;

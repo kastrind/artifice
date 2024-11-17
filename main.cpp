@@ -22,7 +22,11 @@ int main( int argc, char* args[] )
 		SDL_Rect* windowRect = &init.windowRect;
 
 		//input event controller
-		EventController eventController(cfg.MOUSE_SENSITIVITY_X, cfg.MOUSE_SENSITIVITY_Y);
+		EventController eventController(cfg.MOUSE_SENSITIVITY_X, cfg.MOUSE_SENSITIVITY_Y,
+										cfg.KEY_ASCEND, cfg.KEY_DESCEND, cfg.KEY_LEFT,
+										cfg.KEY_RIGHT, cfg.KEY_FORWARD, cfg.KEY_BACKWARD,
+										cfg.KEY_PLACE, cfg.KEY_REMOVE, cfg.KEY_NEXT,
+										cfg.KEY_PREVIOUS, cfg.KEY_JUMP);
 
 		//create a default camera object
 		Camera camera;

@@ -901,7 +901,7 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	captureInput();
 
 	glm::vec3 prevPersonPos = personPos;
-	glm::vec3 center{ 0, 0, 0 };
+	glm::vec2 center{ 0.5f, 0.5f };
 	float modelDistance = dof;
 	float minModelDist = dof;
 	glm::vec4 collidingTriPts[3];
@@ -918,10 +918,9 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 	hasLanded = false;
 	shouldClimb = false;
 
-	modelsInFocus.clear();
-
 	projectionMatrix = glm::perspective(glm::radians((float)fov), (float)width / (float)height, near, far);
 	viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
 	mtx.unlock();
 
 	int cnt = 0;
@@ -942,11 +941,23 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 
 		//mark out-of-DOF models to avoid needless rendering
 		mdl.isInDOF = camDist < dof;
-		if (!mdl.isInDOF) { continue; }
+		if (!mdl.isInDOF) {
+			mdl.inFocus = false;
+			mtx.lock();
+			modelsInFocus.erase(ptrModel);
+			mtx.unlock();
+			continue;
+		}
 
 		//mark far and out-of-FOV models to avoid needless rendering
-		mdl.isInFOV = isInFOV(mdl);
-		if (!mdl.isInFOV) { continue; }
+		mdl.isInFOV = isInFOV(mdl) || (userMode == UserMode::PLAYER && (camDist < 2.0f * collidingDistanceH || camDist < 2.0f * collidingDistanceV));
+		if (!mdl.isInFOV) {
+			mdl.inFocus = false;
+			mtx.lock();
+			modelsInFocus.erase(ptrModel);
+			mtx.unlock();
+			continue;
+		}
 
 		//models that are far away will be ignored for next two loops
 		if (mdl.ignoreForCycles == 0 && camDist > 5.0f * collidingDistanceH && camDist > 5.0f * collidingDistanceV) {
@@ -960,7 +971,6 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		mdl.modelMatrix = modelMatrix;
 
 		mdl.inFocus = false;
-		bool checkAgainForFocus = true;
 		float minX = 1.0f, maxX = -1.0f, minY = 1.0f, maxY = -1.0f, minZ = 100000.0f, maxZ = -100000.0f;
 
 		//if cube is skybox, then do not process further
@@ -1034,16 +1044,6 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 			tri.p[2] = pt[2];
 			mtx.unlock();
 
-			//determines whether looking at the current model
-			if (checkAgainForFocus && tri.contains(glm::vec4(center, 1.0f)))
-			{
-				mdl.inFocus = true;
-				mtx.lock();
-				modelsInFocus.insert(ptrModel);
-				mtx.unlock();
-				checkAgainForFocus = false;
-			}
-
 			//calculate bounding box
 			minX = std::min(minX, std::min(std::min(pt[0].x/pt[0].w, pt[1].x/pt[1].w), pt[2].x/pt[2].w));
 			minY = std::min(minY, std::min(std::min(pt[0].y/pt[0].w, pt[1].y/pt[1].w), pt[2].y/pt[2].w));
@@ -1058,9 +1058,23 @@ bool Engine3D::onUserUpdate(float elapsedTime)
 		minY = (std::max(-1.0f, minY) + 1) / 2.0f;
 		maxX = (std::min(1.0f, maxX) + 1) / 2.0f;
 		maxY = (std::min(1.0f, maxY) + 1) / 2.0f;
-		//std::cout << "X: " << minX << " - "<< maxX << ", Y: " << minY << " - " << maxY << ", Z: " << minZ << " - " << maxZ << std::endl;
 		boundingbox bbox = { minX, maxX, minY, maxY, minZ, maxZ };
 		mdl.bbox = bbox;
+
+		//determine if in focus
+		if (mdl.bbox.minX < center.x && mdl.bbox.maxX > center.x && mdl.bbox.minY < center.y && mdl.bbox.maxY > center.y) {
+			mtx.lock();
+			//don't focus on editing models about to be placed
+			if (editingModel == nullptr || mdl.id != (*editingModel).id ) {
+				mdl.inFocus = true;
+				modelsInFocus.insert(ptrModel);
+			}
+			mtx.unlock();
+		} else {
+			mtx.lock();
+			modelsInFocus.erase(ptrModel);
+			mtx.unlock();
+		}
 
 		//get the triangle normal
 		glm::vec3 line1 = collidingTriPts[1] - collidingTriPts[0];

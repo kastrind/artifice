@@ -317,12 +317,59 @@ void EventController::decodeEvent(SDL_Event* e)
 	}
 }
 
-bool EventController::ascend(bool * keysPressed) {
+bool EventController::ascend(bool * keysPressed)
+{
 	return keysPressed[keyMappings[KeyActions::ASCEND]];
 }
 
-bool EventController::descend(bool * keysPressed) {
+bool EventController::descend(bool * keysPressed)
+{
 	return keysPressed[keyMappings[KeyActions::DESCEND]];
+}
+
+bool EventController::left(bool* keysPressed)
+{
+	return keysPressed[keyMappings[KeyActions::LEFT]];
+}
+
+bool EventController::right(bool* keysPressed)
+{
+	return keysPressed[keyMappings[KeyActions::RIGHT]];
+}
+
+bool EventController::forward(bool* keysPressed)
+{
+	return keysPressed[keyMappings[KeyActions::FORWARD]];
+}
+
+bool EventController::backward(bool* keysPressed)
+{
+	return keysPressed[keyMappings[KeyActions::BACKWARD]];
+}
+
+bool EventController::place(bool* keysPressed)
+{
+	return keysPressed[keyMappings[KeyActions::PLACE]];
+}
+
+bool EventController::remove(bool* keysPressed)
+{
+	return keysPressed[keyMappings[KeyActions::REMOVE]];
+}
+
+bool EventController::next(bool* keysPressed, bool* prevKeysPressed)
+{
+	return keysPressed[keyMappings[KeyActions::NEXT]];
+}
+
+bool EventController::previous(bool* keysPressed, bool* prevKeysPressed)
+{
+	return keysPressed[keyMappings[KeyActions::PREVIOUS]];
+}
+
+bool EventController::jump(bool* keysPressed)
+{
+	return keysPressed[keyMappings[KeyActions::JUMP]];
 }
 
 void EventController::bufferKeysPressed()
@@ -330,4 +377,10 @@ void EventController::bufferKeysPressed()
 	mtx.lock();
 	keysPressedQueue.push(BoolArray(keysPressed, SupportedKeys::ALL_KEYS / sizeof(bool)));
 	mtx.unlock();
+}
+
+void EventController::mapActionToKey(KeyActions action, std::string keyStr, SupportedKeys defaultKey)
+{
+	std::map<std::string, SupportedKeys>::iterator it = supportedKeysFromStr.find(keyStr);
+	keyMappings[action] = it != supportedKeysFromStr.end() ? it->second : defaultKey;
 }

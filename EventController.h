@@ -42,16 +42,12 @@ typedef enum
 {
 	ASCEND,
 	DESCEND,
-	STRAFE_LEFT,
-	STRAFE_RIGHT,
+	LEFT,
+	RIGHT,
 	FORWARD,
 	BACKWARD,
 	COPY,
 	PASTE,
-	PAN_LEFT,
-	PAN_RIGHT,
-	PAN_UP,
-	PAN_DOWN,
 	PLACE,
 	REMOVE,
 	NEXT,
@@ -115,15 +111,71 @@ class EventController
 {
 	public:
 
-		EventController(float mouseSensitivityX = 1.0f, float mouseSensitivityY = 1.0f)
+		EventController(float mouseSensitivityX = 1.0f, float mouseSensitivityY = 1.0f,
+						std::string keyAscend = "UP_ARROW", std::string keyDescend = "DOWN_ARROW", std::string keyLeft = "A",
+						std::string keyRight = "D", std::string keyForward = "W", std::string keyBackward = "S",
+						std::string keyPlace = "MOUSE_LEFT", std::string keyRemove = "MOUSE_RIGHT", std::string keyNext = "MOUSE_WHEEL_UP",
+						std::string keyPrevious = "MOUSE_WHEEL_DOWN", std::string keyJump = "SPACE")
 						: mouseSensitivityX(mouseSensitivityX), mouseSensitivityY(mouseSensitivityY)
 		{
+			//initialize key state
 			for (int i = 0; i < SupportedKeys::ALL_KEYS; i++)
 			{
 				keysPressed[i] = false;
 			}
-			//initialize default key mappings
-			this->keyMappings[KeyActions::ASCEND] = SupportedKeys::UP_ARROW;
+
+			//supported keys from string to enum
+			supportedKeysFromStr["UP_ARROW"] = SupportedKeys::UP_ARROW;
+			supportedKeysFromStr["DOWN_ARROW"] = SupportedKeys::DOWN_ARROW;
+			supportedKeysFromStr["LEFT_ARROW"] = SupportedKeys::LEFT_ARROW;
+			supportedKeysFromStr["RIGHT_ARROW"] = SupportedKeys::RIGHT_ARROW;
+			supportedKeysFromStr["W"] = SupportedKeys::W;
+			supportedKeysFromStr["S"] = SupportedKeys::S;
+			supportedKeysFromStr["A"] = SupportedKeys::A;
+			supportedKeysFromStr["D"] = SupportedKeys::D;
+			supportedKeysFromStr["C"] = SupportedKeys::C;
+			supportedKeysFromStr["V"] = SupportedKeys::V;
+			supportedKeysFromStr["MOUSE_LEFT"] = SupportedKeys::MOUSE_LEFT;
+			supportedKeysFromStr["MOUSE_RIGHT"] = SupportedKeys::MOUSE_RIGHT;
+			supportedKeysFromStr["MOUSE_UP"] = SupportedKeys::MOUSE_UP;
+			supportedKeysFromStr["MOUSE_DOWN"] = SupportedKeys::MOUSE_DOWN;
+			supportedKeysFromStr["MOUSE_LEFT_CLICK"] = SupportedKeys::MOUSE_LEFT_CLICK;
+			supportedKeysFromStr["MOUSE_MIDDLE_CLICK"] = SupportedKeys::MOUSE_MIDDLE_CLICK;
+			supportedKeysFromStr["MOUSE_RIGHT_CLICK"] = SupportedKeys::MOUSE_RIGHT_CLICK;
+			supportedKeysFromStr["MOUSE_WHEEL_UP"] = SupportedKeys::MOUSE_WHEEL_UP;
+			supportedKeysFromStr["MOUSE_WHEEL_DOWN"] = SupportedKeys::MOUSE_WHEEL_DOWN;
+			supportedKeysFromStr["LEFT_CTRL"] = SupportedKeys::LEFT_CTRL;
+			supportedKeysFromStr["LEFT_SHIFT"] = SupportedKeys::LEFT_SHIFT;
+			supportedKeysFromStr["LEFT_ALT"] = SupportedKeys::LEFT_ALT;
+			supportedKeysFromStr["SPACE"] = SupportedKeys::SPACE;
+
+			//actions from string to enum
+			keyActionsFromStr["ASCEND"] = KeyActions::ASCEND;
+			keyActionsFromStr["DESCEND"] = KeyActions::DESCEND;
+			keyActionsFromStr["LEFT"] = KeyActions::LEFT;
+			keyActionsFromStr["RIGHT"] = KeyActions::RIGHT;
+			keyActionsFromStr["FORWARD"] = KeyActions::FORWARD;
+			keyActionsFromStr["BACKWARD"] = KeyActions::BACKWARD;
+			keyActionsFromStr["COPY"] = KeyActions::COPY;
+			keyActionsFromStr["PASTE"] = KeyActions::PASTE;
+			keyActionsFromStr["PLACE"] = KeyActions::PLACE;
+			keyActionsFromStr["REMOVE"] = KeyActions::REMOVE;
+			keyActionsFromStr["NEXT"] = KeyActions::NEXT;
+			keyActionsFromStr["PREVIOUS"] = KeyActions::PREVIOUS;
+			keyActionsFromStr["JUMP"] = KeyActions::JUMP;
+
+			//map action to key
+			mapActionToKey(KeyActions::ASCEND, keyAscend, SupportedKeys::UP_ARROW);
+			mapActionToKey(KeyActions::DESCEND, keyDescend, SupportedKeys::DOWN_ARROW);
+			mapActionToKey(KeyActions::LEFT, keyLeft, SupportedKeys::A);
+			mapActionToKey(KeyActions::RIGHT, keyRight, SupportedKeys::D);
+			mapActionToKey(KeyActions::FORWARD, keyForward, SupportedKeys::W);
+			mapActionToKey(KeyActions::BACKWARD, keyBackward, SupportedKeys::S);
+			mapActionToKey(KeyActions::PLACE, keyPlace, SupportedKeys::MOUSE_LEFT_CLICK);
+			mapActionToKey(KeyActions::REMOVE, keyRemove, SupportedKeys::MOUSE_RIGHT_CLICK);
+			mapActionToKey(KeyActions::NEXT, keyNext, SupportedKeys::MOUSE_WHEEL_UP);
+			mapActionToKey(KeyActions::PREVIOUS, keyPrevious, SupportedKeys::MOUSE_WHEEL_DOWN);
+			mapActionToKey(KeyActions::JUMP, keyJump, SupportedKeys::SPACE);
 		}
 
 		bool* getKeysPressed();
@@ -150,11 +202,35 @@ class EventController
 
 		bool descend(bool* keysPressed);
 
+		bool left(bool* keysPressed);
+
+		bool right(bool* keysPressed);
+
+		bool forward(bool* keysPressed);
+
+		bool backward(bool* keysPressed);
+
+		bool place(bool* keysPressed);
+
+		bool remove(bool* keysPressed);
+
+		bool next(bool* keysPressed, bool* prevKeysPressed);
+
+		bool previous(bool* keysPressed, bool* prevKeysPressed);
+
+		bool jump(bool* keysPressed);
+
 		std::mutex mtx;
 
 	private:
 
 		void bufferKeysPressed();
+
+		void mapActionToKey(KeyActions action, std::string keyStr, SupportedKeys defaultKey);
+
+		std::map<std::string, SupportedKeys> supportedKeysFromStr;
+
+		std::map<std::string, KeyActions> keyActionsFromStr;
 
 		std::map<KeyActions, SupportedKeys> keyMappings;
 
