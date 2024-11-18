@@ -778,7 +778,7 @@ void Engine3D::updateVertices()
 		{
 			glm::vec3 line1 = tri.p[1] - tri.p[0];
 			glm::vec3 line2 = tri.p[2] - tri.p[0];
-			glm::vec3 normal = glm::normalize(glm::cross(line2, line1));
+			glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
 			tri.tang = tri.calcTangent();
 
 			for (int i = 0; i < 3; i++)

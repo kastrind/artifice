@@ -11,6 +11,7 @@ in vec2 TexCoord;
 in vec3 surfaceNormal;
 in vec3 TangentViewPos;
 in vec3 TangentFragPos;
+in mat3 TBN;
 
 struct Material {
 	sampler2D diffuseTexture; // texture sampler
@@ -39,7 +40,7 @@ vec2 adjustedTexCoord = TexCoord * frameSize + offset;
 
 uniform vec3 viewPos;
 
-const float heightScale = 0.015;
+const float heightScale = 0.01;
 
 vec2 DisplacementMapping(vec2 texCoords, vec3 viewDir)
 {
@@ -85,12 +86,13 @@ vec2 DisplacementMapping(vec2 texCoords, vec3 viewDir)
 
 void main()
 {
+	vec2 displacedTextCoord = adjustedTexCoord;
 	if (material.existsDisplacementmap) {
 		vec3 tangentViewDir = normalize(TangentViewPos - TangentFragPos);
-		adjustedTexCoord = DisplacementMapping(adjustedTexCoord, tangentViewDir);
+		displacedTextCoord = DisplacementMapping(displacedTextCoord, tangentViewDir);
 	}
 
-	vec4 diffuse = texture(material.diffuseTexture, adjustedTexCoord);
+	vec4 diffuse = texture(material.diffuseTexture, displacedTextCoord);
 
 	// discard if diffuse per-fragment color is pure magenta which is considered transparent
 	if (userMode == 0 && diffuse.rgb == transparentColor) {
@@ -111,15 +113,17 @@ void main()
 		gNormal = normalize(surfaceNormal);
 	}else {
 		// obtain normal from normal map in range [0,1]
-		vec3 normal = texture(material.normalmap, adjustedTexCoord).rgb;
+		vec3 normal = texture(material.normalmap, displacedTextCoord).rgb;
 		// transform normal vector to range [-1,1]
 		normal = normalize(normal * 2.0 - 1.0);
+		normal = TBN * normal;
+		normal.y = -normal.y;
 		gNormal = normal;
 	}
 
 	// and the lightmap per-fragment color
 	if (material.existsLightmap) {
-		gLightmap.rgb = texture(material.lightmap, adjustedTexCoord).rgb;
+		gLightmap.rgb = texture(material.lightmap, displacedTextCoord).rgb;
 	}else {
 		gLightmap = vec4(1.0, 1.0, 1.0, 1.0);
 	}

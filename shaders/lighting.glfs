@@ -45,12 +45,12 @@ void main()
 		ambient = light.ambientIntensity * light.color;
 
 		// diffuse
-		float diff = max(dot(-lightDir, N), 0.0);
+		float diff = max(dot(lightDir, N), 0.0);
 		diffuse = diff * light.diffuseIntensity * light.color;
 
 		// specular
-		vec3 reflectDir = reflect(-lightDir, N);
-		float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+		vec3 reflectDir = reflect(lightDir, N);
+		float spec = pow(max(dot(viewDir, -reflectDir), 0.0), 32);
 		specular = spec * light.specularIntensity * light.color * Specular;
 
 	}else {
