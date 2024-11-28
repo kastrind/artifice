@@ -185,121 +185,25 @@ void EventController::decodeEvent(SDL_Event* e)
 	//user presses a key
 	if( e->type == SDL_KEYDOWN )
 	{
-		if (e->key.keysym.sym == SDLK_UP)
+		for (std::map<SupportedKeys, SDL_KeyCode>::iterator itr = sdlKeyCodeMappings.begin(); itr != sdlKeyCodeMappings.end(); itr++)
 		{
-			keysPressed[SupportedKeys::UP_ARROW] = true;
-		}
-		else if (e->key.keysym.sym == SDLK_DOWN)
-		{
-			keysPressed[SupportedKeys::DOWN_ARROW] = true;
-		}
-		else if (e->key.keysym.sym == SDLK_LEFT)
-		{
-			keysPressed[SupportedKeys::LEFT_ARROW] = true;
-		}
-		else if (e->key.keysym.sym == SDLK_RIGHT)
-		{
-			keysPressed[SupportedKeys::RIGHT_ARROW] = true;
-		}
-		else if (e->key.keysym.sym == SDLK_w)
-		{
-			keysPressed[SupportedKeys::W] = true;
-		}
-		else if (e->key.keysym.sym == SDLK_s)
-		{
-			keysPressed[SupportedKeys::S] = true;
-		}
-		else if (e->key.keysym.sym == SDLK_a)
-		{
-			keysPressed[SupportedKeys::A] = true;
-		}
-		else if (e->key.keysym.sym == SDLK_d)
-		{
-			keysPressed[SupportedKeys::D] = true;
-		}
-		else if (e->key.keysym.sym == SDLK_c)
-		{
-			keysPressed[SupportedKeys::C] = true;
-		}
-		else if (e->key.keysym.sym == SDLK_v)
-		{
-			keysPressed[SupportedKeys::V] = true;
-		}
-		else if (e->key.keysym.sym == SDLK_LCTRL)
-		{
-			keysPressed[SupportedKeys::LEFT_CTRL] = true;
-		}
-		else if (e->key.keysym.sym == SDLK_LSHIFT)
-		{
-			keysPressed[SupportedKeys::LEFT_SHIFT] = true;
-		}
-		else if (e->key.keysym.sym == SDLK_LALT)
-		{
-			keysPressed[SupportedKeys::LEFT_ALT] = true;
-		}
-		else if (e->key.keysym.sym == SDLK_SPACE)
-		{
-			keysPressed[SupportedKeys::SPACE] = true;
+			if (itr->second == e->key.keysym.sym)
+			{
+				keysPressed[itr->first] = true;
+				break;
+			}
 		}
 	}
 	//user releases a key
 	else if( e->type == SDL_KEYUP )
 	{
-		if (e->key.keysym.sym == SDLK_UP)
+		for (std::map<SupportedKeys, SDL_KeyCode>::iterator itr = sdlKeyCodeMappings.begin(); itr != sdlKeyCodeMappings.end(); itr++)
 		{
-			keysPressed[SupportedKeys::UP_ARROW] = false;
-		}
-		else if (e->key.keysym.sym == SDLK_DOWN)
-		{
-			keysPressed[SupportedKeys::DOWN_ARROW] = false;
-		}
-		else if (e->key.keysym.sym == SDLK_LEFT)
-		{
-			keysPressed[SupportedKeys::LEFT_ARROW] = false;
-		}
-		else if (e->key.keysym.sym == SDLK_RIGHT)
-		{
-			keysPressed[SupportedKeys::RIGHT_ARROW] = false;
-		}
-		else if (e->key.keysym.sym == SDLK_w)
-		{
-			keysPressed[SupportedKeys::W] = false;
-		}
-		else if (e->key.keysym.sym == SDLK_s)
-		{
-			keysPressed[SupportedKeys::S] = false;
-		}
-		else if (e->key.keysym.sym == SDLK_a)
-		{
-			keysPressed[SupportedKeys::A] = false;
-		}
-		else if (e->key.keysym.sym == SDLK_d)
-		{
-			keysPressed[SupportedKeys::D] = false;
-		}
-		else if (e->key.keysym.sym == SDLK_c)
-		{
-			keysPressed[SupportedKeys::C] = false;
-		}
-		else if (e->key.keysym.sym == SDLK_v)
-		{
-			keysPressed[SupportedKeys::V] = false;
-		}
-		else if (e->key.keysym.sym == SDLK_LCTRL)
-		{
-			keysPressed[SupportedKeys::LEFT_CTRL] = false;
-		}
-		else if (e->key.keysym.sym == SDLK_LSHIFT)
-		{
-			keysPressed[SupportedKeys::LEFT_SHIFT] = false;
-		}
-		else if (e->key.keysym.sym == SDLK_LALT)
-		{
-			keysPressed[SupportedKeys::LEFT_ALT] = false;
-		}
-		else if (e->key.keysym.sym == SDLK_SPACE)
-		{
-			keysPressed[SupportedKeys::SPACE] = false;
+			if (itr->second == e->key.keysym.sym)
+			{
+				keysPressed[itr->first] = false;
+				break;
+			}
 		}
 	}
 

@@ -164,6 +164,21 @@ class EventController
 			keyActionsFromStr["PREVIOUS"] = KeyActions::PREVIOUS;
 			keyActionsFromStr["JUMP"] = KeyActions::JUMP;
 
+			sdlKeyCodeMappings[SupportedKeys::UP_ARROW] = SDL_KeyCode::SDLK_UP;
+			sdlKeyCodeMappings[SupportedKeys::DOWN_ARROW] = SDL_KeyCode::SDLK_DOWN;
+			sdlKeyCodeMappings[SupportedKeys::LEFT_ARROW] = SDL_KeyCode::SDLK_LEFT;
+			sdlKeyCodeMappings[SupportedKeys::RIGHT_ARROW] = SDL_KeyCode::SDLK_RIGHT;
+			sdlKeyCodeMappings[SupportedKeys::W] = SDL_KeyCode::SDLK_w;
+			sdlKeyCodeMappings[SupportedKeys::S] = SDL_KeyCode::SDLK_s;
+			sdlKeyCodeMappings[SupportedKeys::A] = SDL_KeyCode::SDLK_a;
+			sdlKeyCodeMappings[SupportedKeys::D] = SDL_KeyCode::SDLK_d;
+			sdlKeyCodeMappings[SupportedKeys::C] = SDL_KeyCode::SDLK_c;
+			sdlKeyCodeMappings[SupportedKeys::V] = SDL_KeyCode::SDLK_v;
+			sdlKeyCodeMappings[SupportedKeys::LEFT_CTRL] = SDL_KeyCode::SDLK_LCTRL;
+			sdlKeyCodeMappings[SupportedKeys::LEFT_SHIFT] = SDL_KeyCode::SDLK_LSHIFT;
+			sdlKeyCodeMappings[SupportedKeys::LEFT_ALT] = SDL_KeyCode::SDLK_LALT;
+			sdlKeyCodeMappings[SupportedKeys::SPACE] = SDL_KeyCode::SDLK_SPACE;
+
 			//map action to key
 			mapActionToKey(KeyActions::ASCEND, keyAscend, SupportedKeys::UP_ARROW);
 			mapActionToKey(KeyActions::DESCEND, keyDescend, SupportedKeys::DOWN_ARROW);
@@ -233,6 +248,8 @@ class EventController
 		std::map<std::string, KeyActions> keyActionsFromStr;
 
 		std::map<KeyActions, SupportedKeys> keyMappings;
+
+		std::map<SupportedKeys, SDL_KeyCode> sdlKeyCodeMappings;
 
 		bool keysPressed[SupportedKeys::ALL_KEYS];
 
