@@ -276,6 +276,14 @@ bool EventController::jump(bool* keysPressed)
 	return keysPressed[keyMappings[KeyActions::JUMP]];
 }
 
+bool EventController::scrollDown(bool* keysPressed, bool* prevKeysPressed) {
+	return prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false;
+}
+
+bool EventController::scrollUp(bool* keysPressed, bool* prevKeysPressed) {
+	return prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP]==true && keysPressed[SupportedKeys::MOUSE_WHEEL_UP]==false;
+}
+
 void EventController::bufferKeysPressed()
 {
 	mtx.lock();

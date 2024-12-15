@@ -1238,52 +1238,52 @@ void Engine3D::move(float elapsedTime)
 		//std::cout << "wheel up: " << keysPressed[SupportedKeys::MOUSE_WHEEL_UP] << ", wheel down: " << keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] << std::endl;
 
 		//WSAD camera movement here
-		if (keysPressed[SupportedKeys::W] && hasLanded && collides && canSlide) {
+		if (eventController->forward(keysPressed) && hasLanded && collides && canSlide) {
 			desiredMotion.y = 0;
 			setPersonPos(personPos + 0.5f * personSpeed * desiredMotion);
 
-		} else if (keysPressed[SupportedKeys::W] && hasLanded && (!collides || !collidesFront)) {
+		} else if (eventController->forward(keysPressed) && hasLanded && (!collides || !collidesFront)) {
 			personFront.y = 0;
 			setPersonPos(personPos + personSpeed * personFront);
 
-		} else if (keysPressed[SupportedKeys::W] && (/*!hasLanded ||*/ userMode == UserMode::EDITOR)) {
+		} else if (eventController->forward(keysPressed) && (/*!hasLanded ||*/ userMode == UserMode::EDITOR)) {
 			setPersonPos(personPos + personSpeed * personFront);
 
-		} else if (keysPressed[SupportedKeys::S] && hasLanded && collides && canSlide) {
+		} else if (eventController->backward(keysPressed) && hasLanded && collides && canSlide) {
 			desiredMotion.y = 0;
 			setPersonPos(personPos - 0.5f * personSpeed * desiredMotion);
 
-		} else if (keysPressed[SupportedKeys::S] && hasLanded && (!collides || !collidesBack)) {
+		} else if (eventController->backward(keysPressed) && hasLanded && (!collides || !collidesBack)) {
 			personFront.y = 0;
 			setPersonPos(personPos - personSpeed * personFront);
 
-		} else if (keysPressed[SupportedKeys::S] && (/*!hasLanded ||*/ userMode == UserMode::EDITOR)) {
+		} else if (eventController->backward(keysPressed) && (/*!hasLanded ||*/ userMode == UserMode::EDITOR)) {
 			setPersonPos(personPos - personSpeed * personFront);
 		}
-		if (keysPressed[SupportedKeys::A] && hasLanded && collides && !collidesLeft) {
+		if (eventController->left(keysPressed) && hasLanded && collides && !collidesLeft) {
 			desiredMotion.y = 0;
 			bool desiresRight = glm::dot(personRight, desiredMotion) < 0;
 			if (desiresRight) setPersonPos(personPos + 0.5f * personSpeed * desiredMotion);
 			else setPersonPos(personPos - 0.5f * personSpeed * desiredMotion);
 		
-		} else if (keysPressed[SupportedKeys::A] && (hasLanded && !collides || userMode == UserMode::EDITOR)) {
+		} else if (eventController->left(keysPressed) && (hasLanded && !collides || userMode == UserMode::EDITOR)) {
 			setPersonPos(personPos - glm::normalize(glm::cross(personFront, personUp)) * personSpeed);
 		
-		} else if (keysPressed[SupportedKeys::D] && hasLanded && collides && !collidesRight) {
+		} else if (eventController->right(keysPressed) && hasLanded && collides && !collidesRight) {
 			desiredMotion.y = 0;
 			bool desiresRight = glm::dot(personRight, desiredMotion) < 0;
 			if (desiresRight) setPersonPos(personPos - 0.5f * personSpeed * desiredMotion);
 			else setPersonPos(personPos + 0.5f * personSpeed * desiredMotion);
 
-		} else if (keysPressed[SupportedKeys::D] && (hasLanded && !collides || userMode == UserMode::EDITOR)) {
+		} else if (eventController->right(keysPressed) && (hasLanded && !collides || userMode == UserMode::EDITOR)) {
 			setPersonPos(personPos + glm::normalize(glm::cross(personFront, personUp)) * personSpeed);
 		}
 
 		//jumping
-		if (keysPressed[SupportedKeys::SPACE] && hasLanded) {
+		if (eventController->jump(keysPressed) && hasLanded) {
 			jumpSpeed = gravitationalPull * jumpSpeedFactor;
 			setPersonPos(personPos + glm::vec3(0.0f, elapsedTime * jumpSpeed, 0.0f));
-			if (keysPressed[SupportedKeys::W] && !collides) { //if jumped while moving forward
+			if (eventController->forward(keysPressed) && !collides) { //if jumped while moving forward
 				personFrontOnJump = personFront;
 				personFrontOnJump.y = 0;
 			}else {
@@ -1311,7 +1311,7 @@ void Engine3D::move(float elapsedTime)
 			}
 			if (eventController->ascend(keysPressed)) {
 				setPersonPos(personPos - glm::normalize(glm::cross(personFront, personRight)) * personSpeed);
-			} else if (keysPressed[SupportedKeys::DOWN_ARROW]) {
+			} else if (eventController->descend(keysPressed)) {
 				setPersonPos(personPos + glm::normalize(glm::cross(personFront, personRight)) * personSpeed);
 			}
 		}

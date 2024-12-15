@@ -235,6 +235,10 @@ class EventController
 
 		bool jump(bool* keysPressed);
 
+		bool scrollDown(bool* keysPressed, bool* prevKeysPressed);
+
+		bool scrollUp(bool* keysPressed, bool* prevKeysPressed);
+
 		std::mutex mtx;
 
 	private:
