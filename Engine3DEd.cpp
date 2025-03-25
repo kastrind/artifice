@@ -118,93 +118,93 @@ void Engine3D::edit(float elapsedTime)
 			std::cout << "editing: " << editOptions[editOptionIndex] << std::endl;
 
 		// increases/decreases collation height
-		} else if (editOptions[editOptionIndex] == "collationHeight" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+		} else if (editOptions[editOptionIndex] == "collationHeight" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			collationHeight = std::max(--collationHeight, (unsigned int)1);
 			std::cout << "collation height: " << collationHeight << std::endl;
-		} else if (editOptions[editOptionIndex] == "collationHeight" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+		} else if (editOptions[editOptionIndex] == "collationHeight" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 			collationHeight++;
 			std::cout << "collation height: " << collationHeight << std::endl;
 
 		// increases/decreases collation width
-		} else if (editOptions[editOptionIndex] == "collationWidth" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+		} else if (editOptions[editOptionIndex] == "collationWidth" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			collationWidth = std::max(--collationWidth, (unsigned int)1);
 			std::cout << "collation width: " << collationWidth << std::endl;
-		} else if (editOptions[editOptionIndex] == "collationWidth" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+		} else if (editOptions[editOptionIndex] == "collationWidth" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 			collationWidth++;
 			std::cout << "collation width: " << collationWidth << std::endl;
 
 		// cycles through shapes
-		} else if (editOptions[editOptionIndex] == "shape" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+		} else if (editOptions[editOptionIndex] == "shape" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 			if (++edShapeInt > shapetype::CUBE) edShapeInt = 0;
 			editingShape = (shapetype)edShapeInt;
 			std::cout << "shape: " << shapeTypeToString(editingShape) << std::endl;
-		} else if (editOptions[editOptionIndex] == "shape" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+		} else if (editOptions[editOptionIndex] == "shape" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			if (--edShapeInt > shapetype::CUBE) edShapeInt = shapetype::CUBE;
 			editingShape = (shapetype)edShapeInt;
 			std::cout << "shape: " << shapeTypeToString(editingShape) << std::endl;
 
 		// increases/decreases width
-		} else if (editOptions[editOptionIndex] == "width" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+		} else if (editOptions[editOptionIndex] == "width" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			editingWidth = std::max(editingWidth - 0.1f, 0.1f);
 			std::cout << "width: " << editingWidth << std::endl;
 			isEdited = true;
-		} else if (editOptions[editOptionIndex] == "width" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+		} else if (editOptions[editOptionIndex] == "width" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 			editingWidth += 0.1f;
 			std::cout << "width: " << editingWidth << std::endl;
 			isEdited = true;
 
 		// increases/decreases height
-		} else if (editOptions[editOptionIndex] == "height" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+		} else if (editOptions[editOptionIndex] == "height" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			editingHeight = std::max(editingHeight - 0.1f, 0.1f);
 			std::cout << "height: " << editingHeight << std::endl;
 			isEdited = true;
-		} else if (editOptions[editOptionIndex] == "height" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+		} else if (editOptions[editOptionIndex] == "height" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 			editingHeight += 0.1f;
 			std::cout << "height: " << editingHeight << std::endl;
 			isEdited = true;
 
 		// increases/decreases depth
-		} else if (editOptions[editOptionIndex] == "depth" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+		} else if (editOptions[editOptionIndex] == "depth" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			editingDepth = std::max(editingDepth - 0.1f, 0.1f);
 			std::cout << "depth: " << editingDepth << std::endl;
 			isEdited = true;
-		} else if (editOptions[editOptionIndex] == "depth" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+		} else if (editOptions[editOptionIndex] == "depth" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 			editingDepth += 0.1f;
 			std::cout << "depth: " << editingDepth << std::endl;
 			isEdited = true;
 
 		// increases/decreases X rotation
-		} else if (editOptions[editOptionIndex] == "rotationX" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+		} else if (editOptions[editOptionIndex] == "rotationX" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			editingRotationX = std::max(editingRotationX - 0.1f, -cfg.M_PI_HALF);
 			if (std::abs(editingRotationX) > 0 && std::abs(editingRotationX) < 0.1f) { editingRotationX = 0.0f; }
 			std::cout << "rotationX: " << editingRotationX << std::endl;
-		} else if (editOptions[editOptionIndex] == "rotationX" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+		} else if (editOptions[editOptionIndex] == "rotationX" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 			editingRotationX = std::min(editingRotationX + 0.1f, cfg.M_PI_HALF);
 			if (std::abs(editingRotationX) > 0 && std::abs(editingRotationX) < 0.1f) { editingRotationX = 0.0f; }
 			std::cout << "rotationX: " << editingRotationX << std::endl;
 
 		// increases/decreases Y rotation
-		} else if (editOptions[editOptionIndex] == "rotationY" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+		} else if (editOptions[editOptionIndex] == "rotationY" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			editingRotationY = std::max(editingRotationY - 0.1f, -cfg.M_PI_HALF);
 			if (std::abs(editingRotationY) > 0 && std::abs(editingRotationY) < 0.1f) { editingRotationY = 0.0f; }
 			std::cout << "rotationY: " << editingRotationY << std::endl;
-		} else if (editOptions[editOptionIndex] == "rotationY" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+		} else if (editOptions[editOptionIndex] == "rotationY" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 			editingRotationY = std::min(editingRotationY + 0.1f, cfg.M_PI_HALF);
 			if (std::abs(editingRotationY) > 0 && std::abs(editingRotationY) < 0.1f) { editingRotationY = 0.0f; }
 			std::cout << "rotationY: " << editingRotationY << std::endl;
 
 		// increases/decreases Z rotation
-		} else if (editOptions[editOptionIndex] == "rotationZ" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+		} else if (editOptions[editOptionIndex] == "rotationZ" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			editingRotationZ = std::max(editingRotationZ - 0.1f, -cfg.M_PI_HALF);
 			if (std::abs(editingRotationZ) > 0 && std::abs(editingRotationZ) < 0.1f) { editingRotationZ = 0.0f; }
 			std::cout << "rotationZ: " << editingRotationZ << std::endl;
-		} else if (editOptions[editOptionIndex] == "rotationZ" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+		} else if (editOptions[editOptionIndex] == "rotationZ" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 			editingRotationZ = std::min(editingRotationZ + 0.1f, cfg.M_PI_HALF);
 			if (std::abs(editingRotationZ) > 0 && std::abs(editingRotationZ) < 0.1f) { editingRotationZ = 0.0f; }
 			std::cout << "rotationZ: " << editingRotationZ << std::endl;
 
 		// cycles through textures
-		} else if (editOptions[editOptionIndex] == "texture" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+		} else if (editOptions[editOptionIndex] == "texture" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 			if (editingShape == shapetype::CUBE)
 			{
 				if (++editingCubemapNameIndex > cubemapNames.size() - 1) editingCubemapNameIndex = 0;
@@ -214,7 +214,7 @@ void Engine3D::edit(float elapsedTime)
 				if (++editingTextureNameIndex > textureNames.size() - 1) editingTextureNameIndex = 0;
 				std::cout << "texture: " << textureNames[editingTextureNameIndex] << std::endl;
 			}
-		} else if (editOptions[editOptionIndex] == "texture" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+		} else if (editOptions[editOptionIndex] == "texture" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			if (editingShape == shapetype::CUBE)
 			{
 				if (--editingCubemapNameIndex > cubemapNames.size() - 1) editingCubemapNameIndex = cubemapNames.size() - 1;
@@ -226,10 +226,10 @@ void Engine3D::edit(float elapsedTime)
 			}
 
 		// toggles isSolid
-		} else if (editOptions[editOptionIndex] == "isSolid" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] && keysPressed[SupportedKeys::MOUSE_WHEEL_DOWN] == false) {
+		} else if (editOptions[editOptionIndex] == "isSolid" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			editingIsSolid = !editingIsSolid;
 			std::cout << "isSolid: " << editingIsSolid << std::endl;
-		} else if (editOptions[editOptionIndex] == "isSolid" && prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP] && keysPressed[SupportedKeys::MOUSE_WHEEL_UP] == false) {
+		} else if (editOptions[editOptionIndex] == "isSolid" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 			editingIsSolid = !editingIsSolid;
 			std::cout << "isSolid: " << editingIsSolid << std::endl;
 
