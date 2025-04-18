@@ -417,7 +417,7 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::m
 		else if (i==3) { if (!cfg.NORMAL_MAPPING)       { continue; } idsMap = &normalmapIdsMap; }
 		else if (i==4) { if (!cfg.DISPLACEMENT_MAPPING) { continue; } idsMap = &displacementmapIdsMap; }
 		else { idsMap = &textureIdsMap; }
-		std::string texturesPath = cfg.ASSETS_PATH + std::string("\\") + textureDirName;
+		std::string texturesPath = cfg.ASSETS_PATH + cfg.PATH_SEP + textureDirName;
 		for (const auto & entry : std::filesystem::directory_iterator(texturesPath))
 		{
 			if (entry.is_regular_file())
@@ -474,7 +474,7 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::m
 
 void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::map<std::string, GLuint>& cubeLightmapIdsMap, std::map<std::string, GLuint>& cubeNormalmapIdsMap, std::map<std::string, GLuint>& cubeDisplacementmapIdsMap)
 {
-	std::string cubemapsDirNames[5] = {std::string("cubemaps"), std::string("skyboxes"), std::string("cubelightmaps"), std::string("cubenormalmaps"), std::string("cubeDisplacementmaps")};
+	std::string cubemapsDirNames[5] = {std::string("cubemaps"), std::string("skyboxes"), std::string("cubelightmaps"), std::string("cubenormalmaps"), std::string("cubedisplacementmaps")};
 	std::string filename;
 	std::string name;
 	unsigned short i = 0;
@@ -484,7 +484,7 @@ void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::m
 		else if (i==4) { if (!cfg.NORMAL_MAPPING)       { continue; } idsMap = &cubeNormalmapIdsMap; }
 		else if (i==5) { if (!cfg.DISPLACEMENT_MAPPING) { continue; } idsMap = &cubeDisplacementmapIdsMap; }
 		else { idsMap = &cubemapIdsMap; }
-		std::string cubemapsPath = cfg.ASSETS_PATH + std::string("\\") + cubemapsDirName;
+		std::string cubemapsPath = cfg.ASSETS_PATH + cfg.PATH_SEP + cubemapsDirName;
 		for (const auto & entry : std::filesystem::directory_iterator(cubemapsPath))
 		{
 			if (entry.is_directory())

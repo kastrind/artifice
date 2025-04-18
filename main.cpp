@@ -44,7 +44,7 @@ int main( int argc, char* args[] )
 												cfg.USER_MODE, &eventController);
 
 		Level level;
-		level.load(cfg.LEVELS_PATH + "\\level0.lvl");
+		level.load(cfg.LEVELS_PATH + cfg.PATH_SEP + "level0.lvl");
 		artificeEngine->setLevel(&level);
 
 		//start the 3D engine
@@ -61,7 +61,7 @@ int main( int argc, char* args[] )
 		SDL_StartTextInput();
 
 		//define a duration of 3 milliseconds
-		std::chrono::milliseconds duration_milliseconds(3);
+		std::chrono::milliseconds duration_milliseconds(25);
 
 		//while application is running
 		while( !quit )
