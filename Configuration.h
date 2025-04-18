@@ -14,7 +14,7 @@ typedef struct Configuration
 {
 	const std::string NAME = "Artifice";
 
-	const std::string VERSION = "0.0.1";
+	const std::string VERSION = "0.0.2";
 
 	const std::string ASSETS_PATH = "assets";
 
