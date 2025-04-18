@@ -9,19 +9,35 @@ OBJS = main.o Initiator.o Level.o ShaderProgram.o ArtificeShaderProgram.o EventC
 #CC specifies which compiler we're using
 CC = g++
 
-#INCLUDE_PATHS specifies the additional include paths we'll need
-INCLUDE_PATHS = -IC:\msys64\mingw64\include
+ifeq ($(OS),Windows_NT)
+	#INCLUDE_PATHS specifies the additional include paths we'll need
+	INCLUDE_PATHS = -IC:\msys64\mingw64\include
 
-#LIBRARY_PATHS specifies the additional library paths we'll need
-LIBRARY_PATHS = -LC:\msys64\mingw64\lib
+	#LIBRARY_PATHS specifies the additional library paths we'll need
+	LIBRARY_PATHS = -LC:\msys64\mingw64\lib
 
-#COMPILER_FLAGS specifies the additional compilation options we're using
-# -w suppresses all warnings
-# -Wl,-subsystem,windows gets rid of the console window
-COMPILER_FLAGS = -w #-Wl,-subsystem,windows
+	#COMPILER_FLAGS specifies the additional compilation options we're using
+	# -w suppresses all warnings
+	# -Wl,-subsystem,windows gets rid of the console window
+	COMPILER_FLAGS = -w #-Wl,-subsystem,windows
 
-#LINKER_FLAGS specifies the libraries we're linking against
-LINKER_FLAGS = -lmingw32 -lSDL2main -lSDL2 -lglew32 -lopengl32
+	#LINKER_FLAGS specifies the libraries we're linking against
+	LINKER_FLAGS = -lmingw32 -lSDL2main -lSDL2 -lglew32 -lopengl32
+else
+	#INCLUDE_PATHS specifies the additional include paths we'll need
+	INCLUDE_PATHS = -I/usr/include
+
+	#LIBRARY_PATHS specifies the additional library paths we'll need
+	LIBRARY_PATHS = -L/usr/lib
+
+	#COMPILER_FLAGS specifies the additional compilation options we're using
+	# -w suppresses all warnings
+	# -Wl,-subsystem,windows gets rid of the console window
+	COMPILER_FLAGS = -w #-Wl,-subsystem,windows
+
+	#LINKER_FLAGS specifies the libraries we're linking against
+	LINKER_FLAGS = -lSDL2 -lGLEW -lGL
+endif
 
 #OBJ_NAME specifies the name of our exectuable
 OBJ_NAME = artifice

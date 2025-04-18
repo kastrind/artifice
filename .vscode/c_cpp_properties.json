@@ -27,6 +27,30 @@
                 "\"-lglew32\"",
                 "\"-lopengl32\""
             ]
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/include/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerArgs": [
+                "\"-I/usr/include\"",
+                "\"-L/usr/lib\"",
+                "\"-w\"",
+                "\"-lSDL2\"",
+                "\"-lGLEW\"",
+                "\"-lGL\""
+            ]
         }
     ],
     "version": 4

@@ -1,3 +1,4 @@
+artifice
 *.exe
 *.o
 *.tmp.cpp
