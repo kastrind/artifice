@@ -96,14 +96,21 @@ void main()
 	if (!material.existsNormalmap && !material.existsDisplacementmap) {
 		// also store the per-fragment normals into the gbuffer
 		gNormal = normalize(surfaceNormal);
+
+		vec3 tempNormal = normalize(surfaceNormal);
+		gAlbedo.rgb = tempNormal * 0.5 + 0.5;
+
 	}else {
 		// obtain normal from normal map in range [0,1]
 		vec3 normal = texture(material.normalmap, displacedTextCoord).rgb;
 		// transform normal vector to range [-1,1]
 		normal = normalize(normal * 2.0 - 1.0);
-		normal = TBN * normal;
-		normal.y = -normal.y;
+		//normal.y = -normal.y;
+		normal = normalize(TBN * normal);
+		//normal.y = -normal.y;
 		gNormal = normal;
+
+		gAlbedo.rgb = normal * 0.5 + 0.5;
 	}
 
 	// and the lightmap per-fragment color
@@ -112,5 +119,7 @@ void main()
 	}else {
 		gLightmap = vec4(1.0, 1.0, 1.0, 1.0);
 	}
+
+	//gAlbedo = vec4(normalize(TBN[0]) * 0.5 + 0.5, 1.0); // Visualize tangent as RGB
 
 }

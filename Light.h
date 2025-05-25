@@ -18,3 +18,27 @@ class Light {
 		float specularIntensity = 0.9f;
 
 };
+
+class PointLight : public Light {
+
+	public:
+
+		glm::vec3 position;
+
+		float constant = 1.0f;
+
+		float linear = 0.7f;
+
+		float quadratic = 1.8f;
+
+};
+
+class SpotLight : public PointLight {
+
+	public:
+
+		float cutOff;
+
+		float outerCutOff;
+
+};

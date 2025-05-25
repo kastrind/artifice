@@ -32,6 +32,8 @@ class Level
 
 		Light light;
 
+		PointLight pointLight;
+
 		void load(std::string levelPath);
 
 		void save(std::string levelPath = "");

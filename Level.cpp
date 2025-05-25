@@ -21,6 +21,8 @@ void Level::save(std::string levelPath)
 		f << "player_position," << playerPosition.x << "," << playerPosition.y << "," << playerPosition.z << std::endl;
 		f << "# light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity" << std::endl;
 		f << "light," << light.direction.x << "," << light.direction.y << "," << light.direction.z << "," << light.color.r * 255 << "," << light.color.g * 255 << "," << light.color.b * 255 << "," << light.ambientIntensity << "," << light.diffuseIntensity << "," << light.specularIntensity << std::endl;
+		f << "# point light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity constant linear quadratic" << std::endl;
+		f << "point_light," << pointLight.position.x << "," << pointLight.position.y << "," << pointLight.position.z << "," << pointLight.color.r * 255 << "," << pointLight.color.g * 255 << "," << pointLight.color.b * 255 << "," << pointLight.ambientIntensity << "," << pointLight.diffuseIntensity << "," << pointLight.specularIntensity << "," << pointLight.constant << "," << pointLight.linear << "," << pointLight.quadratic << std::endl;
 		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ" << std::endl;
 
 		for (auto &ptrModel : models)
@@ -108,7 +110,7 @@ void Level::load(std::string levelPath)
 				if (i == NUM_ATTRIBUTES - 1 || (i == 3 && tokens[0] == "player_position")) break;
 				tokens[++i] = token;
 			}
-			if (i == NUM_ATTRIBUTES - 1) {
+			if (i == NUM_ATTRIBUTES - 1 && (tokens[1] == "rectangle" || tokens[1] == "cuboid" || tokens[1] == "cube" || tokens[1] == "skyBox" || tokens[1] == "skybox")) {
 				id      = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
 				shape   = tokens[1];
 				texture = tokens[2];
@@ -159,6 +161,14 @@ void Level::load(std::string levelPath)
 				light.ambientIntensity = std::stof(tokens[7]);
 				light.diffuseIntensity = std::stof(tokens[8]);
 				light.specularIntensity = std::stof(tokens[9]);
+			}else if (tokens[0] == "point_light") {
+				pointLight.position = glm::vec3(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3]));
+				pointLight.color = glm::vec3(std::stoi(tokens[4])/255.0f, std::stoi(tokens[5])/255.0f, std::stoi(tokens[6])/255.0f);
+				pointLight.diffuseIntensity = std::stof(tokens[7]);
+				pointLight.specularIntensity = std::stof(tokens[8]);
+				pointLight.constant = std::stof(tokens[9]);
+				pointLight.linear = std::stof(tokens[10]);
+				pointLight.quadratic = std::stof(tokens[11]);
 			}
 		}
 	}

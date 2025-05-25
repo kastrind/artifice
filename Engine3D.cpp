@@ -705,6 +705,13 @@ void Engine3D::render()
 	lightingShader.setFloat("light.ambientIntensity", light.ambientIntensity);
 	lightingShader.setFloat("light.diffuseIntensity", light.diffuseIntensity);
 	lightingShader.setFloat("light.specularIntensity", light.specularIntensity);
+	lightingShader.setVec3("pointLight.position", pointLight.position);
+	lightingShader.setVec3("pointLight.color", pointLight.color);
+	lightingShader.setFloat("pointLight.diffuseIntensity", pointLight.diffuseIntensity);
+	lightingShader.setFloat("pointLight.specularIntensity", pointLight.specularIntensity);
+	lightingShader.setFloat("pointLight.constant", pointLight.constant);
+	lightingShader.setFloat("pointLight.linear", pointLight.linear);
+	lightingShader.setFloat("pointLight.quadratic", pointLight.quadratic);
 	lightingShader.setInt("gPosition", 0);
 	lightingShader.setInt("gNormal", 1);
 	lightingShader.setInt("gAlbedo", 2);
@@ -779,6 +786,7 @@ void Engine3D::updateVertices()
 			glm::vec3 line1 = tri.p[1] - tri.p[0];
 			glm::vec3 line2 = tri.p[2] - tri.p[0];
 			glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
+			std::cout << "Triangle normal: " << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
 			tri.tang = tri.calcTangent();
 
 			for (int i = 0; i < 3; i++)
@@ -1535,5 +1543,6 @@ void Engine3D::setLevel(Level* level)
 	cubePointsCnt = level->cubePointsCnt;
 	setPersonPos(level->playerPosition);
 	this->light = level->light;
+	this->pointLight = level->pointLight;
 	this->level = std::make_shared<Level>(*level);
 }

@@ -245,6 +245,7 @@ void Engine3D::edit(float elapsedTime)
 			std::cout << "SAVING!" << std::endl;
 			if (level) {
 				level->light = light;
+				level->pointLight = pointLight;
 				level->modelPointsCnt = modelPointsCnt;
 				level->cubePointsCnt = cubePointsCnt;
 				level->models = ptrModelsToRender;
