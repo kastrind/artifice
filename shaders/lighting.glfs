@@ -84,8 +84,8 @@ void main()
 		vec3 finalPointLightDiffuse  = pointLightDiff * pointLight.diffuseIntensity * pointLight.color;
 		vec3 finalPointLightSpecular = pointLightSpec * pointLight.specularIntensity * pointLight.color * Specular;
 
-		//diffuse  +=  finalPointLightDiffuse * attenuation;
-		//specular += finalPointLightSpecular * attenuation;
+		diffuse  +=  finalPointLightDiffuse * attenuation;
+		specular += finalPointLightSpecular * attenuation;
 
 	}else {
 		// ambient
