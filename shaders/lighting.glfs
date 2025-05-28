@@ -4,6 +4,8 @@ layout (location = 1) out vec4 FragColor; // final color
 
 in vec2 TexCoord;
 
+#define NR_POINT_LIGHTS 1
+
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedo;
@@ -34,6 +36,9 @@ uniform PointLight pointLight;
 uniform bool phongLighting;
 uniform vec3 viewPos;
 
+vec3 calcDirLight(Light light, vec3 normal, vec3 viewDir, vec3 Specular);
+vec3 calcPointLights(PointLight pointLight, vec3 normal, vec3 FragPos, vec3 viewDir, vec3 Specular);
+
 void main()
 {
 	// retrieve data from gbuffer
@@ -46,55 +51,61 @@ void main()
 	vec3 N = texture(gNormal, TexCoord).rgb;
 	vec3 viewDir = texture(gViewDir, TexCoord).rgb;
 
-	vec3 lightDir = normalize(-light.direction);
-
-	vec3 ambient = vec3(1.0, 1.0, 1.0);
-	vec3 diffuse = vec3(0.0, 0.0, 0.0);
-	vec3 specular = vec3(0.0, 0.0, 0.0);
+	vec3 lightResult = vec3(0.0, 0.0, 0.0);
 
 	if (phongLighting) {
+
+		lightResult = calcDirLight(light, N, viewDir, Specular);
+		for(int i = 0; i < NR_POINT_LIGHTS; i++)
+			lightResult += calcPointLights(pointLight, N, FragPos, viewDir, Specular);
+
+	}else {
 		// ambient
-		ambient = light.ambientIntensity * light.color;
+		lightResult = (light.ambientIntensity + light.diffuseIntensity) * light.color;
+	}
 
-		// diffuse
-		float diff = max(dot(lightDir, N), 0.0);
-		diffuse = diff * light.diffuseIntensity * light.color;
+	vec3 finalColor = lightResult * Diffuse;
 
-		// specular
-		vec3 reflectDir = reflect(lightDir, N);
-		float spec = pow(max(dot(viewDir, -reflectDir), 0.0), 32);
-		specular = spec * light.specularIntensity * light.color * Specular;
+	FragColor = vec4(finalColor, 1.0);
+	screenTexture = FragColor;
+}
 
-		//pointLight.position = vec3(0.264035,-0.34048,2.60431);
-		//pointLight.color = vec3(0.0, 0.0, 1.0);
-		//pointLight.constant = 1.0;
-		//pointLight.linear = 0.7;
-		//pointLight.quadratic = 1.8;
+vec3 calcDirLight(Light light, vec3 normal, vec3 viewDir, vec3 Specular)
+{
+	vec3 lightDir = normalize(-light.direction);
 
+	// ambient
+	vec3 ambient = light.ambientIntensity * light.color;
+
+	// diffuse
+	float diff = max(dot(lightDir, normal), 0.0);
+	vec3 diffuse = diff * light.diffuseIntensity * light.color;
+
+	// specular
+	vec3 reflectDir = reflect(lightDir, normal);
+	float spec = pow(max(dot(viewDir, -reflectDir), 0.0), 32);
+	vec3 specular = spec * light.specularIntensity * light.color * Specular;
+
+	return (ambient + diffuse + specular);
+}
+
+vec3 calcPointLights(PointLight pointLight, vec3 normal, vec3 FragPos, vec3 viewDir, vec3 Specular)
+{
 		// attenuation
 		vec3 pointLightDir = normalize(pointLight.position - FragPos);
-		float pointLightDiff = max(dot(pointLightDir, N), 0.0);
-		vec3 pointLightReflectDir = reflect(pointLightDir, N);
+		float pointLightDiff = max(dot(pointLightDir, normal), 0.0);
+		vec3 pointLightReflectDir = reflect(pointLightDir, normal);
 
 		float pointLightSpec = pow(max(dot(viewDir, -pointLightReflectDir), 0.0), 32);
 		float pointLightDistance = length(pointLight.position - FragPos);
 
 		float attenuation = 1.0 / (pointLight.constant + pointLight.linear * pointLightDistance + pointLight.quadratic * (pointLightDistance * pointLightDistance));
 
-		vec3 finalPointLightDiffuse  = pointLightDiff * pointLight.diffuseIntensity * pointLight.color;
-		vec3 finalPointLightSpecular = pointLightSpec * pointLight.specularIntensity * pointLight.color * Specular;
+		vec3 diffuse  = pointLightDiff * pointLight.diffuseIntensity * pointLight.color;
+		diffuse *= attenuation;
+		vec3 specular = pointLightSpec * pointLight.specularIntensity * pointLight.color * Specular;
+		specular *= attenuation;
 
-		diffuse  +=  finalPointLightDiffuse * attenuation;
-		specular += finalPointLightSpecular * attenuation;
-
-	}else {
-		// ambient
-		ambient = (light.ambientIntensity + light.diffuseIntensity) * light.color;
-	}
-
-	vec3 finalColor = (ambient + diffuse + specular) * Diffuse;
-
-	FragColor = vec4(finalColor, 1.0);
-	screenTexture = FragColor;
+		return (diffuse + specular);
 }
 
