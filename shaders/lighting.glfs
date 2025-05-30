@@ -4,7 +4,7 @@ layout (location = 1) out vec4 FragColor; // final color
 
 in vec2 TexCoord;
 
-#define NR_POINT_LIGHTS 1
+#define NR_POINT_LIGHTS 10
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
@@ -32,6 +32,8 @@ struct PointLight {
 	float quadratic;
 };
 uniform PointLight pointLight;
+uniform PointLight pointLights[NR_POINT_LIGHTS];
+uniform int pointLightCount;
 
 uniform bool phongLighting;
 uniform vec3 viewPos;
@@ -56,8 +58,10 @@ void main()
 	if (phongLighting) {
 
 		lightResult = calcDirLight(light, N, viewDir, Specular);
-		for(int i = 0; i < NR_POINT_LIGHTS; i++)
-			lightResult += calcPointLights(pointLight, N, FragPos, viewDir, Specular);
+		for(int i = 0; i < NR_POINT_LIGHTS; i++) {
+			if (i == pointLightCount) break;
+			lightResult += calcPointLights(pointLights[i], N, FragPos, viewDir, Specular);
+		}
 
 	}else {
 		// ambient

@@ -705,6 +705,18 @@ void Engine3D::render()
 	lightingShader.setFloat("light.ambientIntensity", light.ambientIntensity);
 	lightingShader.setFloat("light.diffuseIntensity", light.diffuseIntensity);
 	lightingShader.setFloat("light.specularIntensity", light.specularIntensity);
+	unsigned long pointLightCounter = 0;
+	for (PointLight& pl : pointLights)
+	{
+		lightingShader.setVec3("pointLights[" + std::to_string(pointLightCounter) + "].position", pl.position);
+		lightingShader.setVec3("pointLights[" + std::to_string(pointLightCounter) + "].color", pl.color);
+		lightingShader.setFloat("pointLights[" + std::to_string(pointLightCounter) + "].diffuseIntensity", pl.diffuseIntensity);
+		lightingShader.setFloat("pointLights[" + std::to_string(pointLightCounter) + "].specularIntensity", pl.specularIntensity);
+		lightingShader.setFloat("pointLights[" + std::to_string(pointLightCounter) + "].constant", pl.constant);
+		lightingShader.setFloat("pointLights[" + std::to_string(pointLightCounter) + "].linear", pl.linear);
+		lightingShader.setFloat("pointLights[" + std::to_string(pointLightCounter++) + "].quadratic", pl.quadratic);
+	}
+	lightingShader.setInt("pointLightCount", (int)pointLights.size());
 	lightingShader.setVec3("pointLight.position", pointLight.position);
 	lightingShader.setVec3("pointLight.color", pointLight.color);
 	lightingShader.setFloat("pointLight.diffuseIntensity", pointLight.diffuseIntensity);
@@ -1543,6 +1555,10 @@ void Engine3D::setLevel(Level* level)
 	cubePointsCnt = level->cubePointsCnt;
 	setPersonPos(level->playerPosition);
 	this->light = level->light;
+	for (PointLight& pl : level->pointLights)
+	{
+		this->pointLights.push_back(pl);
+	}
 	this->pointLight = level->pointLight;
 	this->level = std::make_shared<Level>(*level);
 }

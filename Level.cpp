@@ -169,6 +169,7 @@ void Level::load(std::string levelPath)
 				pointLight.constant = std::stof(tokens[9]);
 				pointLight.linear = std::stof(tokens[10]);
 				pointLight.quadratic = std::stof(tokens[11]);
+				pointLights.push_back(pointLight);
 			}
 		}
 	}

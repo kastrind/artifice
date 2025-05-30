@@ -274,6 +274,8 @@ class Engine3D
 
 		PointLight pointLight;
 
+		std::vector<PointLight> pointLights;
+
 		//editor user mode specific
 		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX", "rotationY", "rotationZ", "texture", "isSolid", "collationHeight", "collationWidth"};
 		unsigned short editOptionIndex = 0;

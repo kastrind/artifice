@@ -34,6 +34,8 @@ class Level
 
 		PointLight pointLight;
 
+		std::vector<PointLight> pointLights;
+
 		void load(std::string levelPath);
 
 		void save(std::string levelPath = "");
