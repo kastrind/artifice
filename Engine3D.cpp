@@ -714,9 +714,9 @@ void Engine3D::render()
 		lightingShader.setFloat("pointLights[" + std::to_string(pointLightCounter) + "].specularIntensity", pl.specularIntensity);
 		lightingShader.setFloat("pointLights[" + std::to_string(pointLightCounter) + "].constant", pl.constant);
 		lightingShader.setFloat("pointLights[" + std::to_string(pointLightCounter) + "].linear", pl.linear);
-		lightingShader.setFloat("pointLights[" + std::to_string(pointLightCounter++) + "].quadratic", pl.quadratic);
+		lightingShader.setFloat("pointLights[" + std::to_string(pointLightCounter) + "].quadratic", pl.quadratic);
+		lightingShader.setFloat("pointLights[" + std::to_string(pointLightCounter++) + "].cutoffDistance", pl.cutoffDistance);
 	}
-	lightingShader.setInt("pointLightCount", (int)pointLights.size());
 	lightingShader.setVec3("pointLight.position", pointLight.position);
 	lightingShader.setVec3("pointLight.color", pointLight.color);
 	lightingShader.setFloat("pointLight.diffuseIntensity", pointLight.diffuseIntensity);
@@ -798,7 +798,7 @@ void Engine3D::updateVertices()
 			glm::vec3 line1 = tri.p[1] - tri.p[0];
 			glm::vec3 line2 = tri.p[2] - tri.p[0];
 			glm::vec3 normal = glm::normalize(glm::cross(line1, line2));
-			std::cout << "Triangle normal: " << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
+			//std::cout << "Triangle normal: " << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
 			tri.tang = tri.calcTangent();
 
 			for (int i = 0; i < 3; i++)

@@ -71,7 +71,7 @@ engine :
 	$(CC) -c Engine3D.cpp Engine3DEd.cpp $(COMPILER_FLAGS)
 
 clean :
-	rm *.o *.exe || true
+	rm *.o *.exe artifice || true
 
 #objs : clean gui main init level shader event engine
 objs : clean main init level shader event engine

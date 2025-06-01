@@ -4,7 +4,8 @@ layout (location = 1) out vec4 FragColor; // final color
 
 in vec2 TexCoord;
 
-#define NR_POINT_LIGHTS 10
+// this directive must always be on this line number (8), to let the engine edit this line and set the required number of point lights on runtime
+#define NR_POINT_LIGHTS 4
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
@@ -30,10 +31,10 @@ struct PointLight {
 	float constant;
 	float linear;
 	float quadratic;
+	float cutoffDistance;
 };
 uniform PointLight pointLight;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
-uniform int pointLightCount;
 
 uniform bool phongLighting;
 uniform vec3 viewPos;
@@ -59,7 +60,6 @@ void main()
 
 		lightResult = calcDirLight(light, N, viewDir, Specular);
 		for(int i = 0; i < NR_POINT_LIGHTS; i++) {
-			if (i == pointLightCount) break;
 			lightResult += calcPointLights(pointLights[i], N, FragPos, viewDir, Specular);
 		}
 
@@ -95,21 +95,25 @@ vec3 calcDirLight(Light light, vec3 normal, vec3 viewDir, vec3 Specular)
 
 vec3 calcPointLights(PointLight pointLight, vec3 normal, vec3 FragPos, vec3 viewDir, vec3 Specular)
 {
-		// attenuation
-		vec3 pointLightDir = normalize(pointLight.position - FragPos);
-		float pointLightDiff = max(dot(pointLightDir, normal), 0.0);
-		vec3 pointLightReflectDir = reflect(pointLightDir, normal);
+	// save lighting calculations if fragment is not within the light's cutoff distance
+	if (length(pointLight.position - FragPos) > pointLight.cutoffDistance) {
+		return vec3(0.0, 0.0, 0.0);
+	}
+	
+	vec3 pointLightDir = normalize(pointLight.position - FragPos);
+	float pointLightDiff = max(dot(pointLightDir, normal), 0.0);
+	vec3 pointLightReflectDir = reflect(pointLightDir, normal);
 
-		float pointLightSpec = pow(max(dot(viewDir, -pointLightReflectDir), 0.0), 32);
-		float pointLightDistance = length(pointLight.position - FragPos);
+	float pointLightSpec = pow(max(dot(viewDir, -pointLightReflectDir), 0.0), 32);
+	float pointLightDistance = length(pointLight.position - FragPos);
 
-		float attenuation = 1.0 / (pointLight.constant + pointLight.linear * pointLightDistance + pointLight.quadratic * (pointLightDistance * pointLightDistance));
+	float attenuation = 1.0 / (pointLight.constant + pointLight.linear * pointLightDistance + pointLight.quadratic * (pointLightDistance * pointLightDistance));
 
-		vec3 diffuse  = pointLightDiff * pointLight.diffuseIntensity * pointLight.color;
-		diffuse *= attenuation;
-		vec3 specular = pointLightSpec * pointLight.specularIntensity * pointLight.color * Specular;
-		specular *= attenuation;
+	vec3 diffuse  = pointLightDiff * pointLight.diffuseIntensity * pointLight.color;
+	diffuse *= attenuation;
+	vec3 specular = pointLightSpec * pointLight.specularIntensity * pointLight.color * Specular;
+	specular *= attenuation;
 
-		return (diffuse + specular);
+	return (diffuse + specular);
 }
 

@@ -8,6 +8,7 @@
 #include <memory>
 #include "Constructs3D.h"
 #include "Light.h"
+#include "Utility.h"
 
 class Level
 {

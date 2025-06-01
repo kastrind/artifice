@@ -162,15 +162,22 @@ void Level::load(std::string levelPath)
 				light.diffuseIntensity = std::stof(tokens[8]);
 				light.specularIntensity = std::stof(tokens[9]);
 			}else if (tokens[0] == "point_light") {
-				pointLight.position = glm::vec3(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3]));
-				pointLight.color = glm::vec3(std::stoi(tokens[4])/255.0f, std::stoi(tokens[5])/255.0f, std::stoi(tokens[6])/255.0f);
-				pointLight.diffuseIntensity = std::stof(tokens[7]);
-				pointLight.specularIntensity = std::stof(tokens[8]);
-				pointLight.constant = std::stof(tokens[9]);
-				pointLight.linear = std::stof(tokens[10]);
-				pointLight.quadratic = std::stof(tokens[11]);
+				glm::vec3 position = glm::vec3(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3]));
+				glm::vec3 color = glm::vec3(std::stoi(tokens[4])/255.0f, std::stoi(tokens[5])/255.0f, std::stoi(tokens[6])/255.0f);
+				float diffuseIntensity = std::stof(tokens[7]);
+				float specularIntensity = std::stof(tokens[8]);
+				float constant = std::stof(tokens[9]);
+				float linear = std::stof(tokens[10]);
+				float quadratic = std::stof(tokens[11]);
+				PointLight pointLight(position, constant, linear, quadratic);
+				pointLight.color = color;
+				pointLight.diffuseIntensity = diffuseIntensity;
+				pointLight.specularIntensity = specularIntensity;
 				pointLights.push_back(pointLight);
 			}
 		}
 	}
+	// edit the lighting shader to reflect the number of point lights
+	Utility::replaceLineInFile("shaders/lighting.glfs", 7, "#define NR_POINT_LIGHTS " + std::to_string(pointLights.size()));
+
 }
