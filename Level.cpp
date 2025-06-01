@@ -47,7 +47,7 @@ void Level::save(std::string levelPath)
 			}
 			else if (m.modelMesh.shape == shapetype::RECTANGLE)
 			{
-				float width = m.modelMesh.tris[0].p[0].x - m.modelMesh.tris[1].p[0].x;
+				float width = m.modelMesh.tris[0].p[1].x - m.modelMesh.tris[0].p[0].x;
 				float height = m.modelMesh.tris[0].p[0].y - m.modelMesh.tris[0].p[2].y;
 				f << "rectangle," << m.texture << "," << width << "," << height << "," <<  "0";
 			}
