@@ -24,6 +24,7 @@
 #include "Light.h"
 #include "Level.h"
 #include "EventController.h"
+#include "Preset.h"
 
 #include <stdio.h>
 #include <iostream>
@@ -278,7 +279,9 @@ class Engine3D
 
 		//editor user mode specific
 		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX", "rotationY", "rotationZ", "texture", "isSolid", "collationHeight", "collationWidth"};
+		std::vector<std::string> lightingEditOptions = {"light type", "preset light"};
 		unsigned short editOptionIndex = 0;
+		unsigned short lightingEditOptionIndex = 0;
 		float originalCollidingDistanceH = 0;
 		float originalCollidingDistanceV = 0;
 		unsigned int collationHeight = 1;
@@ -300,6 +303,8 @@ class Engine3D
 		model modelInFocusTmp;
 		unsigned long modelPointsCnt = 0;
 		unsigned long cubePointsCnt = 0;
+		bool isLightingEditingModeEnabled = false;
+		Preset preset;
 
 		bool keysPressed[SupportedKeys::ALL_KEYS];
 		bool prevKeysPressed[SupportedKeys::ALL_KEYS];

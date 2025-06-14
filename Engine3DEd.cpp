@@ -108,6 +108,25 @@ void Engine3D::edit(float elapsedTime)
 		//bool* keysPressed = eventController->getKeysPressed();
 		bool isEdited = false;
 
+		if (prevKeysPressed[SupportedKeys::L] && !keysPressed[SupportedKeys::L]) {
+			isLightingEditingModeEnabled = !isLightingEditingModeEnabled;
+			if (isLightingEditingModeEnabled) std::cout << "Lighting editing mode enabled" << std::endl;
+			else std::cout << "Lighting editing mode disabled" << std::endl;
+		}
+
+		if (isLightingEditingModeEnabled) {
+			// pressing LCTRL + mouse wheel up/down cycles through lighting edit options
+			if (keysPressed[SupportedKeys::LEFT_CTRL] && eventController->scrollDown(keysPressed, prevKeysPressed)) {
+				if (--lightingEditOptionIndex > lightingEditOptions.size() - 1) lightingEditOptionIndex = lightingEditOptions.size() - 1;
+				std::cout << "editing: " << lightingEditOptions[lightingEditOptionIndex] << std::endl;
+
+			} else if (keysPressed[SupportedKeys::LEFT_CTRL] && eventController->scrollUp(keysPressed, prevKeysPressed)) {
+				if (++lightingEditOptionIndex > lightingEditOptions.size() - 1) lightingEditOptionIndex = 0;
+				std::cout << "editing: " << lightingEditOptions[lightingEditOptionIndex] << std::endl;
+			}
+			return;
+		}
+
 		// pressing LCTRL + mouse wheel up/down cycles through edit options
 		if (keysPressed[SupportedKeys::LEFT_CTRL] && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			if (--editOptionIndex > editOptions.size() - 1) editOptionIndex = editOptions.size() - 1;

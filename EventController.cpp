@@ -284,6 +284,8 @@ bool EventController::scrollUp(bool* keysPressed, bool* prevKeysPressed) {
 	return prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP]==true && keysPressed[SupportedKeys::MOUSE_WHEEL_UP]==false;
 }
 
+
+
 void EventController::bufferKeysPressed()
 {
 	mtx.lock();

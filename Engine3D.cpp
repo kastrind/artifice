@@ -69,6 +69,9 @@ Engine3D::Engine3D(
 	cubemapFaceIndexMap["bottom"] = 3;
 	cubemapFaceIndexMap["back"] = 4;
 	cubemapFaceIndexMap["front"] = 5;
+
+	preset.loadPresetLights();
+	std::cout << "Loaded " << preset.getDirectionalLights().size() << " directional lights and " << preset.getPointLights().size() << " point lights." << std::endl;
 }
 
 std::thread Engine3D::startEngine()

@@ -1,0 +1,9 @@
+# directional name dirX dirY dirZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity
+directional,directional_light_down,0,-1.0,0,128,128,128,0.3,0.5,0.9
+directional,directional_light_up,0,1.0,0,128,128,128,0.3,0.5,0.9
+# point name light colorR colorG colorB diffuseIntensity specularIntensity constant linear quadratic
+point,point_light_7,255,255,255,1.0,1.0,1.0,0.7,1.8
+point,point_light_13,255,255,255,1.0,1.0,1.0,0.35,0.44
+point,point_light_20,255,255,255,1.0,1.0,1.0,0.22,0.2
+point,point_light_32,255,255,255,1.0,1.0,1.0,0.14,0.07
+point,point_light_50,255,255,255,1.0,1.0,1.0,0.09,0.032
