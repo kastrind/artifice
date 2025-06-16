@@ -82,6 +82,10 @@ class Preset
 			return pointLights;
 		}
 
+		std::vector<SpotLight>& getSpotLights() {
+			return spotLights;
+		}
+
 	private:
 
 		std::string presetPath = cfg.ASSETS_PATH + cfg.PATH_SEP + "presets";
@@ -89,5 +93,7 @@ class Preset
 		std::vector<Light> directionalLights;
 
 		std::vector<PointLight> pointLights;
+
+		std::vector<SpotLight> spotLights;
 
 };

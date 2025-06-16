@@ -124,6 +124,15 @@ void Engine3D::edit(float elapsedTime)
 				if (++lightingEditOptionIndex > lightingEditOptions.size() - 1) lightingEditOptionIndex = 0;
 				std::cout << "editing: " << lightingEditOptions[lightingEditOptionIndex] << std::endl;
 			}
+
+			// switches between light types
+			if (lightingEditOptions[lightingEditOptionIndex] == "light type" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
+				if (--lightingTypeOptionIndex > lightingTypeOptions.size() -1 ) { lightingTypeOptionIndex = lightingTypeOptions.size() - 1; }
+				std::cout << "lighting type: " << lightingTypeOptions[lightingTypeOptionIndex] << std::endl;
+			}else if (lightingEditOptions[lightingEditOptionIndex] == "light type" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
+				if (++lightingTypeOptionIndex > lightingTypeOptions.size() - 1) { lightingTypeOptionIndex = 0; }
+				std::cout << "lighting type: " << lightingTypeOptions[lightingTypeOptionIndex] << std::endl;
+			}
 			return;
 		}
 

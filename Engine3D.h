@@ -279,9 +279,11 @@ class Engine3D
 
 		//editor user mode specific
 		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX", "rotationY", "rotationZ", "texture", "isSolid", "collationHeight", "collationWidth"};
-		std::vector<std::string> lightingEditOptions = {"light type", "preset light"};
 		unsigned short editOptionIndex = 0;
+		std::vector<std::string> lightingEditOptions = {"light type", "preset light"};
 		unsigned short lightingEditOptionIndex = 0;
+		std::vector<std::string> lightingTypeOptions = {};
+		unsigned short lightingTypeOptionIndex = 0;
 		float originalCollidingDistanceH = 0;
 		float originalCollidingDistanceV = 0;
 		unsigned int collationHeight = 1;

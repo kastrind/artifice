@@ -70,8 +70,23 @@ Engine3D::Engine3D(
 	cubemapFaceIndexMap["back"] = 4;
 	cubemapFaceIndexMap["front"] = 5;
 
-	preset.loadPresetLights();
-	std::cout << "Loaded " << preset.getDirectionalLights().size() << " directional lights and " << preset.getPointLights().size() << " point lights." << std::endl;
+	if (userMode == UserMode::EDITOR)
+	{
+		preset.loadPresetLights();
+		std::cout << "Loaded " << preset.getDirectionalLights().size() << " directional lights, " << preset.getPointLights().size() << " point lights and " << preset.getSpotLights().size() << " spot lights." << std::endl;
+		if (preset.getDirectionalLights().size() > 0)
+		{
+			lightingTypeOptions.push_back("directional");
+		}
+		if (preset.getPointLights().size() > 0)
+		{
+			lightingTypeOptions.push_back("point");
+		}
+		if (preset.getSpotLights().size() > 0)
+		{
+			lightingTypeOptions.push_back("spot");
+		}
+	}
 }
 
 std::thread Engine3D::startEngine()
