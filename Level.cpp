@@ -21,10 +21,14 @@ void Level::save(std::string levelPath)
 		f << "player_position," << playerPosition.x << "," << playerPosition.y << "," << playerPosition.z << std::endl;
 		f << "# light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity" << std::endl;
 		f << "light," << light.direction.x << "," << light.direction.y << "," << light.direction.z << "," << light.color.r * 255 << "," << light.color.g * 255 << "," << light.color.b * 255 << "," << light.ambientIntensity << "," << light.diffuseIntensity << "," << light.specularIntensity << std::endl;
-		f << "# point light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity constant linear quadratic" << std::endl;
-		f << "point_light," << pointLight.position.x << "," << pointLight.position.y << "," << pointLight.position.z << "," << pointLight.color.r * 255 << "," << pointLight.color.g * 255 << "," << pointLight.color.b * 255 << "," << pointLight.ambientIntensity << "," << pointLight.diffuseIntensity << "," << pointLight.specularIntensity << "," << pointLight.constant << "," << pointLight.linear << "," << pointLight.quadratic << std::endl;
-		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ" << std::endl;
 
+		f << "# point light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity constant linear quadratic" << std::endl;
+		for (PointLight& pl : pointLights)
+		{
+			f << "point_light," << pl.position.x << "," << pl.position.y << "," << pl.position.z << "," << pl.color.r * 255 << "," << pl.color.g * 255 << "," << pl.color.b * 255 << "," << pl.diffuseIntensity << "," << pl.specularIntensity << "," << pl.constant << "," << pl.linear << "," << pl.quadratic << std::endl;
+		}
+
+		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ" << std::endl;
 		for (auto &ptrModel : models)
 		{
 			model& m = *ptrModel;

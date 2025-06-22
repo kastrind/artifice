@@ -25,6 +25,7 @@
 #include "Level.h"
 #include "EventController.h"
 #include "Preset.h"
+#include "Utility.h"
 
 #include <stdio.h>
 #include <iostream>
@@ -284,6 +285,8 @@ class Engine3D
 		unsigned short lightingEditOptionIndex = 0;
 		std::vector<std::string> lightingTypeOptions = {};
 		unsigned short lightingTypeOptionIndex = 0;
+		unsigned short presetDirectionalLightIndex = 0;
+		unsigned short presetPointLightIndex = 0;
 		float originalCollidingDistanceH = 0;
 		float originalCollidingDistanceV = 0;
 		unsigned int collationHeight = 1;

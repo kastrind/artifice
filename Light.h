@@ -2,6 +2,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <string>
 
 class Light {
 
@@ -17,12 +18,14 @@ class Light {
 
 		float specularIntensity = 0.9f;
 
+		std::string name = "directional";
+
 };
 
 class PointLight : public Light {
 
 	public:
-		PointLight() {}
+		PointLight() { name = "point"; }
 
 		PointLight(glm::vec3 position, float constant, float linear, float quadratic)
 					: position(position), constant(constant), linear(linear), quadratic(quadratic) {
@@ -30,6 +33,7 @@ class PointLight : public Light {
 			if (cutoffDistance < 0.0f) {
 				cutoffDistance = 10000.0f; // no cutoff, set to a large value
 			}
+			name = "point";
 		}
 
 
@@ -58,6 +62,7 @@ class PointLight : public Light {
 class SpotLight : public PointLight {
 
 	public:
+		SpotLight() { name = "spot"; }
 
 		float cutOff;
 

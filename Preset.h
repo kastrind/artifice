@@ -61,14 +61,31 @@ class Preset
 					if (tokens[0] == "directional")
 					{
 						Light light = Light();
+						light.name = tokens[1];
+						light.direction.x = std::stof(tokens[2]);
+						light.direction.y = std::stof(tokens[3]);
+						light.direction.z = std::stof(tokens[4]);
+						light.color.r = std::stof(tokens[5]) / 255.0f;
+						light.color.g = std::stof(tokens[6]) / 255.0f;
+						light.color.b = std::stof(tokens[7]) / 255.0f;
+						light.ambientIntensity = std::stof(tokens[8]);
+						light.diffuseIntensity = std::stof(tokens[9]);
+						light.specularIntensity = std::stof(tokens[10]);
 						directionalLights.push_back(light);
-						//TODO: set light properties from tokens
 					}
 					else if (tokens[0] == "point")
 					{
 						PointLight pointLight = PointLight();
+						pointLight.name = tokens[1];
 						pointLights.push_back(pointLight);
-						//TODO: set point light properties from tokens
+						pointLight.color.r = std::stof(tokens[2]) / 255.0f;
+						pointLight.color.g = std::stof(tokens[3]) / 255.0f;
+						pointLight.color.b = std::stof(tokens[4]) / 255.0f;
+						pointLight.diffuseIntensity = std::stof(tokens[5]);
+						pointLight.specularIntensity = std::stof(tokens[6]);
+						pointLight.constant = std::stof(tokens[7]);
+						pointLight.linear = std::stof(tokens[8]);
+						pointLight.quadratic = std::stof(tokens[9]);
 					}
 				}
 			}

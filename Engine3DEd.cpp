@@ -123,15 +123,44 @@ void Engine3D::edit(float elapsedTime)
 			} else if (keysPressed[SupportedKeys::LEFT_CTRL] && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 				if (++lightingEditOptionIndex > lightingEditOptions.size() - 1) lightingEditOptionIndex = 0;
 				std::cout << "editing: " << lightingEditOptions[lightingEditOptionIndex] << std::endl;
-			}
 
-			// switches between light types
-			if (lightingEditOptions[lightingEditOptionIndex] == "light type" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
+			// switches among light types
+			} else if (lightingEditOptions[lightingEditOptionIndex] == "light type" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 				if (--lightingTypeOptionIndex > lightingTypeOptions.size() -1 ) { lightingTypeOptionIndex = lightingTypeOptions.size() - 1; }
 				std::cout << "lighting type: " << lightingTypeOptions[lightingTypeOptionIndex] << std::endl;
 			}else if (lightingEditOptions[lightingEditOptionIndex] == "light type" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 				if (++lightingTypeOptionIndex > lightingTypeOptions.size() - 1) { lightingTypeOptionIndex = 0; }
 				std::cout << "lighting type: " << lightingTypeOptions[lightingTypeOptionIndex] << std::endl;
+
+			// switches among preset lights
+			} else if (lightingEditOptions[lightingEditOptionIndex] == "preset light" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
+				if (lightingTypeOptions[lightingTypeOptionIndex] == "directional" && preset.getDirectionalLights().size() > 0)	{
+					if (--presetDirectionalLightIndex > preset.getDirectionalLights().size() - 1) presetDirectionalLightIndex = preset.getDirectionalLights().size() - 1;
+					light = preset.getDirectionalLights()[presetDirectionalLightIndex];
+					std::cout << "selected preset directional light: " << light.name << std::endl;
+				}else if (lightingTypeOptions[lightingTypeOptionIndex] == "point" && preset.getPointLights().size() > 0) {
+					if (--presetPointLightIndex > preset.getPointLights().size() - 1) presetPointLightIndex = preset.getPointLights().size() - 1;
+					pointLight = preset.getPointLights()[presetPointLightIndex];
+					pointLight.position = getPersonPos();
+					pointLights.push_back(pointLight);
+					// edit the lighting shader to reflect the number of point lights
+					Utility::replaceLineInFile("shaders/lighting.glfs", 7, "#define NR_POINT_LIGHTS " + std::to_string(pointLights.size()));
+					std::cout << "selected preset point light: " << pointLight.name << std::endl;
+				}
+			} else if (lightingEditOptions[lightingEditOptionIndex] == "preset light" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
+				if (lightingTypeOptions[lightingTypeOptionIndex] == "directional" && preset.getDirectionalLights().size() > 0)	{
+					if (++presetDirectionalLightIndex > preset.getDirectionalLights().size() - 1) presetDirectionalLightIndex = preset.getDirectionalLights().size() - 1;
+					light = preset.getDirectionalLights()[presetDirectionalLightIndex];
+					std::cout << "selected preset directional light: " << light.name << std::endl;
+				}else if (lightingTypeOptions[lightingTypeOptionIndex] == "point" && preset.getPointLights().size() > 0) {
+					if (++presetPointLightIndex > preset.getPointLights().size() - 1) presetPointLightIndex = preset.getPointLights().size() - 1;
+					pointLight = preset.getPointLights()[presetPointLightIndex];
+					pointLight.position = getPersonPos();
+					pointLights.push_back(pointLight);
+					// edit the lighting shader to reflect the number of point lights
+					Utility::replaceLineInFile("shaders/lighting.glfs", 7, "#define NR_POINT_LIGHTS " + std::to_string(pointLights.size()));
+					std::cout << "selected preset point light: " << pointLight.name << std::endl;
+				}
 			}
 			return;
 		}
@@ -273,7 +302,7 @@ void Engine3D::edit(float elapsedTime)
 			std::cout << "SAVING!" << std::endl;
 			if (level) {
 				level->light = light;
-				level->pointLight = pointLight;
+				level->pointLights = pointLights;
 				level->modelPointsCnt = modelPointsCnt;
 				level->cubePointsCnt = cubePointsCnt;
 				level->models = ptrModelsToRender;
