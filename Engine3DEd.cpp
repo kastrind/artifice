@@ -132,34 +132,39 @@ void Engine3D::edit(float elapsedTime)
 				if (++lightingTypeOptionIndex > lightingTypeOptions.size() - 1) { lightingTypeOptionIndex = 0; }
 				std::cout << "lighting type: " << lightingTypeOptions[lightingTypeOptionIndex] << std::endl;
 
-			// switches among preset lights
+			// switches among preset lights by scrolling down and lighting type
 			} else if (lightingEditOptions[lightingEditOptionIndex] == "preset light" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 				if (lightingTypeOptions[lightingTypeOptionIndex] == "directional" && preset.getDirectionalLights().size() > 0)	{
 					if (--presetDirectionalLightIndex > preset.getDirectionalLights().size() - 1) presetDirectionalLightIndex = preset.getDirectionalLights().size() - 1;
-					light = preset.getDirectionalLights()[presetDirectionalLightIndex];
 					std::cout << "selected preset directional light: " << light.name << std::endl;
 				}else if (lightingTypeOptions[lightingTypeOptionIndex] == "point" && preset.getPointLights().size() > 0) {
 					if (--presetPointLightIndex > preset.getPointLights().size() - 1) presetPointLightIndex = preset.getPointLights().size() - 1;
 					pointLight = preset.getPointLights()[presetPointLightIndex];
 					pointLight.position = getPersonPos();
-					pointLights.push_back(pointLight);
-					// edit the lighting shader to reflect the number of point lights
-					Utility::replaceLineInFile("shaders/lighting.glfs", 7, "#define NR_POINT_LIGHTS " + std::to_string(pointLights.size()));
 					std::cout << "selected preset point light: " << pointLight.name << std::endl;
 				}
+			// switches among preset lights by scrolling up and lighting type
 			} else if (lightingEditOptions[lightingEditOptionIndex] == "preset light" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 				if (lightingTypeOptions[lightingTypeOptionIndex] == "directional" && preset.getDirectionalLights().size() > 0)	{
 					if (++presetDirectionalLightIndex > preset.getDirectionalLights().size() - 1) presetDirectionalLightIndex = preset.getDirectionalLights().size() - 1;
-					light = preset.getDirectionalLights()[presetDirectionalLightIndex];
 					std::cout << "selected preset directional light: " << light.name << std::endl;
 				}else if (lightingTypeOptions[lightingTypeOptionIndex] == "point" && preset.getPointLights().size() > 0) {
 					if (++presetPointLightIndex > preset.getPointLights().size() - 1) presetPointLightIndex = preset.getPointLights().size() - 1;
 					pointLight = preset.getPointLights()[presetPointLightIndex];
 					pointLight.position = getPersonPos();
+					std::cout << "selected preset point light: " << pointLight.name << std::endl;
+				}
+			}
+			// places a light in the scene
+			if (keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] && !prevKeysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
+				if (lightingTypeOptions[lightingTypeOptionIndex] == "directional" && preset.getDirectionalLights().size() > 0) {
+					light = preset.getDirectionalLights()[presetDirectionalLightIndex];
+					std::cout << "placed preset directional light: " << light.name << std::endl;
+				} else if (lightingTypeOptions[lightingTypeOptionIndex] == "point" && preset.getPointLights().size() > 0) {
 					pointLights.push_back(pointLight);
 					// edit the lighting shader to reflect the number of point lights
 					Utility::replaceLineInFile("shaders/lighting.glfs", 7, "#define NR_POINT_LIGHTS " + std::to_string(pointLights.size()));
-					std::cout << "selected preset point light: " << pointLight.name << std::endl;
+					std::cout << "placed preset point light: " << pointLight.name << std::endl;
 				}
 			}
 			return;

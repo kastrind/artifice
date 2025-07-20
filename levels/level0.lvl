@@ -1,5 +1,5 @@
 # player position positionX positionY positionZ
-player_position,-0.85802,-0.883743,3.42736
+player_position,1.06714,-0.50271,3.52593
 # light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity
 light,0.1,-0.9,2.60431,128,128,128,0.3,0.5,0.9
 # point light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity constant linear quadratic
