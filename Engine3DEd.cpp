@@ -37,6 +37,18 @@ void Engine3D::addModel(float editingWidth, float editingHeight, float editingDe
 	}
 }
 
+void Engine3D::addLightHandleModel(unsigned long id, glm::vec3 position) {
+	model m;
+	rectangle rectangle(0.01f, 0.01f, 0.0f, 0.0f, 0.0f);
+	model mdl(id+1, modelPointsCnt, "transparent", position, rectangle, false);
+	m = mdl;
+	modelPointsCnt += m.modelMesh.tris.size() * 3;
+	std::cout << "about to place light handle model with id = " << m.id << std::endl;
+	mtx.lock();
+	ptrModelsToRender.push_back(std::make_shared<model>(m));
+	mtx.unlock();
+}
+
 void Engine3D::addModel(model& mdl)
 {
 	mdl.id = getTimeSinceEpoch();
@@ -151,7 +163,6 @@ void Engine3D::edit(float elapsedTime)
 				}else if (lightingTypeOptions[lightingTypeOptionIndex] == "point" && preset.getPointLights().size() > 0) {
 					if (++presetPointLightIndex > preset.getPointLights().size() - 1) presetPointLightIndex = preset.getPointLights().size() - 1;
 					pointLight = preset.getPointLights()[presetPointLightIndex];
-					pointLight.position = getPersonPos();
 					std::cout << "selected preset point light: " << pointLight.name << std::endl;
 				}
 			}
@@ -161,10 +172,14 @@ void Engine3D::edit(float elapsedTime)
 					light = preset.getDirectionalLights()[presetDirectionalLightIndex];
 					std::cout << "placed preset directional light: " << light.name << std::endl;
 				} else if (lightingTypeOptions[lightingTypeOptionIndex] == "point" && preset.getPointLights().size() > 0) {
+					pointLight.position = personPos + originalCollidingDistanceH * personFront;
 					pointLights.push_back(pointLight);
 					// edit the lighting shader to reflect the number of point lights
 					Utility::replaceLineInFile("shaders/lighting.glfs", 7, "#define NR_POINT_LIGHTS " + std::to_string(pointLights.size()));
 					std::cout << "placed preset point light: " << pointLight.name << std::endl;
+					unsigned long id = getTimeSinceEpoch();
+					addLightHandleModel(id, pointLight.position);
+					updateVerticesFlag = true;
 				}
 			}
 			return;
