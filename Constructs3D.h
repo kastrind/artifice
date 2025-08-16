@@ -249,19 +249,13 @@ typedef struct rectangle : public shape
 
 		inline void toTriangles() override {
 			//CCW WINDING ORDER
-			// 2---1
-			// \   |
-			//  \  |
-			//   \ |
-			//     3
-			triangle tri1{ { {p.x, p.y + h, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f} }, { {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f} } };
-			//ALWAYS CCW WINDING ORDER
-			// 1
-			// | \ 
-			// |  \ 
-			// |   \ 
-			// 2--- 3
-			triangle tri2{ { {p.x, p.y + h, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f},     {p.x, p.y, p.z, 1.0f} },     { {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f} } };
+			// 1: (0,1) ┌─────┐ 2: (1,1)
+			//          │   / │
+			//          │  /  │
+			//          │ /   │
+			// 3: (0,0) └─────┘ (1,0)
+			triangle tri1{ { {p.x, p.y + h, p.z, 1.0f}, {p.x + w, p.y + h, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f} }, { {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} } };
+			triangle tri2{ { {p.x, p.y + h, p.z, 1.0f}, {p.x + w, p.y, p.z, 1.0f},     {p.x, p.y, p.z, 1.0f} },     { {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f} } };
 			tri1.calcTangent(); tri2.calcTangent();
 			triangles.push_back(tri1);
 			triangles.push_back(tri2);
