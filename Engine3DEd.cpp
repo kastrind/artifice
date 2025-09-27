@@ -40,7 +40,7 @@ void Engine3D::addModel(float editingWidth, float editingHeight, float editingDe
 void Engine3D::addLightHandleModel(unsigned long id, glm::vec3 position) {
 	model m;
 	rectangle rectangle(0.01f, 0.01f, 0.0f, 0.0f, 0.0f);
-	model mdl(id+1, modelPointsCnt, "transparent", position, rectangle, false);
+	model mdl(id, modelPointsCnt, "transparent", position, rectangle, false);
 	m = mdl;
 	modelPointsCnt += m.modelMesh.tris.size() * 3;
 	std::cout << "about to place light handle model with id = " << m.id << std::endl;
@@ -120,6 +120,22 @@ void Engine3D::edit(float elapsedTime)
 		//bool* keysPressed = eventController->getKeysPressed();
 		bool isEdited = false;
 
+		// SAVE level on LCTRL + S release
+		if (prevKeysPressed[SupportedKeys::S] && keysPressed[SupportedKeys::S] == false && keysPressed[SupportedKeys::LEFT_CTRL]) {
+			mtx.lock();
+			std::cout << "SAVING!" << std::endl;
+			if (level) {
+				level->light = light;
+				level->pointLights = pointLights;
+				level->modelPointsCnt = modelPointsCnt;
+				level->cubePointsCnt = cubePointsCnt;
+				level->models = ptrModelsToRender;
+				level->playerPosition = getPersonPos();
+				level->save();
+			}
+			mtx.unlock();
+		}
+
 		if (prevKeysPressed[SupportedKeys::L] && !keysPressed[SupportedKeys::L]) {
 			isLightingEditingModeEnabled = !isLightingEditingModeEnabled;
 			if (isLightingEditingModeEnabled) std::cout << "Lighting editing mode enabled" << std::endl;
@@ -158,10 +174,10 @@ void Engine3D::edit(float elapsedTime)
 			// switches among preset lights by scrolling up and lighting type
 			} else if (lightingEditOptions[lightingEditOptionIndex] == "preset light" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 				if (lightingTypeOptions[lightingTypeOptionIndex] == "directional" && preset.getDirectionalLights().size() > 0)	{
-					if (++presetDirectionalLightIndex > preset.getDirectionalLights().size() - 1) presetDirectionalLightIndex = preset.getDirectionalLights().size() - 1;
+					if (++presetDirectionalLightIndex > preset.getDirectionalLights().size() - 1) presetDirectionalLightIndex = 0;
 					std::cout << "selected preset directional light: " << light.name << std::endl;
 				}else if (lightingTypeOptions[lightingTypeOptionIndex] == "point" && preset.getPointLights().size() > 0) {
-					if (++presetPointLightIndex > preset.getPointLights().size() - 1) presetPointLightIndex = preset.getPointLights().size() - 1;
+					if (++presetPointLightIndex > preset.getPointLights().size() - 1) presetPointLightIndex = 0;
 					pointLight = preset.getPointLights()[presetPointLightIndex];
 					std::cout << "selected preset point light: " << pointLight.name << std::endl;
 				}
@@ -172,12 +188,13 @@ void Engine3D::edit(float elapsedTime)
 					light = preset.getDirectionalLights()[presetDirectionalLightIndex];
 					std::cout << "placed preset directional light: " << light.name << std::endl;
 				} else if (lightingTypeOptions[lightingTypeOptionIndex] == "point" && preset.getPointLights().size() > 0) {
+					unsigned long id = getTimeSinceEpoch();
+					pointLight.id = id;
 					pointLight.position = personPos + originalCollidingDistanceH * personFront;
 					pointLights.push_back(pointLight);
 					// edit the lighting shader to reflect the number of point lights
 					Utility::replaceLineInFile("shaders/lighting.glfs", 7, "#define NR_POINT_LIGHTS " + std::to_string(pointLights.size()));
 					std::cout << "placed preset point light: " << pointLight.name << std::endl;
-					unsigned long id = getTimeSinceEpoch();
 					addLightHandleModel(id, pointLight.position);
 					updateVerticesFlag = true;
 				}
@@ -317,19 +334,6 @@ void Engine3D::edit(float elapsedTime)
 			std::cout << "copying model: " << copyingModel->id << std::endl;
 			mtx.unlock();
 
-		} else if (prevKeysPressed[SupportedKeys::S] && keysPressed[SupportedKeys::S] == false && keysPressed[SupportedKeys::LEFT_CTRL]) {
-			mtx.lock();
-			std::cout << "SAVING!" << std::endl;
-			if (level) {
-				level->light = light;
-				level->pointLights = pointLights;
-				level->modelPointsCnt = modelPointsCnt;
-				level->cubePointsCnt = cubePointsCnt;
-				level->models = ptrModelsToRender;
-				level->playerPosition = getPersonPos();
-				level->save();
-			}
-			mtx.unlock();
 		}
 
 		if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
@@ -441,6 +445,17 @@ void Engine3D::edit(float elapsedTime)
 			mtx.unlock();
 
 		} else if (deletingModel != nullptr && deletingModel->removeFlag==false && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK]==false) {
+			if (!deletingModel->isSolid && deletingModel->modelMesh.shape == shapetype::RECTANGLE && deletingModel->texture == "transparent") {
+				std::cout << "removed light handle model" << std::endl;
+				for (auto it = pointLights.begin(); it != pointLights.end(); ++it) {
+					std::cout << "point light has id = " << it->id << std::endl;
+					if ( it->id == deletingModel->id ) {
+						pointLights.erase(it);
+						std::cout << "also removed point light with id = " << deletingModel->id << std::endl;
+						break;
+					}
+				}
+			}
 			removeModel(deletingModel);
 			deletingModel.reset();
 			isEdited = true;

@@ -22,10 +22,14 @@ void Level::save(std::string levelPath)
 		f << "# light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity" << std::endl;
 		f << "light," << light.direction.x << "," << light.direction.y << "," << light.direction.z << "," << light.color.r * 255 << "," << light.color.g * 255 << "," << light.color.b * 255 << "," << light.ambientIntensity << "," << light.diffuseIntensity << "," << light.specularIntensity << std::endl;
 
-		f << "# point light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity constant linear quadratic" << std::endl;
+		f << "# id point light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity constant linear quadratic" << std::endl;
 		for (PointLight& pl : pointLights)
 		{
-			f << "point_light," << pl.position.x << "," << pl.position.y << "," << pl.position.z << "," << pl.color.r * 255 << "," << pl.color.g * 255 << "," << pl.color.b * 255 << "," << pl.diffuseIntensity << "," << pl.specularIntensity << "," << pl.constant << "," << pl.linear << "," << pl.quadratic << std::endl;
+			// point lights without id are ignored, like the unlit one which is added if no point lights exist
+			if (pl.id == 0) {
+				continue;
+			}
+			f << pl.id << "," << "point_light," << pl.position.x << "," << pl.position.y << "," << pl.position.z << "," << pl.color.r * 255 << "," << pl.color.g * 255 << "," << pl.color.b * 255 << "," << pl.diffuseIntensity << "," << pl.specularIntensity << "," << pl.constant << "," << pl.linear << "," << pl.quadratic << std::endl;
 		}
 
 		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ" << std::endl;
@@ -165,21 +169,29 @@ void Level::load(std::string levelPath)
 				light.ambientIntensity = std::stof(tokens[7]);
 				light.diffuseIntensity = std::stof(tokens[8]);
 				light.specularIntensity = std::stof(tokens[9]);
-			}else if (tokens[0] == "point_light") {
-				glm::vec3 position = glm::vec3(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3]));
-				glm::vec3 color = glm::vec3(std::stoi(tokens[4])/255.0f, std::stoi(tokens[5])/255.0f, std::stoi(tokens[6])/255.0f);
-				float diffuseIntensity = std::stof(tokens[7]);
-				float specularIntensity = std::stof(tokens[8]);
-				float constant = std::stof(tokens[9]);
-				float linear = std::stof(tokens[10]);
-				float quadratic = std::stof(tokens[11]);
+			}else if (tokens[1] == "point_light") {
+				id = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
+				glm::vec3 position = glm::vec3(std::stof(tokens[2]), std::stof(tokens[3]), std::stof(tokens[4]));
+				glm::vec3 color = glm::vec3(std::stoi(tokens[5])/255.0f, std::stoi(tokens[6])/255.0f, std::stoi(tokens[7])/255.0f);
+				float diffuseIntensity = std::stof(tokens[8]);
+				float specularIntensity = std::stof(tokens[9]);
+				float constant = std::stof(tokens[10]);
+				float linear = std::stof(tokens[11]);
+				float quadratic = std::stof(tokens[12]);
 				PointLight pointLight(position, constant, linear, quadratic);
+				pointLight.id = id;
 				pointLight.color = color;
 				pointLight.diffuseIntensity = diffuseIntensity;
 				pointLight.specularIntensity = specularIntensity;
 				pointLights.push_back(pointLight);
 			}
 		}
+	}
+	// if no point lights,
+	if (pointLights.size() == 0) {
+		// add one unlit point light if none exists, so that the lighting shader compiles, as it expects at least one point light
+		PointLight pointLight(glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.0f);
+		pointLights.push_back(pointLight);
 	}
 	// edit the lighting shader to reflect the number of point lights
 	Utility::replaceLineInFile("shaders/lighting.glfs", 7, "#define NR_POINT_LIGHTS " + std::to_string(pointLights.size()));

@@ -5,7 +5,7 @@ layout (location = 1) out vec4 FragColor; // final color
 in vec2 TexCoord;
 
 // this directive must always be on this line number (8), to let the engine edit this line and set the required number of point lights on runtime
-#define NR_POINT_LIGHTS 5
+#define NR_POINT_LIGHTS 1
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
@@ -97,6 +97,10 @@ vec3 calcPointLights(PointLight pointLight, vec3 normal, vec3 FragPos, vec3 view
 {
 	// save lighting calculations if fragment is not within the light's cutoff distance
 	if (length(pointLight.position - FragPos) > pointLight.cutoffDistance) {
+		return vec3(0.0, 0.0, 0.0);
+	}
+	// avoid division by zero
+	if (pointLight.constant == 0.0 && pointLight.linear == 0.0 && pointLight.quadratic == 0.0) {
 		return vec3(0.0, 0.0, 0.0);
 	}
 	
