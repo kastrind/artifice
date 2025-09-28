@@ -273,6 +273,7 @@ class Engine3D
 		glm::vec3 lightPos;
 
 		Light light;
+		Light selectedLight;
 
 		PointLight pointLight;
 

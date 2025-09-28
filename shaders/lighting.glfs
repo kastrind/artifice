@@ -5,7 +5,7 @@ layout (location = 1) out vec4 FragColor; // final color
 in vec2 TexCoord;
 
 // this directive must always be on this line number (8), to let the engine edit this line and set the required number of point lights on runtime
-#define NR_POINT_LIGHTS 32
+#define NR_POINT_LIGHTS 28
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;

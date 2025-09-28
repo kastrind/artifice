@@ -167,7 +167,8 @@ void Engine3D::edit(float elapsedTime)
 			} else if (lightingEditOptions[lightingEditOptionIndex] == "preset light" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 				if (lightingTypeOptions[lightingTypeOptionIndex] == "directional" && preset.getDirectionalLights().size() > 0)	{
 					if (--presetDirectionalLightIndex > preset.getDirectionalLights().size() - 1) presetDirectionalLightIndex = preset.getDirectionalLights().size() - 1;
-					std::cout << "selected preset directional light: " << light.name << std::endl;
+					selectedLight = preset.getDirectionalLights()[presetDirectionalLightIndex];
+					std::cout << "selected preset directional light: " << selectedLight.name << std::endl;
 				}else if (lightingTypeOptions[lightingTypeOptionIndex] == "point" && preset.getPointLights().size() > 0) {
 					if (--presetPointLightIndex > preset.getPointLights().size() - 1) presetPointLightIndex = preset.getPointLights().size() - 1;
 					pointLight = preset.getPointLights()[presetPointLightIndex];
@@ -178,14 +179,17 @@ void Engine3D::edit(float elapsedTime)
 			} else if (lightingEditOptions[lightingEditOptionIndex] == "preset light" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 				if (lightingTypeOptions[lightingTypeOptionIndex] == "directional" && preset.getDirectionalLights().size() > 0)	{
 					if (++presetDirectionalLightIndex > preset.getDirectionalLights().size() - 1) presetDirectionalLightIndex = 0;
-					std::cout << "selected preset directional light: " << light.name << std::endl;
+					selectedLight = preset.getDirectionalLights()[presetDirectionalLightIndex];
+					std::cout << "selected preset directional light: " << selectedLight.name << std::endl;
 				}else if (lightingTypeOptions[lightingTypeOptionIndex] == "point" && preset.getPointLights().size() > 0) {
 					if (++presetPointLightIndex > preset.getPointLights().size() - 1) presetPointLightIndex = 0;
 					pointLight = preset.getPointLights()[presetPointLightIndex];
 					std::cout << "selected preset point light: " << pointLight.name << std::endl;
 				}
 			}
-			if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
+			// if lighting type is point or spot and left mouse clicked, place light handle model in the scene
+			if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] &&
+				(lightingTypeOptions[lightingTypeOptionIndex] == "point" || lightingTypeOptions[lightingTypeOptionIndex] == "spot")) {
 				glm::vec3 position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
 				unsigned long id = getTimeSinceEpoch();
 				addLightHandleModel(id, position);
@@ -193,13 +197,13 @@ void Engine3D::edit(float elapsedTime)
 				personSpeedFactor /= 100;
 				isEdited = true;
 			}
-			// there is a spawned model about to be placed
+			// if there is a spawned model about to be placed
 			if (editingModel != nullptr) {
-				//real-time update of position
+				//real-time update of position and rotation
 				editingModel->position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
 				editingModel->rotate(0.0f, glm::atan(personFront.x, personFront.z), 0.0f); // yaw to face the person front direction
 			}
-			// places a light in the scene
+			// if left mouse released, place a point (TODO: spot too) light in the scene
 			if (editingModel != nullptr && !keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
 				if (lightingTypeOptions[lightingTypeOptionIndex] == "point" && preset.getPointLights().size() > 0) {
 					pointLight.id = editingModel->id;
@@ -213,18 +217,54 @@ void Engine3D::edit(float elapsedTime)
 					editingModel = nullptr;
 					isEdited = true;
 					personSpeedFactor *= 100;
-					std::cout << "placed preset light: " << pointLight.name << std::endl;
+					std::cout << "placed preset point light: " << pointLight.name << std::endl;
 				}
 			}
 			// places a directional light in the scene
 			if (keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] && !prevKeysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
 				if (lightingTypeOptions[lightingTypeOptionIndex] == "directional" && preset.getDirectionalLights().size() > 0) {
-					light = preset.getDirectionalLights()[presetDirectionalLightIndex];
+					light = selectedLight;
 					std::cout << "placed preset directional light: " << light.name << std::endl;
 				}
 			}
-			return;
 		}
+
+		// right mouse click to identify model in focus to be deleted
+		if (deletingModel == nullptr && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] && modelsInFocus.size() > 0) {
+			mtx.lock();
+			auto modelInFocus = *(modelsInFocus.begin());
+			deletingModel = modelInFocus;
+			mtx.unlock();
+		// releases right mouse click to delete the model in focus
+		} else if (deletingModel != nullptr && deletingModel->removeFlag==false && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK]==false) {
+			// if lighting edit mode is enabled and the deleted model is a light handle, remove point light with the same id
+			if (isLightingEditingModeEnabled && !deletingModel->isSolid && deletingModel->modelMesh.shape == shapetype::RECTANGLE && deletingModel->texture == "transparent") {
+				for (auto it = pointLights.begin(); it != pointLights.end(); ++it) {
+					if ( it->id == deletingModel->id ) {
+						pointLights.erase(it);
+						std::cout << "removed point light with id = " << deletingModel->id << std::endl;
+						removeModel(deletingModel);
+						deletingModel.reset();
+						isEdited = true;
+						std::cout << "also removed light handle model" << std::endl;
+						break;
+					}
+				}
+			}else if (!isLightingEditingModeEnabled) {
+				if (!deletingModel->isSolid && deletingModel->modelMesh.shape == shapetype::RECTANGLE && deletingModel->texture == "transparent") {
+					std::cout << "Cannot delete light handle model in normal editing mode. Press L to toggle lighting editing mode." << std::endl;
+				}else {
+				removeModel(deletingModel);
+				isEdited = true;
+				}
+				deletingModel.reset();
+			}else {
+				std::cout << "Cannot delete model that is not a light handle in lighting editing mode. Press L to toggle lighting editing mode." << std::endl;
+				deletingModel.reset();
+			}
+		}
+
+		if (isLightingEditingModeEnabled) return;
 
 		// pressing LCTRL + mouse wheel up/down cycles through edit options
 		if (keysPressed[SupportedKeys::LEFT_CTRL] && eventController->scrollDown(keysPressed, prevKeysPressed)) {
@@ -460,28 +500,6 @@ void Engine3D::edit(float elapsedTime)
 			editingModel = nullptr;
 			isEdited = true;
 			std::cout << "ended model placement" << std::endl;
-
-		// right mouse click deletes the model currently in focus
-		} else if (deletingModel == nullptr && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] && modelsInFocus.size() > 0) {
-			mtx.lock();
-			auto modelInFocus = *(modelsInFocus.begin());
-			deletingModel = modelInFocus;
-			mtx.unlock();
-
-		} else if (deletingModel != nullptr && deletingModel->removeFlag==false && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK]==false) {
-			if (!deletingModel->isSolid && deletingModel->modelMesh.shape == shapetype::RECTANGLE && deletingModel->texture == "transparent") {
-				std::cout << "removed light handle model" << std::endl;
-				for (auto it = pointLights.begin(); it != pointLights.end(); ++it) {
-					if ( it->id == deletingModel->id ) {
-						pointLights.erase(it);
-						std::cout << "also removed point light with id = " << deletingModel->id << std::endl;
-						break;
-					}
-				}
-			}
-			removeModel(deletingModel);
-			deletingModel.reset();
-			isEdited = true;
 		}
 		updateVerticesFlag = isEdited;
 	}
