@@ -382,7 +382,7 @@ class Engine3D
 
 		void addModel(model& mdl);
 
-		void addLightHandleModel(unsigned long id, glm::vec3 position);
+		void addLightHandleModel(unsigned long id, glm::vec3 position, glm::mat4 rotationMatrix = glm::mat4(1.0f));
 
 		void removeModel(std::shared_ptr<model> m);
 

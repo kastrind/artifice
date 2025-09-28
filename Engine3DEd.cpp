@@ -37,15 +37,18 @@ void Engine3D::addModel(float editingWidth, float editingHeight, float editingDe
 	}
 }
 
-void Engine3D::addLightHandleModel(unsigned long id, glm::vec3 position) {
+void Engine3D::addLightHandleModel(unsigned long id, glm::vec3 position, glm::mat4 rotationMatrix) {
 	model m;
 	rectangle rectangle(0.01f, 0.01f, 0.0f, 0.0f, 0.0f);
 	model mdl(id, modelPointsCnt, "transparent", position, rectangle, false);
+	mdl.rotationMatrix = rotationMatrix;
 	m = mdl;
 	modelPointsCnt += m.modelMesh.tris.size() * 3;
 	std::cout << "about to place light handle model with id = " << m.id << std::endl;
 	mtx.lock();
 	ptrModelsToRender.push_back(std::make_shared<model>(m));
+	editingModel = ptrModelsToRender.back();
+	std::cout << "placed model has sn = " << editingModel->sn << std::endl;
 	mtx.unlock();
 }
 
@@ -182,21 +185,42 @@ void Engine3D::edit(float elapsedTime)
 					std::cout << "selected preset point light: " << pointLight.name << std::endl;
 				}
 			}
+			if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
+				glm::vec3 position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
+				unsigned long id = getTimeSinceEpoch();
+				addLightHandleModel(id, position);
+				updateVerticesFlag = true;
+				personSpeedFactor /= 100;
+				isEdited = true;
+			}
+			// there is a spawned model about to be placed
+			if (editingModel != nullptr) {
+				//real-time update of position
+				editingModel->position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
+				editingModel->rotate(0.0f, glm::atan(personFront.x, personFront.z), 0.0f); // yaw to face the person front direction
+			}
 			// places a light in the scene
+			if (editingModel != nullptr && !keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
+				if (lightingTypeOptions[lightingTypeOptionIndex] == "point" && preset.getPointLights().size() > 0) {
+					pointLight.id = editingModel->id;
+					pointLight.position = editingModel->position;
+					pointLights.push_back(pointLight);
+					// edit the lighting shader to reflect the number of point lights
+					Utility::replaceLineInFile("shaders/lighting.glfs", 7, "#define NR_POINT_LIGHTS " + std::to_string(pointLights.size()));
+					removeModel(ptrModelsToRender.back());
+					editingModel->rotate(0.0f, glm::atan(personFront.x, personFront.z), 0.0f);
+					addLightHandleModel(editingModel->id, editingModel->position, editingModel->rotationMatrix);
+					editingModel = nullptr;
+					isEdited = true;
+					personSpeedFactor *= 100;
+					std::cout << "placed preset light: " << pointLight.name << std::endl;
+				}
+			}
+			// places a directional light in the scene
 			if (keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] && !prevKeysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
 				if (lightingTypeOptions[lightingTypeOptionIndex] == "directional" && preset.getDirectionalLights().size() > 0) {
 					light = preset.getDirectionalLights()[presetDirectionalLightIndex];
 					std::cout << "placed preset directional light: " << light.name << std::endl;
-				} else if (lightingTypeOptions[lightingTypeOptionIndex] == "point" && preset.getPointLights().size() > 0) {
-					unsigned long id = getTimeSinceEpoch();
-					pointLight.id = id;
-					pointLight.position = personPos + originalCollidingDistanceH * personFront;
-					pointLights.push_back(pointLight);
-					// edit the lighting shader to reflect the number of point lights
-					Utility::replaceLineInFile("shaders/lighting.glfs", 7, "#define NR_POINT_LIGHTS " + std::to_string(pointLights.size()));
-					std::cout << "placed preset point light: " << pointLight.name << std::endl;
-					addLightHandleModel(id, pointLight.position);
-					updateVerticesFlag = true;
 				}
 			}
 			return;
@@ -448,7 +472,6 @@ void Engine3D::edit(float elapsedTime)
 			if (!deletingModel->isSolid && deletingModel->modelMesh.shape == shapetype::RECTANGLE && deletingModel->texture == "transparent") {
 				std::cout << "removed light handle model" << std::endl;
 				for (auto it = pointLights.begin(); it != pointLights.end(); ++it) {
-					std::cout << "point light has id = " << it->id << std::endl;
 					if ( it->id == deletingModel->id ) {
 						pointLights.erase(it);
 						std::cout << "also removed point light with id = " << deletingModel->id << std::endl;
