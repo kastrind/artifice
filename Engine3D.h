@@ -279,6 +279,10 @@ class Engine3D
 
 		std::vector<PointLight> pointLights;
 
+		SpotLight spotLight;
+
+		std::vector<SpotLight> spotLights;
+
 		//editor user mode specific
 		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX", "rotationY", "rotationZ", "texture", "isSolid", "collationHeight", "collationWidth"};
 		unsigned short editOptionIndex = 0;
@@ -288,6 +292,7 @@ class Engine3D
 		unsigned short lightingTypeOptionIndex = 0;
 		unsigned short presetDirectionalLightIndex = 0;
 		unsigned short presetPointLightIndex = 0;
+		unsigned short presetSpotLightIndex = 0;
 		float originalCollidingDistanceH = 0;
 		float originalCollidingDistanceV = 0;
 		unsigned int collationHeight = 1;

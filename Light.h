@@ -66,8 +66,14 @@ class SpotLight : public PointLight {
 	public:
 		SpotLight() { name = "spot"; }
 
-		float cutOff;
+		SpotLight(glm::vec3 position, glm::vec3 direction, float constant, float linear, float quadratic, float cutoff, float outerCutoff)
+					: PointLight(position, constant, linear, quadratic), cutoff(cutoff), outerCutoff(outerCutoff) {
+			name = "spot";
+			this->direction = direction;
+		}
 
-		float outerCutOff;
+		float cutoff = 15.0f;
+
+		float outerCutoff = 20.0f;
 
 };

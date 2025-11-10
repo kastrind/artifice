@@ -174,6 +174,11 @@ void Engine3D::edit(float elapsedTime)
 					pointLight = preset.getPointLights()[presetPointLightIndex];
 					pointLight.position = getPersonPos();
 					std::cout << "selected preset point light: " << pointLight.name << std::endl;
+				}else if (lightingTypeOptions[lightingTypeOptionIndex] == "spot" && preset.getSpotLights().size() > 0) {
+					if (--presetSpotLightIndex > preset.getSpotLights().size() - 1) presetSpotLightIndex = preset.getSpotLights().size() - 1;
+					spotLight = preset.getSpotLights()[presetSpotLightIndex];
+					spotLight.position = getPersonPos();
+					std::cout << "selected preset spot light: " << spotLight.name << std::endl;
 				}
 			// switches among preset lights by scrolling up and lighting type
 			} else if (lightingEditOptions[lightingEditOptionIndex] == "preset light" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
@@ -185,6 +190,10 @@ void Engine3D::edit(float elapsedTime)
 					if (++presetPointLightIndex > preset.getPointLights().size() - 1) presetPointLightIndex = 0;
 					pointLight = preset.getPointLights()[presetPointLightIndex];
 					std::cout << "selected preset point light: " << pointLight.name << std::endl;
+				}else if (lightingTypeOptions[lightingTypeOptionIndex] == "spot" && preset.getSpotLights().size() > 0) {
+					if (++presetSpotLightIndex > preset.getSpotLights().size() - 1) presetSpotLightIndex = 0;
+					spotLight = preset.getSpotLights()[presetSpotLightIndex];
+					std::cout << "selected preset spot light: " << spotLight.name << std::endl;
 				}
 			}
 			// if lighting type is point or spot and left mouse clicked, place light handle model in the scene

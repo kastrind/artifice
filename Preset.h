@@ -51,10 +51,12 @@ class Preset
 					std::istringstream ss(linestring);
 					std::string token;
 					unsigned int i = -1;
-					std::string tokens[11];
+					std::string tokens[12];
 					while(std::getline(ss, token, ','))
 					{
-						if ( (i == 11 && tokens[0] == "directional") || (i == 10 && tokens[0] == "point")) break;
+						if ( (i == 11 && tokens[0] == "directional") ||
+							 (i == 10 && tokens[0] == "point") ||
+							 (i == 12 && tokens[0] == "spot")) break;
 						tokens[++i] = token;
 					}
 
@@ -86,6 +88,22 @@ class Preset
 						pointLight.constant = std::stof(tokens[7]);
 						pointLight.linear = std::stof(tokens[8]);
 						pointLight.quadratic = std::stof(tokens[9]);
+					}
+					else if (tokens[0] == "spot")
+					{
+						SpotLight spotLight = SpotLight();
+						spotLight.name = tokens[1];
+						spotLights.push_back(spotLight);
+						spotLight.color.r = std::stof(tokens[2]) / 255.0f;
+						spotLight.color.g = std::stof(tokens[3]) / 255.0f;
+						spotLight.color.b = std::stof(tokens[4]) / 255.0f;
+						spotLight.diffuseIntensity = std::stof(tokens[5]);
+						spotLight.specularIntensity = std::stof(tokens[6]);
+						spotLight.constant = std::stof(tokens[7]);
+						spotLight.linear = std::stof(tokens[8]);
+						spotLight.quadratic = std::stof(tokens[9]);
+						spotLight.cutoff = std::stof(tokens[10]);
+						spotLight.outerCutoff = std::stof(tokens[11]);
 					}
 				}
 			}
