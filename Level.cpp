@@ -31,6 +31,15 @@ void Level::save(std::string levelPath)
 			}
 			f << pl.id << "," << "point_light," << pl.position.x << "," << pl.position.y << "," << pl.position.z << "," << pl.color.r * 255 << "," << pl.color.g * 255 << "," << pl.color.b * 255 << "," << pl.diffuseIntensity << "," << pl.specularIntensity << "," << pl.constant << "," << pl.linear << "," << pl.quadratic << std::endl;
 		}
+		f << "# id spot light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity constant linear quadratic dirX dirY dirZ cutoff outerCutoff" << std::endl;
+		for (SpotLight& sl : spotLights)
+		{
+			// spot lights without id are ignored, like the unlit one which is added if no spot lights exist
+			if (sl.id == 0) {
+				continue;
+			}
+			f << sl.id << "," << "spot_light," << sl.position.x << "," << sl.position.y << "," << sl.position.z << "," << sl.color.r * 255 << "," << sl.color.g * 255 << "," << sl.color.b * 255 << "," << sl.diffuseIntensity << "," << sl.specularIntensity << "," << sl.constant << "," << sl.linear << "," << sl.quadratic << "," << sl.direction.x << "," << sl.direction.y << "," << sl.direction.z << "," << sl.cutoff << "," << sl.outerCutoff << std::endl;
+		}
 
 		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ" << std::endl;
 		for (auto &ptrModel : models)
@@ -184,6 +193,24 @@ void Level::load(std::string levelPath)
 				pointLight.diffuseIntensity = diffuseIntensity;
 				pointLight.specularIntensity = specularIntensity;
 				pointLights.push_back(pointLight);
+			}else if (tokens[1] == "spot_light") {
+				id = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
+				glm::vec3 position = glm::vec3(std::stof(tokens[2]), std::stof(tokens[3]), std::stof(tokens[4]));
+				glm::vec3 color = glm::vec3(std::stoi(tokens[5])/255.0f, std::stoi(tokens[6])/255.0f, std::stoi(tokens[7])/255.0f);
+				float diffuseIntensity = std::stof(tokens[8]);
+				float specularIntensity = std::stof(tokens[9]);
+				float constant = std::stof(tokens[10]);
+				float linear = std::stof(tokens[11]);
+				float quadratic = std::stof(tokens[12]);
+				glm::vec3 direction = glm::vec3(std::stof(tokens[13]), std::stof(tokens[14]), std::stof(tokens[15]));
+				float cutoff = std::stof(tokens[16]);
+				float outerCutoff = std::stof(tokens[17]);
+				SpotLight spotLight(position, direction, constant, linear, quadratic, cutoff, outerCutoff);
+				spotLight.id = id;
+				spotLight.color = color;
+				spotLight.diffuseIntensity = diffuseIntensity;
+				spotLight.specularIntensity = specularIntensity;
+				spotLights.push_back(spotLight);
 			}
 		}
 	}

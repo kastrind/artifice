@@ -723,6 +723,7 @@ void Engine3D::render()
 	lightingShader.setFloat("light.ambientIntensity", light.ambientIntensity);
 	lightingShader.setFloat("light.diffuseIntensity", light.diffuseIntensity);
 	lightingShader.setFloat("light.specularIntensity", light.specularIntensity);
+
 	unsigned long pointLightCounter = 0;
 	for (PointLight& pl : pointLights)
 	{
@@ -735,6 +736,7 @@ void Engine3D::render()
 		lightingShader.setFloat("pointLights[" + std::to_string(pointLightCounter) + "].quadratic", pl.quadratic);
 		lightingShader.setFloat("pointLights[" + std::to_string(pointLightCounter++) + "].cutoffDistance", pl.cutoffDistance);
 	}
+	//TODO: remove single point light after testing
 	lightingShader.setVec3("pointLight.position", pointLight.position);
 	lightingShader.setVec3("pointLight.color", pointLight.color);
 	lightingShader.setFloat("pointLight.diffuseIntensity", pointLight.diffuseIntensity);
@@ -742,6 +744,23 @@ void Engine3D::render()
 	lightingShader.setFloat("pointLight.constant", pointLight.constant);
 	lightingShader.setFloat("pointLight.linear", pointLight.linear);
 	lightingShader.setFloat("pointLight.quadratic", pointLight.quadratic);
+
+	unsigned long spotLightCounter = 0;
+	for (SpotLight& sl : spotLights)
+	{
+		lightingShader.setVec3("spotLights[" + std::to_string(spotLightCounter) + "].position", sl.position);
+		lightingShader.setVec3("spotLights[" + std::to_string(spotLightCounter) + "].direction", sl.direction);
+		lightingShader.setVec3("spotLights[" + std::to_string(spotLightCounter) + "].color", sl.color);
+		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].diffuseIntensity", sl.diffuseIntensity);
+		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].specularIntensity", sl.specularIntensity);
+		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].constant", sl.constant);
+		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].linear", sl.linear);
+		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].quadratic", sl.quadratic);
+		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].cutoffDistance", sl.cutoffDistance);
+		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].cutoff", sl.cutoff);
+		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter++) + "].outerCutoff", sl.outerCutoff);
+	}
+
 	lightingShader.setInt("gPosition", 0);
 	lightingShader.setInt("gNormal", 1);
 	lightingShader.setInt("gAlbedo", 2);
@@ -1577,6 +1596,11 @@ void Engine3D::setLevel(Level* level)
 	{
 		this->pointLights.push_back(pl);
 	}
+	// TODO: remove pointLight
 	this->pointLight = level->pointLight;
+	for (SpotLight& sl : level->spotLights)
+	{
+		this->spotLights.push_back(sl);
+	}
 	this->level = std::make_shared<Level>(*level);
 }

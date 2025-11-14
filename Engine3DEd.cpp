@@ -212,8 +212,9 @@ void Engine3D::edit(float elapsedTime)
 				editingModel->position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
 				editingModel->rotate(0.0f, glm::atan(personFront.x, personFront.z), 0.0f); // yaw to face the person front direction
 			}
-			// if left mouse released, place a point (TODO: spot too) light in the scene
+			// if left mouse released, place a point or spot light in the scene
 			if (editingModel != nullptr && !keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
+				// for point lights
 				if (lightingTypeOptions[lightingTypeOptionIndex] == "point" && preset.getPointLights().size() > 0) {
 					pointLight.id = editingModel->id;
 					pointLight.position = editingModel->position;
@@ -227,6 +228,21 @@ void Engine3D::edit(float elapsedTime)
 					isEdited = true;
 					personSpeedFactor *= 100;
 					std::cout << "placed preset point light: " << pointLight.name << std::endl;
+				// for spot lights
+				}else if (lightingTypeOptions[lightingTypeOptionIndex] == "spot" && preset.getSpotLights().size() > 0) {
+					spotLight.id = editingModel->id;
+					spotLight.position = editingModel->position;
+					spotLight.direction = glm::normalize(personFront);
+					spotLights.push_back(spotLight);
+					// edit the lighting shader to reflect the number of spot lights
+					Utility::replaceLineInFile("shaders/lighting.glfs", 12, "#define NR_SPOT_LIGHTS " + std::to_string(spotLights.size()));
+					removeModel(ptrModelsToRender.back());
+					editingModel->rotate(0.0f, glm::atan(personFront.x, personFront.z), 0.0f);
+					addLightHandleModel(editingModel->id, editingModel->position, editingModel->rotationMatrix);
+					editingModel = nullptr;
+					isEdited = true;
+					personSpeedFactor *= 100;
+					std::cout << "placed preset spot light: " << spotLight.name << std::endl;
 				}
 			}
 			// places a directional light in the scene
@@ -248,6 +264,7 @@ void Engine3D::edit(float elapsedTime)
 		} else if (deletingModel != nullptr && deletingModel->removeFlag==false && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK]==false) {
 			// if lighting edit mode is enabled and the deleted model is a light handle, remove point light with the same id
 			if (isLightingEditingModeEnabled && !deletingModel->isSolid && deletingModel->modelMesh.shape == shapetype::RECTANGLE && deletingModel->texture == "transparent") {
+				bool found = false;
 				for (auto it = pointLights.begin(); it != pointLights.end(); ++it) {
 					if ( it->id == deletingModel->id ) {
 						pointLights.erase(it);
@@ -256,7 +273,22 @@ void Engine3D::edit(float elapsedTime)
 						deletingModel.reset();
 						isEdited = true;
 						std::cout << "also removed light handle model" << std::endl;
+						found = true;
 						break;
+					}
+				}
+				if (!found) {
+					for (auto it = spotLights.begin(); it != spotLights.end(); ++it) {
+						if ( it->id == deletingModel->id ) {
+							spotLights.erase(it);
+							std::cout << "removed spot light with id = " << deletingModel->id << std::endl;
+							removeModel(deletingModel);
+							deletingModel.reset();
+							isEdited = true;
+							std::cout << "also removed light handle model" << std::endl;
+							found = true;
+							break;
+						}
 					}
 				}
 			}else if (!isLightingEditingModeEnabled) {
