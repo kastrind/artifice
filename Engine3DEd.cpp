@@ -130,6 +130,7 @@ void Engine3D::edit(float elapsedTime)
 			if (level) {
 				level->light = light;
 				level->pointLights = pointLights;
+				level->spotLights = spotLights;
 				level->modelPointsCnt = modelPointsCnt;
 				level->cubePointsCnt = cubePointsCnt;
 				level->models = ptrModelsToRender;
@@ -235,7 +236,7 @@ void Engine3D::edit(float elapsedTime)
 					spotLight.direction = glm::normalize(personFront);
 					spotLights.push_back(spotLight);
 					// edit the lighting shader to reflect the number of spot lights
-					Utility::replaceLineInFile("shaders/lighting.glfs", 12, "#define NR_SPOT_LIGHTS " + std::to_string(spotLights.size()));
+					Utility::replaceLineInFile("shaders/lighting.glfs", 10, "#define NR_SPOT_LIGHTS " + std::to_string(spotLights.size()));
 					removeModel(ptrModelsToRender.back());
 					editingModel->rotate(0.0f, glm::atan(personFront.x, personFront.z), 0.0f);
 					addLightHandleModel(editingModel->id, editingModel->position, editingModel->rotationMatrix);
@@ -262,7 +263,7 @@ void Engine3D::edit(float elapsedTime)
 			mtx.unlock();
 		// releases right mouse click to delete the model in focus
 		} else if (deletingModel != nullptr && deletingModel->removeFlag==false && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK]==false) {
-			// if lighting edit mode is enabled and the deleted model is a light handle, remove point light with the same id
+			// if lighting edit mode is enabled and the deleted model is a light handle, remove point/spot light with the same id
 			if (isLightingEditingModeEnabled && !deletingModel->isSolid && deletingModel->modelMesh.shape == shapetype::RECTANGLE && deletingModel->texture == "transparent") {
 				bool found = false;
 				for (auto it = pointLights.begin(); it != pointLights.end(); ++it) {
@@ -274,6 +275,8 @@ void Engine3D::edit(float elapsedTime)
 						isEdited = true;
 						std::cout << "also removed light handle model" << std::endl;
 						found = true;
+						// edit the lighting shader to reflect the number of point lights
+						Utility::replaceLineInFile("shaders/lighting.glfs", 7, "#define NR_POINT_LIGHTS " + std::to_string(pointLights.size()));
 						break;
 					}
 				}
@@ -287,6 +290,8 @@ void Engine3D::edit(float elapsedTime)
 							isEdited = true;
 							std::cout << "also removed light handle model" << std::endl;
 							found = true;
+							// edit the lighting shader to reflect the number of spot lights
+							Utility::replaceLineInFile("shaders/lighting.glfs", 10, "#define NR_SPOT_LIGHTS " + std::to_string(spotLights.size()));
 							break;
 						}
 					}

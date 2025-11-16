@@ -22,7 +22,7 @@ void Level::save(std::string levelPath)
 		f << "# light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity" << std::endl;
 		f << "light," << light.direction.x << "," << light.direction.y << "," << light.direction.z << "," << light.color.r * 255 << "," << light.color.g * 255 << "," << light.color.b * 255 << "," << light.ambientIntensity << "," << light.diffuseIntensity << "," << light.specularIntensity << std::endl;
 
-		f << "# id point light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity constant linear quadratic" << std::endl;
+		f << "# id point light positionX positionY positionZ colorR colorG colorB diffuseIntensity specularIntensity constant linear quadratic" << std::endl;
 		for (PointLight& pl : pointLights)
 		{
 			// point lights without id are ignored, like the unlit one which is added if no point lights exist
@@ -31,7 +31,7 @@ void Level::save(std::string levelPath)
 			}
 			f << pl.id << "," << "point_light," << pl.position.x << "," << pl.position.y << "," << pl.position.z << "," << pl.color.r * 255 << "," << pl.color.g * 255 << "," << pl.color.b * 255 << "," << pl.diffuseIntensity << "," << pl.specularIntensity << "," << pl.constant << "," << pl.linear << "," << pl.quadratic << std::endl;
 		}
-		f << "# id spot light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity constant linear quadratic dirX dirY dirZ cutoff outerCutoff" << std::endl;
+		f << "# id spot light positionX positionY positionZ colorR colorG colorB diffuseIntensity specularIntensity constant linear quadratic dirX dirY dirZ cutoff outerCutoff" << std::endl;
 		for (SpotLight& sl : spotLights)
 		{
 			// spot lights without id are ignored, like the unlit one which is added if no spot lights exist
@@ -127,7 +127,7 @@ void Level::load(std::string levelPath)
 				if (i == NUM_ATTRIBUTES - 1 || (i == 3 && tokens[0] == "player_position")) break;
 				tokens[++i] = token;
 			}
-			if (i == NUM_ATTRIBUTES - 1 && (tokens[1] == "rectangle" || tokens[1] == "cuboid" || tokens[1] == "cube" || tokens[1] == "skyBox" || tokens[1] == "skybox")) {
+			if (i == NUM_ATTRIBUTES - 6 && (tokens[1] == "rectangle" || tokens[1] == "cuboid" || tokens[1] == "cube" || tokens[1] == "skyBox" || tokens[1] == "skybox")) {
 				id      = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
 				shape   = tokens[1];
 				texture = tokens[2];
@@ -214,6 +214,7 @@ void Level::load(std::string levelPath)
 			}
 		}
 	}
+	std::cout << "loaded " << models.size() << " models.";
 	// if no point lights,
 	if (pointLights.size() == 0) {
 		// add one unlit point light if none exists, so that the lighting shader compiles, as it expects at least one point light
@@ -222,5 +223,14 @@ void Level::load(std::string levelPath)
 	}
 	// edit the lighting shader to reflect the number of point lights
 	Utility::replaceLineInFile("shaders/lighting.glfs", 7, "#define NR_POINT_LIGHTS " + std::to_string(pointLights.size()));
+
+	// if no spot lights,
+	if (spotLights.size() == 0) {
+		// add one unlit spot light if none exists, so that the lighting shader compiles, as it expects at least one spot light
+		SpotLight spotLight(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+		spotLights.push_back(spotLight);
+	}
+	// edit the lighting shader to reflect the number of spot lights
+	Utility::replaceLineInFile("shaders/lighting.glfs", 10, "#define NR_SPOT_LIGHTS " + std::to_string(spotLights.size()));
 
 }

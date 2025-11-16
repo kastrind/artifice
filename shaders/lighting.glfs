@@ -7,6 +7,9 @@ in vec2 TexCoord;
 // this directive must always be on this line number (8), to let the engine edit this line and set the required number of point lights on runtime
 #define NR_POINT_LIGHTS 28
 
+// this directive must always be on this line number (11), to let the engine edit this line and set the required number of spot lights on runtime
+#define NR_SPOT_LIGHTS 6
+
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedo;
@@ -35,6 +38,21 @@ struct PointLight {
 };
 uniform PointLight pointLight;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
+
+struct SpotLight {
+	vec3 position;
+	vec3 direction;
+	vec3 color;
+	float ambientIntensity;
+	float diffuseIntensity;
+	float specularIntensity;
+	float constant;
+	float linear;
+	float quadratic;
+	float cutoffDistance;
+	float cutoff;
+	float outerCutoff;
+};
 
 uniform bool phongLighting;
 uniform vec3 viewPos;
