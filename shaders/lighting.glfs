@@ -8,7 +8,7 @@ in vec2 TexCoord;
 #define NR_POINT_LIGHTS 28
 
 // this directive must always be on this line number (11), to let the engine edit this line and set the required number of spot lights on runtime
-#define NR_SPOT_LIGHTS 6
+#define NR_SPOT_LIGHTS 4
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
@@ -36,7 +36,6 @@ struct PointLight {
 	float quadratic;
 	float cutoffDistance;
 };
-uniform PointLight pointLight;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 
 struct SpotLight {
@@ -53,12 +52,14 @@ struct SpotLight {
 	float cutoff;
 	float outerCutoff;
 };
+uniform SpotLight spotLights[NR_SPOT_LIGHTS];
 
 uniform bool phongLighting;
 uniform vec3 viewPos;
 
 vec3 calcDirLight(Light light, vec3 normal, vec3 viewDir, vec3 Specular);
 vec3 calcPointLights(PointLight pointLight, vec3 normal, vec3 FragPos, vec3 viewDir, vec3 Specular);
+vec3 calcSpotLights(SpotLight spotLight, vec3 normal, vec3 FragPos, vec3 viewDir, vec3 Specular);
 
 void main()
 {
@@ -80,7 +81,9 @@ void main()
 		for(int i = 0; i < NR_POINT_LIGHTS; i++) {
 			lightResult += calcPointLights(pointLights[i], N, FragPos, viewDir, Specular);
 		}
-
+		for (int i = 0; i < NR_SPOT_LIGHTS; i++) {
+			lightResult += calcSpotLights(spotLights[i], N, FragPos, viewDir, Specular);
+		}
 	}else {
 		// ambient
 		lightResult = (light.ambientIntensity + light.diffuseIntensity) * light.color;
@@ -137,5 +140,44 @@ vec3 calcPointLights(PointLight pointLight, vec3 normal, vec3 FragPos, vec3 view
 	specular *= attenuation;
 
 	return (diffuse + specular);
+}
+
+vec3 calcSpotLights(SpotLight spotLight, vec3 normal, vec3 FragPos, vec3 viewDir, vec3 Specular)
+{
+		// save lighting calculations if fragment is not within the light's cutoff distance
+	if (length(spotLight.position - FragPos) > spotLight.cutoffDistance) {
+		return vec3(0.0, 0.0, 0.0);
+	}
+	// avoid division by zero
+	if (spotLight.constant == 0.0 && spotLight.linear == 0.0 && spotLight.quadratic == 0.0) {
+		return vec3(0.0, 0.0, 0.0);
+	}
+	
+	vec3 spotLightDir = normalize(spotLight.position - FragPos);
+	float theta = dot(spotLightDir, normalize(-spotLight.direction));
+
+	// check if fragment is within the spotlight cone
+	// we use cosine, not angles, hence the > sign
+	if (theta > spotLight.outerCutoff) {
+
+		float spotLightDiff = max(dot(spotLightDir, normal), 0.0);
+		vec3 spotLightReflectDir = reflect(spotLightDir, normal);
+
+		float spotLightSpec = pow(max(dot(viewDir, -spotLightReflectDir), 0.0), 32);
+		float spotLightDistance = length(spotLight.position - FragPos);
+
+		float attenuation = 1.0 / (spotLight.constant + spotLight.linear * spotLightDistance + spotLight.quadratic * (spotLightDistance * spotLightDistance));
+
+		float intensity = clamp((theta - spotLight.outerCutoff) / (spotLight.cutoff - spotLight.outerCutoff), 0.0, 1.0);
+
+		vec3 diffuse  = spotLightDiff * spotLight.diffuseIntensity * spotLight.color;
+		diffuse *= attenuation;
+		vec3 specular = spotLightSpec * spotLight.specularIntensity * spotLight.color * Specular;
+		specular *= attenuation;
+		return (diffuse + specular) * intensity;
+
+	}else {
+		return vec3(0.0, 0.0, 0.0);
+	}
 }
 

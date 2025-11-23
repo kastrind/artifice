@@ -736,14 +736,6 @@ void Engine3D::render()
 		lightingShader.setFloat("pointLights[" + std::to_string(pointLightCounter) + "].quadratic", pl.quadratic);
 		lightingShader.setFloat("pointLights[" + std::to_string(pointLightCounter++) + "].cutoffDistance", pl.cutoffDistance);
 	}
-	//TODO: remove single point light after testing
-	lightingShader.setVec3("pointLight.position", pointLight.position);
-	lightingShader.setVec3("pointLight.color", pointLight.color);
-	lightingShader.setFloat("pointLight.diffuseIntensity", pointLight.diffuseIntensity);
-	lightingShader.setFloat("pointLight.specularIntensity", pointLight.specularIntensity);
-	lightingShader.setFloat("pointLight.constant", pointLight.constant);
-	lightingShader.setFloat("pointLight.linear", pointLight.linear);
-	lightingShader.setFloat("pointLight.quadratic", pointLight.quadratic);
 
 	unsigned long spotLightCounter = 0;
 	for (SpotLight& sl : spotLights)
@@ -757,8 +749,8 @@ void Engine3D::render()
 		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].linear", sl.linear);
 		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].quadratic", sl.quadratic);
 		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].cutoffDistance", sl.cutoffDistance);
-		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].cutoff", sl.cutoff);
-		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter++) + "].outerCutoff", sl.outerCutoff);
+		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].cutoff", glm::cos(glm::radians(sl.cutoff)));
+		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter++) + "].outerCutoff", glm::cos(glm::radians(sl.outerCutoff)));
 	}
 
 	lightingShader.setInt("gPosition", 0);
@@ -1596,8 +1588,6 @@ void Engine3D::setLevel(Level* level)
 	{
 		this->pointLights.push_back(pl);
 	}
-	// TODO: remove pointLight
-	this->pointLight = level->pointLight;
 	for (SpotLight& sl : level->spotLights)
 	{
 		this->spotLights.push_back(sl);

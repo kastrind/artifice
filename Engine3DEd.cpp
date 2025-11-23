@@ -211,7 +211,9 @@ void Engine3D::edit(float elapsedTime)
 			if (editingModel != nullptr) {
 				//real-time update of position and rotation
 				editingModel->position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
-				editingModel->rotate(0.0f, glm::atan(personFront.x, personFront.z), 0.0f); // yaw to face the person front direction
+				editingModel->rotationMatrix[0] = glm::vec4(getCameraRight(), 0.0f);
+				editingModel->rotationMatrix[1] = glm::vec4(glm::normalize(glm::cross(getCameraFront(), getCameraRight())), 0.0f);
+				editingModel->rotationMatrix[2] = glm::vec4(-getCameraFront(), 0.0f);
 			}
 			// if left mouse released, place a point or spot light in the scene
 			if (editingModel != nullptr && !keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
@@ -223,7 +225,6 @@ void Engine3D::edit(float elapsedTime)
 					// edit the lighting shader to reflect the number of point lights
 					Utility::replaceLineInFile("shaders/lighting.glfs", 7, "#define NR_POINT_LIGHTS " + std::to_string(pointLights.size()));
 					removeModel(ptrModelsToRender.back());
-					editingModel->rotate(0.0f, glm::atan(personFront.x, personFront.z), 0.0f);
 					addLightHandleModel(editingModel->id, editingModel->position, editingModel->rotationMatrix);
 					editingModel = nullptr;
 					isEdited = true;
@@ -238,7 +239,6 @@ void Engine3D::edit(float elapsedTime)
 					// edit the lighting shader to reflect the number of spot lights
 					Utility::replaceLineInFile("shaders/lighting.glfs", 10, "#define NR_SPOT_LIGHTS " + std::to_string(spotLights.size()));
 					removeModel(ptrModelsToRender.back());
-					editingModel->rotate(0.0f, glm::atan(personFront.x, personFront.z), 0.0f);
 					addLightHandleModel(editingModel->id, editingModel->position, editingModel->rotationMatrix);
 					editingModel = nullptr;
 					isEdited = true;

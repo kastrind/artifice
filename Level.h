@@ -33,8 +33,6 @@ class Level
 
 		Light light;
 
-		PointLight pointLight;
-
 		std::vector<PointLight> pointLights;
 
 		std::vector<SpotLight> spotLights;
