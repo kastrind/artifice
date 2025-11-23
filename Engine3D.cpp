@@ -752,6 +752,18 @@ void Engine3D::render()
 		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].cutoff", glm::cos(glm::radians(sl.cutoff)));
 		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter++) + "].outerCutoff", glm::cos(glm::radians(sl.outerCutoff)));
 	}
+	
+	lightingShader.setVec3("flashLight.position", getPersonPos());
+	lightingShader.setVec3("flashLight.direction", getPersonFront());
+	lightingShader.setVec3("flashLight.color", glm::vec3(1.0f, 1.0f, 1.0f));
+	lightingShader.setFloat("flashLight.diffuseIntensity", 0.5f);
+	lightingShader.setFloat("flashLight.specularIntensity", 0.9f);
+	lightingShader.setFloat("flashLight.constant", 1.0f);
+	lightingShader.setFloat("flashLight.linear", 0.7f);
+	lightingShader.setFloat("flashLight.quadratic", 1.8f);
+	lightingShader.setFloat("flashLight.cutoffDistance", 7.0f);
+	lightingShader.setFloat("flashLight.cutoff", glm::cos(glm::radians(15.0f)));
+	lightingShader.setFloat("flashLight.outerCutoff", glm::cos(glm::radians(20.0f)));
 
 	lightingShader.setInt("gPosition", 0);
 	lightingShader.setInt("gNormal", 1);
