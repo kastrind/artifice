@@ -750,20 +750,25 @@ void Engine3D::render()
 		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].quadratic", sl.quadratic);
 		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].cutoffDistance", sl.cutoffDistance);
 		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].cutoff", glm::cos(glm::radians(sl.cutoff)));
+		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter) + "].cutoffAngle", sl.cutoff);
 		lightingShader.setFloat("spotLights[" + std::to_string(spotLightCounter++) + "].outerCutoff", glm::cos(glm::radians(sl.outerCutoff)));
 	}
-	
-	lightingShader.setVec3("flashLight.position", getPersonPos());
-	lightingShader.setVec3("flashLight.direction", getPersonFront());
-	lightingShader.setVec3("flashLight.color", glm::vec3(1.0f, 1.0f, 1.0f));
-	lightingShader.setFloat("flashLight.diffuseIntensity", 0.5f);
-	lightingShader.setFloat("flashLight.specularIntensity", 0.9f);
-	lightingShader.setFloat("flashLight.constant", 1.0f);
-	lightingShader.setFloat("flashLight.linear", 0.7f);
-	lightingShader.setFloat("flashLight.quadratic", 1.8f);
-	lightingShader.setFloat("flashLight.cutoffDistance", 7.0f);
-	lightingShader.setFloat("flashLight.cutoff", glm::cos(glm::radians(15.0f)));
-	lightingShader.setFloat("flashLight.outerCutoff", glm::cos(glm::radians(20.0f)));
+
+	lightingShader.setBool("isFlashLightOn", isFlashLightOn);
+	if (assignedFlashLight && isFlashLightOn) {
+		lightingShader.setVec3("flashLight.position", getPersonPos());
+		lightingShader.setVec3("flashLight.direction", getPersonFront());
+		lightingShader.setVec3("flashLight.color", flashLight.color);
+		lightingShader.setFloat("flashLight.diffuseIntensity", flashLight.diffuseIntensity);
+		lightingShader.setFloat("flashLight.specularIntensity", flashLight.specularIntensity);
+		lightingShader.setFloat("flashLight.constant", flashLight.constant);
+		lightingShader.setFloat("flashLight.linear", flashLight.linear);
+		lightingShader.setFloat("flashLight.quadratic", flashLight.quadratic);
+		lightingShader.setFloat("flashLight.cutoffDistance", flashLight.cutoffDistance);
+		lightingShader.setFloat("flashLight.cutoff", glm::cos(glm::radians(flashLight.cutoff)));
+		lightingShader.setFloat("flashLight.cutoffAngle", flashLight.cutoff);
+		lightingShader.setFloat("flashLight.outerCutoff", glm::cos(glm::radians(flashLight.outerCutoff)));
+	}
 
 	lightingShader.setInt("gPosition", 0);
 	lightingShader.setInt("gNormal", 1);
@@ -1412,6 +1417,13 @@ void Engine3D::move(float elapsedTime)
 			setCameraRight(glm::normalize(glm::cross(personFront, personUp)));
 		}
 		setPersonPos(getPersonPos());
+
+		//flashlight toggle
+		if (eventController->flashlight(keysPressed, prevKeysPressed) && isFlashLightOn) {
+			isFlashLightOn = false;
+		} else if (eventController->flashlight(keysPressed, prevKeysPressed) && !isFlashLightOn) {
+			isFlashLightOn = true;
+		}
 	}
 }
 
@@ -1603,6 +1615,10 @@ void Engine3D::setLevel(Level* level)
 	for (SpotLight& sl : level->spotLights)
 	{
 		this->spotLights.push_back(sl);
+	}
+	if (level->assignedFlashLight) {
+		this->assignedFlashLight = true;
+		this->flashLight = level->flashLight;
 	}
 	this->level = std::make_shared<Level>(*level);
 }

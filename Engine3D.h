@@ -283,6 +283,12 @@ class Engine3D
 
 		std::vector<SpotLight> spotLights;
 
+		SpotLight flashLight;
+
+		bool assignedFlashLight = false;
+
+		bool isFlashLightOn = false;
+
 		//editor user mode specific
 		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX", "rotationY", "rotationZ", "texture", "isSolid", "collationHeight", "collationWidth"};
 		unsigned short editOptionIndex = 0;

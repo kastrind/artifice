@@ -20,6 +20,7 @@ typedef enum
 	S,
 	A,
 	D,
+	F,
 	C,
 	V,
 	L,
@@ -47,6 +48,7 @@ typedef enum
 	RIGHT,
 	FORWARD,
 	BACKWARD,
+	FLASHLIGHT,
 	COPY,
 	PASTE,
 	PLACE,
@@ -113,10 +115,12 @@ class EventController
 	public:
 
 		EventController(float mouseSensitivityX = 1.0f, float mouseSensitivityY = 1.0f,
-						std::string keyAscend = "UP_ARROW", std::string keyDescend = "DOWN_ARROW", std::string keyLeft = "A",
-						std::string keyRight = "D", std::string keyForward = "W", std::string keyBackward = "S",
-						std::string keyPlace = "MOUSE_LEFT", std::string keyRemove = "MOUSE_RIGHT", std::string keyNext = "MOUSE_WHEEL_UP",
-						std::string keyPrevious = "MOUSE_WHEEL_DOWN", std::string keyJump = "SPACE")
+						std::string keyAscend = "UP_ARROW", std::string keyDescend = "DOWN_ARROW",
+						std::string keyLeft = "A", std::string keyRight = "D", std::string keyForward = "W", std::string keyBackward = "S",
+						std::string keyFlashlight = "F",
+						std::string keyPlace = "MOUSE_LEFT", std::string keyRemove = "MOUSE_RIGHT",
+						std::string keyNext = "MOUSE_WHEEL_UP", std::string keyPrevious = "MOUSE_WHEEL_DOWN",
+						std::string keyJump = "SPACE")
 						: mouseSensitivityX(mouseSensitivityX), mouseSensitivityY(mouseSensitivityY)
 		{
 			//initialize key state
@@ -134,6 +138,7 @@ class EventController
 			supportedKeysFromStr["S"] = SupportedKeys::S;
 			supportedKeysFromStr["A"] = SupportedKeys::A;
 			supportedKeysFromStr["D"] = SupportedKeys::D;
+			supportedKeysFromStr["F"] = SupportedKeys::F;
 			supportedKeysFromStr["C"] = SupportedKeys::C;
 			supportedKeysFromStr["V"] = SupportedKeys::V;
 			supportedKeysFromStr["L"] = SupportedKeys::L;
@@ -158,6 +163,7 @@ class EventController
 			keyActionsFromStr["RIGHT"] = KeyActions::RIGHT;
 			keyActionsFromStr["FORWARD"] = KeyActions::FORWARD;
 			keyActionsFromStr["BACKWARD"] = KeyActions::BACKWARD;
+			keyActionsFromStr["FLASHLIGHT"] = KeyActions::FLASHLIGHT;
 			keyActionsFromStr["COPY"] = KeyActions::COPY;
 			keyActionsFromStr["PASTE"] = KeyActions::PASTE;
 			keyActionsFromStr["PLACE"] = KeyActions::PLACE;
@@ -174,6 +180,7 @@ class EventController
 			sdlKeyCodeMappings[SupportedKeys::S] = SDL_KeyCode::SDLK_s;
 			sdlKeyCodeMappings[SupportedKeys::A] = SDL_KeyCode::SDLK_a;
 			sdlKeyCodeMappings[SupportedKeys::D] = SDL_KeyCode::SDLK_d;
+			sdlKeyCodeMappings[SupportedKeys::F] = SDL_KeyCode::SDLK_f;
 			sdlKeyCodeMappings[SupportedKeys::C] = SDL_KeyCode::SDLK_c;
 			sdlKeyCodeMappings[SupportedKeys::V] = SDL_KeyCode::SDLK_v;
 			sdlKeyCodeMappings[SupportedKeys::L] = SDL_KeyCode::SDLK_l;
@@ -189,6 +196,7 @@ class EventController
 			mapActionToKey(KeyActions::RIGHT, keyRight, SupportedKeys::D);
 			mapActionToKey(KeyActions::FORWARD, keyForward, SupportedKeys::W);
 			mapActionToKey(KeyActions::BACKWARD, keyBackward, SupportedKeys::S);
+			mapActionToKey(KeyActions::FLASHLIGHT, keyFlashlight, SupportedKeys::S);
 			mapActionToKey(KeyActions::PLACE, keyPlace, SupportedKeys::MOUSE_LEFT_CLICK);
 			mapActionToKey(KeyActions::REMOVE, keyRemove, SupportedKeys::MOUSE_RIGHT_CLICK);
 			mapActionToKey(KeyActions::NEXT, keyNext, SupportedKeys::MOUSE_WHEEL_UP);
@@ -227,6 +235,8 @@ class EventController
 		bool forward(bool* keysPressed);
 
 		bool backward(bool* keysPressed);
+
+		bool flashlight(bool* keysPressed, bool* prevKeysPressed);
 
 		bool place(bool* keysPressed);
 

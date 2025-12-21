@@ -131,6 +131,8 @@ void Engine3D::edit(float elapsedTime)
 				level->light = light;
 				level->pointLights = pointLights;
 				level->spotLights = spotLights;
+				level->flashLight = flashLight;
+				level->assignedFlashLight = assignedFlashLight;
 				level->modelPointsCnt = modelPointsCnt;
 				level->cubePointsCnt = cubePointsCnt;
 				level->models = ptrModelsToRender;
@@ -251,6 +253,29 @@ void Engine3D::edit(float elapsedTime)
 				if (lightingTypeOptions[lightingTypeOptionIndex] == "directional" && preset.getDirectionalLights().size() > 0) {
 					light = selectedLight;
 					std::cout << "placed preset directional light: " << light.name << std::endl;
+				}
+			}
+
+			if (eventController->flashlight(keysPressed, prevKeysPressed)) {
+				if (lightingTypeOptions[lightingTypeOptionIndex] == "point") {
+					if (assignedFlashLight && flashLight.name == pointLight.name) {
+						assignedFlashLight = false;
+						std::cout << "Flashlight unassigned" << std::endl;
+					} else if (!assignedFlashLight || flashLight.name != pointLight.name) {
+						flashLight = SpotLight(glm::vec3 (0,0,0), glm::vec3 (0,0,0), pointLight.constant, pointLight.linear, pointLight.quadratic, 360.0f, 360.0f);
+						flashLight.name = pointLight.name;
+						assignedFlashLight = true;
+						std::cout << "Flashlight assigned to point light " << pointLight.name << std::endl;
+					}
+				} else if (lightingTypeOptions[lightingTypeOptionIndex] == "spot") {
+					if (assignedFlashLight && flashLight.name == spotLight.name) {
+						assignedFlashLight = false;
+						std::cout << "Flashlight unassigned" << std::endl;
+					} else if (!assignedFlashLight || flashLight.name != spotLight.name) {
+						flashLight = spotLight;
+						assignedFlashLight = true;
+						std::cout << "Flashlight assigned to spot light " << spotLight.name << std::endl;
+					}
 				}
 			}
 		}

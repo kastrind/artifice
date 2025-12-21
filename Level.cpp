@@ -21,8 +21,11 @@ void Level::save(std::string levelPath)
 		f << "player_position," << playerPosition.x << "," << playerPosition.y << "," << playerPosition.z << std::endl;
 		f << "# light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity" << std::endl;
 		f << "light," << light.direction.x << "," << light.direction.y << "," << light.direction.z << "," << light.color.r * 255 << "," << light.color.g * 255 << "," << light.color.b * 255 << "," << light.ambientIntensity << "," << light.diffuseIntensity << "," << light.specularIntensity << std::endl;
-
-		f << "# id point light positionX positionY positionZ colorR colorG colorB diffuseIntensity specularIntensity constant linear quadratic" << std::endl;
+		if (assignedFlashLight) {
+			f << "# id flashlight colorR colorG colorB diffuseIntensity specularIntensity constant linear quadratic cutoff outerCutoff" << std::endl;
+			f <<  flashLight.id << "," << "flashlight," << flashLight.color.r * 255 << "," << flashLight.color.g * 255 << "," << flashLight.color.b * 255 << "," << flashLight.diffuseIntensity << "," << flashLight.specularIntensity << "," << flashLight.constant << "," << flashLight.linear << "," << flashLight.quadratic << "," << flashLight.cutoff << "," << flashLight.outerCutoff << std::endl;
+		}
+		f << "# id point_light positionX positionY positionZ colorR colorG colorB diffuseIntensity specularIntensity constant linear quadratic" << std::endl;
 		for (PointLight& pl : pointLights)
 		{
 			// point lights without id are ignored, like the unlit one which is added if no point lights exist
@@ -31,7 +34,7 @@ void Level::save(std::string levelPath)
 			}
 			f << pl.id << "," << "point_light," << pl.position.x << "," << pl.position.y << "," << pl.position.z << "," << pl.color.r * 255 << "," << pl.color.g * 255 << "," << pl.color.b * 255 << "," << pl.diffuseIntensity << "," << pl.specularIntensity << "," << pl.constant << "," << pl.linear << "," << pl.quadratic << std::endl;
 		}
-		f << "# id spot light positionX positionY positionZ colorR colorG colorB diffuseIntensity specularIntensity constant linear quadratic dirX dirY dirZ cutoff outerCutoff" << std::endl;
+		f << "# id spot_light positionX positionY positionZ colorR colorG colorB diffuseIntensity specularIntensity constant linear quadratic dirX dirY dirZ cutoff outerCutoff" << std::endl;
 		for (SpotLight& sl : spotLights)
 		{
 			// spot lights without id are ignored, like the unlit one which is added if no spot lights exist
@@ -211,6 +214,23 @@ void Level::load(std::string levelPath)
 				spotLight.diffuseIntensity = diffuseIntensity;
 				spotLight.specularIntensity = specularIntensity;
 				spotLights.push_back(spotLight);
+			}else if (tokens[1] == "flashlight") {
+				id = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
+				glm::vec3 color = glm::vec3(std::stoi(tokens[2])/255.0f, std::stoi(tokens[3])/255.0f, std::stoi(tokens[4])/255.0f);
+				float diffuseIntensity = std::stof(tokens[5]);
+				float specularIntensity = std::stof(tokens[6]);
+				float constant = std::stof(tokens[7]);
+				float linear = std::stof(tokens[8]);
+				float quadratic = std::stof(tokens[9]);
+				float cutoff = std::stof(tokens[10]);
+				float outerCutoff = std::stof(tokens[11]);
+				SpotLight spotLight(glm::vec3(0,0,0), glm::vec3(0,0,0), constant, linear, quadratic, cutoff, outerCutoff);
+				spotLight.id = id;
+				spotLight.color = color;
+				spotLight.diffuseIntensity = diffuseIntensity;
+				spotLight.specularIntensity = specularIntensity;
+				flashLight = spotLight;
+				assignedFlashLight = true;
 			}
 		}
 	}

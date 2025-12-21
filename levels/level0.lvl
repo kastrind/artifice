@@ -1,8 +1,10 @@
 # player position positionX positionY positionZ
-player_position,-0.000719308,-0.673817,1.80243
+player_position,0.928714,-0.616792,4.77846
 # light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity
 light,0,1,0,128,128,128,0.3,0.5,0.9
-# id point light positionX positionY positionZ colorR colorG colorB diffuseIntensity specularIntensity constant linear quadratic
+# id flashlight colorR colorG colorB diffuseIntensity specularIntensity constant linear quadratic cutoff outerCutoff
+0,flashlight,255,255,255,0.5,0.9,1,0.7,1.8,360,360
+# id point_light positionX positionY positionZ colorR colorG colorB diffuseIntensity specularIntensity constant linear quadratic
 1759014267169,point_light,0.988099,-0.755765,2.83529,255,255,255,0.5,0.9,1,0.7,1.8
 1759017399751,point_light,0.350814,-0.265422,4.33492,255,255,255,0.5,0.9,1,0.7,1.8
 1759017403400,point_light,0.827398,-0.253999,3.86923,255,255,255,0.5,0.9,1,0.7,1.8
@@ -31,7 +33,7 @@ light,0,1,0,128,128,128,0.3,0.5,0.9
 1759018513389,point_light,0.659471,-0.959673,1.68317,255,255,255,0.5,0.9,1,0.7,1.8
 1759088138676,point_light,0.90302,-0.500777,2.49615,255,255,255,0.5,0.9,1,0.7,1.8
 1763284295398,point_light,0.506229,-0.956892,1.75768,255,255,255,0.5,0.9,1,0.7,1.8
-# id spot light positionX positionY positionZ colorR colorG colorB diffuseIntensity specularIntensity constant linear quadratic dirX dirY dirZ cutoff outerCutoff
+# id spot_light positionX positionY positionZ colorR colorG colorB diffuseIntensity specularIntensity constant linear quadratic dirX dirY dirZ cutoff outerCutoff
 1763544983282,spot_light,-0.396426,-0.90552,2.406,255,255,255,0.5,0.9,1,0.7,1.8,-0.0172019,-0.99497,-0.0986847,15,20
 1763545505203,spot_light,-0.393958,-0.644548,2.44774,255,255,255,0.5,0.9,1,0.7,1.8,-0.984348,-0.176217,0.00272792,15,20
 1763545526286,spot_light,-0.347811,-0.845659,2.06181,255,255,255,0.5,0.9,1,0.7,1.8,-0.151053,-0.987565,0.043577,15,20

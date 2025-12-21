@@ -51,8 +51,11 @@ struct SpotLight {
 	float cutoffDistance;
 	float cutoff;
 	float outerCutoff;
+	
+	float cutoffAngle; // in degrees, used only to determine whether the spotlight is actually a spotlight or a point light
 };
 uniform SpotLight flashLight;
+uniform bool isFlashLightOn;
 uniform SpotLight spotLights[NR_SPOT_LIGHTS];
 
 uniform bool phongLighting;
@@ -61,6 +64,7 @@ uniform vec3 viewPos;
 vec3 calcDirLight(Light light, vec3 normal, vec3 viewDir, vec3 Specular);
 vec3 calcPointLights(PointLight pointLight, vec3 normal, vec3 FragPos, vec3 viewDir, vec3 Specular);
 vec3 calcSpotLights(SpotLight spotLight, vec3 normal, vec3 FragPos, vec3 viewDir, vec3 Specular);
+PointLight convertSpotLightToPointLight(SpotLight spotLight);
 
 void main()
 {
@@ -85,7 +89,16 @@ void main()
 		for (int i = 0; i < NR_SPOT_LIGHTS; i++) {
 			lightResult += calcSpotLights(spotLights[i], N, FragPos, viewDir, Specular);
 		}
-		lightResult += calcSpotLights(flashLight, N, FragPos, viewDir, Specular);
+		
+		if (isFlashLightOn) {
+			if (flashLight.cutoffAngle < 360.0 && flashLight.cutoffAngle > 0.0) {
+				lightResult += calcSpotLights(flashLight, N, FragPos, viewDir, Specular);
+			// else if cutoffAngle is 360, flashlight is a point light
+			}else if (flashLight.cutoffAngle == 360.0) {
+				lightResult += calcPointLights(convertSpotLightToPointLight(flashLight), N, FragPos, viewDir, Specular);
+			}
+		}
+
 	}else {
 		// ambient
 		lightResult = (light.ambientIntensity + light.diffuseIntensity) * light.color;
@@ -181,5 +194,19 @@ vec3 calcSpotLights(SpotLight spotLight, vec3 normal, vec3 FragPos, vec3 viewDir
 	}else {
 		return vec3(0.0, 0.0, 0.0);
 	}
+}
+
+PointLight convertSpotLightToPointLight(SpotLight spotLight) {
+	PointLight pointLight;
+	pointLight.position = spotLight.position;
+	pointLight.color = spotLight.color;
+	pointLight.ambientIntensity = spotLight.ambientIntensity;
+	pointLight.diffuseIntensity = spotLight.diffuseIntensity;
+	pointLight.specularIntensity = spotLight.specularIntensity;
+	pointLight.constant = spotLight.constant;
+	pointLight.linear = spotLight.linear;
+	pointLight.quadratic = spotLight.quadratic;
+	pointLight.cutoffDistance = spotLight.cutoffDistance;
+	return pointLight;
 }
 

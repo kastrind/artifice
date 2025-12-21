@@ -76,6 +76,8 @@ typedef struct Configuration
 
 	std::string KEY_BACKWARD = "S";
 
+	std::string KEY_FLASHLIGHT = "F";
+
 	std::string KEY_PLACE = "MOUSE_LEFT_CLICK";
 
 	std::string KEY_REMOVE = "MOUSE_RIGHT_CLICK";

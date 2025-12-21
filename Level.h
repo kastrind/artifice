@@ -37,6 +37,10 @@ class Level
 
 		std::vector<SpotLight> spotLights;
 
+		SpotLight flashLight;
+
+		bool assignedFlashLight = false;
+
 		void load(std::string levelPath);
 
 		void save(std::string levelPath = "");

@@ -251,6 +251,11 @@ bool EventController::backward(bool* keysPressed)
 	return keysPressed[keyMappings[KeyActions::BACKWARD]];
 }
 
+bool EventController::flashlight(bool* keysPressed, bool* prevKeysPressed)
+{
+	return !prevKeysPressed[SupportedKeys::F] && keysPressed[keyMappings[KeyActions::FLASHLIGHT]];
+}
+
 bool EventController::place(bool* keysPressed)
 {
 	return keysPressed[keyMappings[KeyActions::PLACE]];
