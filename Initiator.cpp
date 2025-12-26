@@ -165,6 +165,9 @@ void Initiator::loadConfiguration()
 				} else if (tokens[0] == "KEY_BACKWARD") {
 					cfg->KEY_BACKWARD = tokens[1];
 					std::cout << "KEY_BACKWARD = " << cfg->KEY_BACKWARD << std::endl;
+				} else if (tokens[0] == "KEY_FLASHLIGHT") {
+					cfg->KEY_FLASHLIGHT = tokens[1];
+					std::cout << "KEY_FLASHLIGHT = " << cfg->KEY_FLASHLIGHT << std::endl;
 				} else if (tokens[0] == "KEY_PLACE") {
 					cfg->KEY_PLACE = tokens[1];
 					std::cout << "KEY_PLACE = " << cfg->KEY_PLACE << std::endl;

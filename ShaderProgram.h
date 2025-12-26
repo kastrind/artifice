@@ -181,6 +181,8 @@ protected:
 
 	//Program ID
 	GLuint mProgramID;
+
+	bool isBound = false;
 };
 
 #endif

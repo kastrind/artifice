@@ -99,11 +99,7 @@ std::thread Engine3D::startEngine()
 
 void Engine3D::engineLoop()
 {
-	//create user resources as part of this thread
-	if (!onUserCreate())
-		isActive = false;
-	else
-		isActive = true;
+	isActive = true;
 
 	renderingThread = startRendering();
 
@@ -120,19 +116,8 @@ void Engine3D::engineLoop()
 		elapsedTime = elapsedTimeDuration.count();
 
 		//handle frame update
-		if (!onUserUpdate(elapsedTime))
+		if (!update(elapsedTime))
 			isActive = false;
-	}
-
-	if (onUserDestroy())
-	{
-		//user has permitted destroy, so exit and clean up
-		isActive = false;
-	}
-	else
-	{
-		//user denied destroy for some reason, so continue running
-		isActive = true;
 	}
 }
 
@@ -164,7 +149,7 @@ void Engine3D::renderingLoop()
 		}
 		//initialize GLEW
 		printf( "Initializing GLEW...\n" );
-		glewExperimental = GL_TRUE; 
+		glewExperimental = GL_TRUE;
 		GLenum glewError = glewInit();
 		if( glewError != GLEW_OK )
 		{
@@ -659,6 +644,7 @@ void Engine3D::render()
 		}
 		cm.render(&geometryCubemapShader, gCubeVAO, gCubeIBO, cubemapIdsMap[cm.texture], cubeLightmapIdsMap[cm.texture], cubeNormalmapIdsMap[cm.texture], cubeDisplacementmapIdsMap[cm.texture]);
 	}
+	geometryCubemapShader.unbind();
 
 	//render other models
 	geometryShader.bind();
@@ -711,6 +697,7 @@ void Engine3D::render()
 		glDrawBuffer(GL_COLOR_ATTACHMENT4);
 		glBlitFramebuffer(0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, 0, 0, cfg.SCREEN_WIDTH, cfg.SCREEN_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	}
+	geometryShader.unbind();
 
 	//lighting pass
 	glBindFramebuffer(GL_FRAMEBUFFER, lightingBO);
@@ -792,12 +779,15 @@ void Engine3D::render()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
+	lightingShader.unbind();
 	postProcShader.bind();
 	postProcShader.setInt("screenTexture", 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, screenTexture);
 
 	renderScreenQuad();
+
+	postProcShader.unbind();
 
 	// glBindFramebuffer(GL_READ_FRAMEBUFFER, gBO);
 	// glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
@@ -955,12 +945,7 @@ void Engine3D::renderUI()
 }
 */
 
-bool Engine3D::onUserCreate()
-{
-	return true;
-}
-
-bool Engine3D::onUserUpdate(float elapsedTime)
+bool Engine3D::update(float elapsedTime)
 {
 	mtx.lock();
 
@@ -1427,34 +1412,34 @@ void Engine3D::move(float elapsedTime)
 	}
 }
 
-bool Engine3D::onUserDestroy()
+bool Engine3D::stopEngine(std::thread& engineThreadToJoin)
 {
-	std::cout << "Destroying Engine3D..." << std::endl;
-
 	printf("Stopping rendering thread...\n");
 
 	renderingThread.join();
 
 	printf("Unbinding and deleting shader programs...\n");
 
-	//unbind program - deactivate shader
+	// unbind shader programs and deallocate them
 	geometryShader.unbind();
-	geometryCubemapShader.unbind();
-	geometrySkyboxShader.unbind();
-	lightingShader.unbind();
-	postProcShader.unbind();
-
-	//deallocate programs
 	geometryShader.freeProgram();
+	geometryCubemapShader.unbind();
 	geometryCubemapShader.freeProgram();
+	geometrySkyboxShader.unbind();
 	geometrySkyboxShader.freeProgram();
+	lightingShader.unbind();
 	lightingShader.freeProgram();
+	postProcShader.unbind();
 	postProcShader.freeProgram();
 
 	// printf("Shutting down ImGui...\n");
 	// ImGui_ImplOpenGL3_Shutdown();
 	// ImGui_ImplSDL2_Shutdown();
 	// ImGui::DestroyContext();
+
+	std::cout << "Stopping engine thread...\n";
+
+	engineThreadToJoin.join();
 
 	return true;
 }

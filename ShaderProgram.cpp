@@ -19,7 +19,10 @@ ShaderProgram::~ShaderProgram()
 void ShaderProgram::freeProgram()
 {
 	//delete program
-	glDeleteProgram( mProgramID );
+	if (mProgramID != NULL) {
+		glDeleteProgram( mProgramID );
+		mProgramID = NULL;
+	}
 }
 
 bool ShaderProgram::bind()
@@ -36,13 +39,18 @@ bool ShaderProgram::bind()
 		return false;
 	}
 
+	isBound = true;
 	return true;
 }
 
 void ShaderProgram::unbind()
 {
-	//use default program
-	glUseProgram( NULL );
+	if (isBound)
+	{
+		//use default program
+		glUseProgram(NULL);
+		isBound = false;
+	}
 }
 
 GLuint ShaderProgram::getProgramID()

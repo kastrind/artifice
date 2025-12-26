@@ -50,7 +50,7 @@ int main( int argc, char* args[] )
 		artificeEngine->setLevel(&level);
 
 		//start the 3D engine
-		printf( "Starting Engine thread...\n" );
+		printf( "Starting engine thread...\n" );
 		std::thread engineThread = artificeEngine->startEngine();
 
 		//main loop flag
@@ -62,7 +62,7 @@ int main( int argc, char* args[] )
 		//enable text input
 		SDL_StartTextInput();
 
-		//define a duration of 3 milliseconds
+		//define a duration of x milliseconds
 		std::chrono::milliseconds duration_milliseconds(25);
 
 		//while application is running
@@ -117,9 +117,8 @@ int main( int argc, char* args[] )
 		//disable text input
 		SDL_StopTextInput();
 
-		printf("Stopping threads...\n");
+		artificeEngine->stopEngine(engineThread);
 
-		engineThread.join();
 	}
 
 	//free resources and close SDL

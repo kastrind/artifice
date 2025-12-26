@@ -87,11 +87,9 @@ class Engine3D
 
 		std::thread startEngine();
 
-		bool onUserCreate();
+		bool update(float elapsedTime);
 
-		bool onUserUpdate(float elapsedTime);
-
-		bool onUserDestroy();
+		bool stopEngine(std::thread& engineThreadToJoin);
 
 		glm::mat4 getProjectionMatrix() const;
 
