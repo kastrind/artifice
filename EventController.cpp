@@ -289,6 +289,11 @@ bool EventController::scrollUp(bool* keysPressed, bool* prevKeysPressed) {
 	return prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP]==true && keysPressed[SupportedKeys::MOUSE_WHEEL_UP]==false;
 }
 
+bool EventController::modelModeToggle(bool* keysPressed, bool* prevKeysPressed)
+{
+	return !prevKeysPressed[SupportedKeys::M] && keysPressed[SupportedKeys::M];
+}
+
 
 
 void EventController::bufferKeysPressed()

@@ -142,6 +142,13 @@ void Engine3D::edit(float elapsedTime)
 			mtx.unlock();
 		}
 
+		if (eventController->modelModeToggle(keysPressed, prevKeysPressed)) {
+			//isModelEditingModeEnabled = !isModelEditingModeEnabled;
+			//if (isModelEditingModeEnabled) std::cout << "Model editing mode enabled" << std::endl;
+			//else std::cout << "Model editing mode disabled" << std::endl;
+			std::cout << "Toggling model editing mode" << std::endl;
+		}
+
 		if (prevKeysPressed[SupportedKeys::L] && !keysPressed[SupportedKeys::L]) {
 			isLightingEditingModeEnabled = !isLightingEditingModeEnabled;
 			if (isLightingEditingModeEnabled) std::cout << "Lighting editing mode enabled" << std::endl;

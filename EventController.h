@@ -24,6 +24,7 @@ typedef enum
 	C,
 	V,
 	L,
+	M,
 	MOUSE_LEFT,
 	MOUSE_RIGHT,
 	MOUSE_UP,
@@ -142,6 +143,7 @@ class EventController
 			supportedKeysFromStr["C"] = SupportedKeys::C;
 			supportedKeysFromStr["V"] = SupportedKeys::V;
 			supportedKeysFromStr["L"] = SupportedKeys::L;
+			supportedKeysFromStr["M"] = SupportedKeys::M;
 			supportedKeysFromStr["MOUSE_LEFT"] = SupportedKeys::MOUSE_LEFT;
 			supportedKeysFromStr["MOUSE_RIGHT"] = SupportedKeys::MOUSE_RIGHT;
 			supportedKeysFromStr["MOUSE_UP"] = SupportedKeys::MOUSE_UP;
@@ -184,6 +186,7 @@ class EventController
 			sdlKeyCodeMappings[SupportedKeys::C] = SDL_KeyCode::SDLK_c;
 			sdlKeyCodeMappings[SupportedKeys::V] = SDL_KeyCode::SDLK_v;
 			sdlKeyCodeMappings[SupportedKeys::L] = SDL_KeyCode::SDLK_l;
+			sdlKeyCodeMappings[SupportedKeys::M] = SDL_KeyCode::SDLK_m;
 			sdlKeyCodeMappings[SupportedKeys::LEFT_CTRL] = SDL_KeyCode::SDLK_LCTRL;
 			sdlKeyCodeMappings[SupportedKeys::LEFT_SHIFT] = SDL_KeyCode::SDLK_LSHIFT;
 			sdlKeyCodeMappings[SupportedKeys::LEFT_ALT] = SDL_KeyCode::SDLK_LALT;
@@ -251,6 +254,8 @@ class EventController
 		bool scrollDown(bool* keysPressed, bool* prevKeysPressed);
 
 		bool scrollUp(bool* keysPressed, bool* prevKeysPressed);
+
+		bool modelModeToggle(bool* keysPressed, bool* prevKeysPressed);
 
 		std::mutex mtx;
 
