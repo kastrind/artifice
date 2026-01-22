@@ -44,7 +44,7 @@ void Level::save(std::string levelPath)
 			f << sl.id << "," << "spot_light," << sl.position.x << "," << sl.position.y << "," << sl.position.z << "," << sl.color.r * 255 << "," << sl.color.g * 255 << "," << sl.color.b * 255 << "," << sl.diffuseIntensity << "," << sl.specularIntensity << "," << sl.constant << "," << sl.linear << "," << sl.quadratic << "," << sl.direction.x << "," << sl.direction.y << "," << sl.direction.z << "," << sl.cutoff << "," << sl.outerCutoff << std::endl;
 		}
 
-		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ" << std::endl;
+		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ compoundModelId" << std::endl;
 		for (auto &ptrModel : models)
 		{
 			model& m = *ptrModel;
@@ -74,7 +74,7 @@ void Level::save(std::string levelPath)
 			float thetaRotX = atan2(-m.rotationMatrix[2][1], m.rotationMatrix[2][2]);
 			float thetaRotY = atan2(m.rotationMatrix[2][0], sqrt(m.rotationMatrix[2][1] * m.rotationMatrix[2][1] + m.rotationMatrix[2][2] * m.rotationMatrix[2][2]));
 			float thetaRotZ = atan2(-m.rotationMatrix[1][0], m.rotationMatrix[0][0]);
-			f << "," << (m.isSolid ? "true" : "false") << "," << thetaRotX << "," << thetaRotY << "," << thetaRotZ << "," << m.position.x << "," << m.position.y << "," << m.position.z << std::endl;
+			f << "," << (m.isSolid ? "true" : "false") << "," << thetaRotX << "," << thetaRotY << "," << thetaRotZ << "," << m.position.x << "," << m.position.y << "," << m.position.z << "," << m.compoundModelId << std::endl;
 		}
 	}
 	f.close();

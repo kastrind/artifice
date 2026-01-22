@@ -6,6 +6,7 @@ void Engine3D::addModel(float editingWidth, float editingHeight, float editingDe
 	{
 		cube cube(std::max(editingWidth, std::max(editingHeight, editingDepth)), editingRotationX, editingRotationY, editingRotationZ);
 		cubeModel mdl(getTimeSinceEpoch(), cubePointsCnt, cubemapNames[editingCubemapNameIndex], position, cube, editingIsSolid);
+		mdl.compoundModelId = isModelEditingModeEnabled && compoundModelId > 0 ? compoundModelId : 0;
 		cubePointsCnt += mdl.modelMesh.tris.size() * 3;
 		std::cout << "about to place model with id = " << mdl.id << std::endl;
 		mtx.lock();
@@ -20,11 +21,13 @@ void Engine3D::addModel(float editingWidth, float editingHeight, float editingDe
 		{
 			rectangle rectangle(editingWidth, editingHeight, editingRotationX, editingRotationY, editingRotationZ);
 			model mdl(getTimeSinceEpoch(), modelPointsCnt, textureNames[editingTextureNameIndex], position, rectangle, editingIsSolid);
+			mdl.compoundModelId = isModelEditingModeEnabled && compoundModelId > 0 ? compoundModelId : 0;
 			m = mdl;
 		}else if (editingShape == shapetype::CUBOID)
 		{
 			cuboid cuboid(editingWidth, editingHeight, editingDepth, editingRotationX, editingRotationY, editingRotationZ);
 			model mdl(getTimeSinceEpoch(), modelPointsCnt, textureNames[editingTextureNameIndex], position, cuboid, editingIsSolid);
+			mdl.compoundModelId = isModelEditingModeEnabled && compoundModelId > 0 ? compoundModelId : 0;
 			m = mdl;
 		}
 		modelPointsCnt += m.modelMesh.tris.size() * 3;
@@ -55,6 +58,7 @@ void Engine3D::addLightHandleModel(unsigned long id, glm::vec3 position, glm::ma
 void Engine3D::addModel(model& mdl)
 {
 	mdl.id = getTimeSinceEpoch();
+	mdl.compoundModelId = isModelEditingModeEnabled && compoundModelId > 0 ? compoundModelId : 0;
 	std::cout << "about to place cube model with id = " << mdl.id << std::endl;
 	if (mdl.modelMesh.shape == shapetype::CUBE)
 	{
@@ -143,10 +147,15 @@ void Engine3D::edit(float elapsedTime)
 		}
 
 		if (eventController->modelModeToggle(keysPressed, prevKeysPressed)) {
-			//isModelEditingModeEnabled = !isModelEditingModeEnabled;
-			//if (isModelEditingModeEnabled) std::cout << "Model editing mode enabled" << std::endl;
-			//else std::cout << "Model editing mode disabled" << std::endl;
-			std::cout << "Toggling model editing mode" << std::endl;
+			isModelEditingModeEnabled = !isModelEditingModeEnabled;
+			if (isModelEditingModeEnabled) {
+				std::cout << "Model editing mode enabled" << std::endl;
+				compoundModelId = getTimeSinceEpoch();
+
+			} else {
+				std::cout << "Model editing mode disabled" << std::endl;
+				compoundModelId = 0;
+			}
 		}
 
 		if (prevKeysPressed[SupportedKeys::L] && !keysPressed[SupportedKeys::L]) {

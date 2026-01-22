@@ -401,6 +401,7 @@ typedef struct model {
 	public:
 
 		unsigned long id;
+		unsigned long compoundModelId = 0;
 		unsigned long sn;
 		std::string texture;
 		glm::vec3 position;

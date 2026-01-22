@@ -321,6 +321,9 @@ class Engine3D
 		bool isLightingEditingModeEnabled = false;
 		Preset preset;
 
+		bool isModelEditingModeEnabled = false;
+		unsigned long compoundModelId = 0;
+
 		bool keysPressed[SupportedKeys::ALL_KEYS];
 		bool prevKeysPressed[SupportedKeys::ALL_KEYS];
 
