@@ -127,21 +127,32 @@ void Engine3D::edit(float elapsedTime)
 		//bool* keysPressed = eventController->getKeysPressed();
 		bool isEdited = false;
 
-		// SAVE level on LCTRL + S release
+		// SAVE level or model on LCTRL + S release
 		if (prevKeysPressed[SupportedKeys::S] && keysPressed[SupportedKeys::S] == false && keysPressed[SupportedKeys::LEFT_CTRL]) {
 			mtx.lock();
-			std::cout << "SAVING!" << std::endl;
-			if (level) {
-				level->light = light;
-				level->pointLights = pointLights;
-				level->spotLights = spotLights;
-				level->flashLight = flashLight;
-				level->assignedFlashLight = assignedFlashLight;
-				level->modelPointsCnt = modelPointsCnt;
-				level->cubePointsCnt = cubePointsCnt;
-				level->models = ptrModelsToRender;
-				level->playerPosition = getPersonPos();
-				level->save();
+			if (isModelEditingModeEnabled) {
+				CompoundModel compoundModel;
+				for (auto& mdl : ptrModelsToRender) {
+					if (mdl->compoundModelId == compoundModelId) {
+						compoundModel.models.push_back(mdl);
+						//mdl->modelMesh.saveModelToFile("models/" + std::to_string(mdl->id) + ".mdl");
+					}
+				}
+				compoundModel.save(cfg.ASSETS_PATH + cfg.PATH_SEP + "compoundModels" + cfg.PATH_SEP + std::to_string(compoundModelId) + ".cmdl");
+
+			}else {
+				if (level) {
+					level->light = light;
+					level->pointLights = pointLights;
+					level->spotLights = spotLights;
+					level->flashLight = flashLight;
+					level->assignedFlashLight = assignedFlashLight;
+					level->modelPointsCnt = modelPointsCnt;
+					level->cubePointsCnt = cubePointsCnt;
+					level->models = ptrModelsToRender;
+					level->playerPosition = getPersonPos();
+					level->save();
+				}
 			}
 			mtx.unlock();
 		}
@@ -150,11 +161,12 @@ void Engine3D::edit(float elapsedTime)
 			isModelEditingModeEnabled = !isModelEditingModeEnabled;
 			if (isModelEditingModeEnabled) {
 				std::cout << "Model editing mode enabled" << std::endl;
-				compoundModelId = getTimeSinceEpoch();
+				if (compoundModelId == 0) {
+					compoundModelId = getTimeSinceEpoch();
+				}
 
 			} else {
 				std::cout << "Model editing mode disabled" << std::endl;
-				compoundModelId = 0;
 			}
 		}
 

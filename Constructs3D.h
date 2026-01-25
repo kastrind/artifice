@@ -423,6 +423,11 @@ typedef struct model {
 		unsigned short frameCols = 1;
 
 		float speed = 0.0f;
+		glm::vec3 velocity = glm::vec3(0.0f, 0.0f, 0.0f);
+		glm::vec3 angVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
+		float invInertia = 0.0f;
+		float mass = 1.0f;
+
 		glm::vec3 front = glm::vec3(0.0, 1.0, 0.0);
 		float highestY = 0.0f;
 		float lowestY = 0.0f;

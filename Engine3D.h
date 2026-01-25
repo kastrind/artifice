@@ -23,6 +23,7 @@
 #include "Constructs3D.h"
 #include "Light.h"
 #include "Level.h"
+#include "CompoundModel.h"
 #include "EventController.h"
 #include "Preset.h"
 #include "Utility.h"

@@ -1152,6 +1152,47 @@ bool Engine3D::update(float elapsedTime)
 			//std::cout << "modelDistance: " << modelDistance << std::endl;
 			//std::cout << "dpBottom: " << dpBottom << std::endl;
 
+			//TODO: revisit velocity and rotation later
+			/*
+			glm::vec3 collisionNormal = -normal;
+
+			glm::vec3 contact = (collidingTriPts[0] + collidingTriPts[1] + collidingTriPts[2]) / 3.0f;
+
+			glm::vec3 r = contact - mdl.position;  // vector from object center to contact point
+
+			glm::vec3 impulse = collisionNormal * 1.0f;
+			mdl.velocity += impulse * (1.0f/10.0f); // invMass = 1 / mass
+			glm::vec3 torque = glm::cross(r, impulse);
+			mdl.invInertia = 2.0f; // for starters
+			mdl.angVelocity += torque * mdl.invInertia; // invInertia = 1 / approximate rotational inertia
+
+			// 1. Get rotation axis and angle from angVel
+			float angle = glm::length(mdl.angVelocity) * elapsedTime;
+			if(angle > 0.0001f) {
+				glm::vec3 axis = glm::normalize(mdl.angVelocity);
+				// 2. Build incremental rotation matrix
+				glm::mat4 deltaRot = glm::rotate(glm::mat4(1.0f), angle, axis);
+				// 3. Apply to existing rotation
+				mdl.rotationMatrix = deltaRot * mdl.rotationMatrix;
+			}
+
+			std::cout << "collision normal: " << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
+			std::cout << "angular velocity: " << mdl.angVelocity.x << ", " << mdl.angVelocity.y << ", " << mdl.angVelocity.z << std::endl;
+			std::cout << "velocity: " << mdl.velocity.x << ", " << mdl.velocity.y << ", " << mdl.velocity.z << std::endl;
+			std::cout << "angle: " << angle << std::endl;
+
+			mdl.angVelocity *= 0.90f; // damping
+			mdl.position += mdl.velocity * elapsedTime / 100.0f;
+			mdl.velocity *= 0.90f; // damping
+			*/
+
+
+
+
+
+
+
+
 			//based on dp and normal, determine if able to slide and the desired motion
 			float dpFront = glm::dot(personFront, normal);
 			float absDP = std::abs(dpFront);
