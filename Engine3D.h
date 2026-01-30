@@ -289,6 +289,9 @@ class Engine3D
 		bool isFlashLightOn = false;
 
 		//editor user mode specific
+		std::vector<std::string> compoundModelEditOptions = {"model", "scale", "rotationX/pitch", "rotationY/yaw", "rotationZ/roll"};
+		unsigned short compoundModelEditOptionIndex = 0;
+		unsigned int editingCompoundModelFileNameIndex = 0;
 		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX", "rotationY", "rotationZ", "texture", "isSolid", "collationHeight", "collationWidth"};
 		unsigned short editOptionIndex = 0;
 		std::vector<std::string> lightingEditOptions = {"light type", "preset light"};
@@ -324,6 +327,7 @@ class Engine3D
 
 		bool isModelEditingModeEnabled = false;
 		unsigned long compoundModelId = 0;
+		std::vector<std::string> compoundModelFileNames;
 
 		bool keysPressed[SupportedKeys::ALL_KEYS];
 		bool prevKeysPressed[SupportedKeys::ALL_KEYS];
@@ -370,7 +374,9 @@ class Engine3D
 
 		void loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::map<std::string, GLuint>& lightmapIdsMap, std::map<std::string, GLuint>& normalmapIdsMap, std::map<std::string, GLuint>& displacementmapIdsMap);
 
-		void loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::map<std::string, GLuint>& cubeLightmapIdsMap, std::map<std::string, GLuint>& cubeNormalmapIdsMap, std::map<std::string, GLuint>& cubeDisplacementmapIdsMap);
+		void loadCubemaps(std::map<std::string, GLuint> &cubemapIdsMap, std::map<std::string, GLuint> &cubeLightmapIdsMap, std::map<std::string, GLuint> &cubeNormalmapIdsMap, std::map<std::string, GLuint> &cubeDisplacementmapIdsMap);
+
+		void readCompoundModelFileNames();
 
 		//bool initUI();
 

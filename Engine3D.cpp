@@ -475,6 +475,26 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::m
 	geometryShader.unbind();
 }
 
+
+void Engine3D::readCompoundModelFileNames()
+{
+	std::string filename;
+	std::string compoundModelsPath = cfg.ASSETS_PATH + cfg.PATH_SEP + "compoundModels";
+	
+	for (const auto & entry : std::filesystem::directory_iterator(compoundModelsPath))
+	{
+		if (entry.is_regular_file())
+		{
+			if (entry.path().filename().has_extension()) {
+				filename = entry.path().filename().replace_extension("").string();
+			} else {
+				filename = entry.path().filename().string();
+			}
+			compoundModelFileNames.push_back(filename);
+		}
+	}
+}
+
 void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::map<std::string, GLuint>& cubeLightmapIdsMap, std::map<std::string, GLuint>& cubeNormalmapIdsMap, std::map<std::string, GLuint>& cubeDisplacementmapIdsMap)
 {
 	std::string cubemapsDirNames[5] = {std::string("cubemaps"), std::string("skyboxes"), std::string("cubelightmaps"), std::string("cubenormalmaps"), std::string("cubedisplacementmaps")};

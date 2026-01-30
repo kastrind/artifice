@@ -170,6 +170,26 @@ void Engine3D::edit(float elapsedTime)
 			}
 		}
 
+		if (isModelEditingModeEnabled) {
+			readCompoundModelFileNames();
+
+			// pressing LCTRL + mouse wheel up/down cycles through edit options
+			if (keysPressed[SupportedKeys::LEFT_CTRL] && eventController->scrollDown(keysPressed, prevKeysPressed)) {
+				if (--compoundModelEditOptionIndex > compoundModelEditOptions.size() - 1) compoundModelEditOptionIndex = compoundModelEditOptions.size() - 1;
+				std::cout << "editing: " << compoundModelEditOptions[compoundModelEditOptionIndex] << std::endl;
+
+			} else if (keysPressed[SupportedKeys::LEFT_CTRL] && eventController->scrollUp(keysPressed, prevKeysPressed)) {
+				if (++compoundModelEditOptionIndex > compoundModelEditOptions.size() - 1) compoundModelEditOptionIndex = 0;
+				std::cout << "editing: " << compoundModelEditOptions[compoundModelEditOptionIndex] << std::endl;
+
+			} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "model" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
+			
+				if (++editingCompoundModelFileNameIndex > compoundModelFileNames.size() - 1) editingCompoundModelFileNameIndex = 0;
+				std::cout << "model: " << compoundModelFileNames[editingCompoundModelFileNameIndex] << std::endl;
+			}
+			return;
+		}
+
 		if (prevKeysPressed[SupportedKeys::L] && !keysPressed[SupportedKeys::L]) {
 			isLightingEditingModeEnabled = !isLightingEditingModeEnabled;
 			if (isLightingEditingModeEnabled) std::cout << "Lighting editing mode enabled" << std::endl;

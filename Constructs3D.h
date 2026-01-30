@@ -612,3 +612,12 @@ typedef struct cubeModel : public model {
 		virtual ~cubeModel() {}
 
 } cubeModel;
+
+typedef struct Transform {
+	glm::vec3 position;
+	glm::vec3 rotation;
+	glm::vec3 scale;
+
+	Transform (glm::vec3 position, glm::vec3 rotation, glm::vec3 scale)
+		: position(position), rotation(rotation), scale(scale) {}
+} Transform;

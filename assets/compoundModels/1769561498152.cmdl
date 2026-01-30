@@ -1,0 +1,5 @@
+# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ compoundModelId
+1769561510446,cube,steel_border_wooden_box,0.1,0.1,0.1,true,-0,0,-0, 0, 0, 0,1769561498152
+1769561512457,cube,steel_border_wooden_box,0.1,0.1,0.1,true,-0,0,-0,0.113377,-0.00238657,-0.0195928,1769561498152
+1769561513739,cube,steel_border_wooden_box,0.1,0.1,0.1,true,-0,0,-0,-0.114627,-0.00238657,-0.0205255,1769561498152
+1769561545617,cube,steel_border_wooden_box,0.1,0.1,0.1,true,-0,0,-0.8,0.00399089,-0.142755,0.0237813,1769561498152

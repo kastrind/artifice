@@ -92,6 +92,35 @@ void Level::load(std::string levelPath)
 		return;
 	}
 
+	deserializeModels(f, models);
+
+	//TODO: this is temporary, only for testing the loading of the compound model
+	CompoundModel compmod;
+	Transform transform(glm::vec3(0.0f, 6.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.5f), glm::vec3(1.0f));
+	compmod.load("assets/compoundModels/1769593601717.cmdl", this, &transform);
+
+	// if no point lights,
+	if (pointLights.size() == 0) {
+		// add one unlit point light if none exists, so that the lighting shader compiles, as it expects at least one point light
+		PointLight pointLight(glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.0f);
+		pointLights.push_back(pointLight);
+	}
+	// edit the lighting shader to reflect the number of point lights
+	Utility::replaceLineInFile("shaders/lighting.glfs", 7, "#define NR_POINT_LIGHTS " + std::to_string(pointLights.size()));
+
+	// if no spot lights,
+	if (spotLights.size() == 0) {
+		// add one unlit spot light if none exists, so that the lighting shader compiles, as it expects at least one spot light
+		SpotLight spotLight(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+		spotLights.push_back(spotLight);
+	}
+	// edit the lighting shader to reflect the number of spot lights
+	Utility::replaceLineInFile("shaders/lighting.glfs", 10, "#define NR_SPOT_LIGHTS " + std::to_string(spotLights.size()));
+
+}
+
+void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<model>>& models, Transform* transform)
+{
 	bool existsSkyBox = false;
 
 	while (!f.eof())
@@ -107,6 +136,8 @@ void Level::load(std::string levelPath)
 
 		unsigned long id;
 		char* idEndPtr;
+		unsigned long compoundModelId = 0;
+		char* compoundModelIdEndPtr;
 
 		std::string shape, texture;
 		bool isSolid;
@@ -130,7 +161,8 @@ void Level::load(std::string levelPath)
 				if (i == NUM_ATTRIBUTES - 1 || (i == 3 && tokens[0] == "player_position")) break;
 				tokens[++i] = token;
 			}
-			if (i == NUM_ATTRIBUTES - 6 && (tokens[1] == "rectangle" || tokens[1] == "cuboid" || tokens[1] == "cube" || tokens[1] == "skyBox" || tokens[1] == "skybox")) {
+
+			if (i == NUM_ATTRIBUTES - 5 && (tokens[1] == "rectangle" || tokens[1] == "cuboid" || tokens[1] == "cube" || tokens[1] == "skyBox" || tokens[1] == "skybox")) {
 				id      = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
 				shape   = tokens[1];
 				texture = tokens[2];
@@ -144,12 +176,27 @@ void Level::load(std::string levelPath)
 				positionX = std::stof(tokens[10]);
 				positionY = std::stof(tokens[11]);
 				positionZ = std::stof(tokens[12]);
-				//std::cout << "shape: " << shape << ", tex: " << texture << ", w: " << width << ", h: " << height << ", d: " << depth << ", rX: " << rotationX << ", rY: " << rotationY << ", rZ: " << rotationZ << ", pX: " << positionX << ", pY: " << positionY << ", pZ: " << positionZ << std::endl;
+
+				if (transform != nullptr) {
+					positionX = transform->position.x + positionX * transform->scale.x;
+					positionY = transform->position.y + positionY * transform->scale.y;
+					positionZ = transform->position.z + positionZ * transform->scale.z;
+					rotationX += transform->rotation.x;
+					rotationY += transform->rotation.y;
+					rotationZ += transform->rotation.z;
+					width  *= transform->scale.x;
+					height *= transform->scale.y;
+					depth  *= transform->scale.z;
+				}
+
+				compoundModelId = std::strtoul(tokens[13].c_str(), &compoundModelIdEndPtr, 0);
+				//std::cout << "shape: " << shape << ", tex: " << texture << ", w: " << width << ", h: " << height << ", d: " << depth << ", rX: " << rotationX << ", rY: " << rotationY << ", rZ: " << rotationZ << ", pX: " << positionX << ", pY: " << positionY << ", pZ: " << positionZ << ", compoundModelId: " << compoundModelId << std::endl;
 
 				if (shape == "rectangle")
 				{
 					rectangle rectangle(width, height, rotationX, rotationY, rotationZ);
 					model m(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), rectangle, isSolid);
+					m.compoundModelId = compoundModelId;
 					modelPointsCnt += m.modelMesh.tris.size() * 3;
 					models.push_back(std::make_shared<model>(m));
 				}
@@ -157,6 +204,7 @@ void Level::load(std::string levelPath)
 				{
 					cuboid cuboid(width, height, depth, rotationX, rotationY, rotationZ);
 					model m(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), cuboid, isSolid);
+					m.compoundModelId = compoundModelId;
 					modelPointsCnt += m.modelMesh.tris.size() * 3;
 					models.push_back(std::make_shared<model>(m));
 				}
@@ -164,6 +212,7 @@ void Level::load(std::string levelPath)
 				{
 					cube cube(std::max(width, std::max(height, depth)), rotationX, rotationY, rotationZ);
 					cubeModel cubeMdl(id, cubePointsCnt, texture, glm::vec3(positionX, positionY, positionZ), cube, isSolid);
+					cubeMdl.compoundModelId = compoundModelId;
 					cubeMdl.isSkyBox = (shape == "skyBox" || shape == "skybox") == true;
 					cubeMdl.isActiveSkyBox = (!existsSkyBox && cubeMdl.isSkyBox); // only the first skyBox is active
 					existsSkyBox = existsSkyBox || cubeMdl.isSkyBox;
@@ -234,23 +283,5 @@ void Level::load(std::string levelPath)
 			}
 		}
 	}
-	std::cout << "loaded " << models.size() << " models.";
-	// if no point lights,
-	if (pointLights.size() == 0) {
-		// add one unlit point light if none exists, so that the lighting shader compiles, as it expects at least one point light
-		PointLight pointLight(glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.0f);
-		pointLights.push_back(pointLight);
-	}
-	// edit the lighting shader to reflect the number of point lights
-	Utility::replaceLineInFile("shaders/lighting.glfs", 7, "#define NR_POINT_LIGHTS " + std::to_string(pointLights.size()));
-
-	// if no spot lights,
-	if (spotLights.size() == 0) {
-		// add one unlit spot light if none exists, so that the lighting shader compiles, as it expects at least one spot light
-		SpotLight spotLight(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-		spotLights.push_back(spotLight);
-	}
-	// edit the lighting shader to reflect the number of spot lights
-	Utility::replaceLineInFile("shaders/lighting.glfs", 10, "#define NR_SPOT_LIGHTS " + std::to_string(spotLights.size()));
-
+	std::cout << "loaded " << models.size() << " models." << std::endl;
 }

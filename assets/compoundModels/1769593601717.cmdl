@@ -1,0 +1,5 @@
+# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ compoundModelId
+1769593680972,cube,steel_border_wooden_box,0.1,0.1,0.1,true,-0,0,-0.6,0,0,0,1769593601717
+1769593698884,rectangle,brickwall,0.1,0.1,0,true,-0,0,-0.6,0.0,0.3,0,1769593601717
+1769593708559,rectangle,walnut_skull,0.1,0.1,0,true,-0,0,-0.6,0,0.5,0,1769593601717
+1769593732877,rectangle,transparentQ,0.1,0.1,0,true,-0,-1.4708,-0.6,0,0.7,0,1769593601717

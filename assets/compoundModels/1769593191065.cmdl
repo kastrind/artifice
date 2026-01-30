@@ -1,0 +1,5 @@
+# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ compoundModelId
+1769593239832,cube,lightbox,0.1,0.1,0.1,true,0.6,-0.3,-0, 0, 0, 0,1769593191065
+1769593240845,cube,lightbox,0.1,0.1,0.1,true,0.6,-0.3,-0,-0.0349042,0.018907,0.150693,1769593191065
+1769593241651,cube,lightbox,0.1,0.1,0.1,true,0.6,-0.3,-0,-0.0558164,0.0398196,0.27225,1769593191065
+1769593242407,cube,lightbox,0.1,0.1,0.1,true,0.6,-0.3,-0,-0.0838561,0.0616272,0.385022,1769593191065

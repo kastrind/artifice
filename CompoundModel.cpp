@@ -53,7 +53,7 @@ void CompoundModel::save(std::string modelPath)
 
 			if (is_first) { // first model position is always 0, 0, 0
 				first_position = m.position;
-				f << ", 0, 0, 0";
+				f << ",0,0,0";
 			}else { // else position is relative to first
 				f << "," << m.position.x - first_position.x << "," << m.position.y - first_position.y << "," << m.position.z - first_position.z;
 			}
@@ -85,178 +85,17 @@ void CompoundModel::save(std::string modelPath)
 	f.close();
 }
 
-void CompoundModel::load(std::string modelPath)
+void CompoundModel::load(std::string modelPath, Level* level, Transform* transform)
 {
-	//TODO: implement loading of compound models
-	// this->modelPath = modelPath;
-	// printf( "Loading compound model %s\n",  modelPath.c_str() );
+	this->modelPath = modelPath;
+	printf( "Loading compound model %s\n",  modelPath.c_str() );
 
-	// std::ifstream f(modelPath);
-	// if (!f.is_open())
-	// {
-	// 	printf( "Failed to load model!\n" );
-	// 	return;
-	// }
+	std::ifstream f(modelPath);
+	if (!f.is_open())
+	{
+		printf( "Failed to load model!\n" );
+		return;
+	}
 
-	// bool existsSkyBox = false;
-
-	// while (!f.eof())
-	// {
-	// 	char line[256];
-	// 	f.getline(line, 256);
-
-	// 	std::stringstream s;
-	// 	std::string streamstring;
-		
-	// 	s << line;
-	// 	s >> streamstring;
-
-	// 	unsigned long id;
-	// 	char* idEndPtr;
-
-	// 	std::string shape, texture;
-	// 	bool isSolid;
-	// 	float width, height, depth, rotationX, rotationY, rotationZ, positionX, positionY, positionZ;
-
-	// 	//std::cout << " line: " << line << std::endl;
-
-	// 	if (streamstring.c_str()[0] == '#')
-	// 	{
-	// 		//std::cout << "ignoring comment " << streamstring.c_str() << std::endl;
-	// 		continue;
-	// 	}
-	// 	else
-	// 	{
-	// 		std::string linestring(line);
-	// 		std::istringstream ss(linestring);
-	// 		std::string token;
-	// 		unsigned int i = -1;
-	// 		std::string tokens[NUM_ATTRIBUTES];
-	// 		while(std::getline(ss, token, ',')) {
-	// 			if (i == NUM_ATTRIBUTES - 1 || (i == 3 && tokens[0] == "player_position")) break;
-	// 			tokens[++i] = token;
-	// 		}
-	// 		if (i == NUM_ATTRIBUTES - 6 && (tokens[1] == "rectangle" || tokens[1] == "cuboid" || tokens[1] == "cube" || tokens[1] == "skyBox" || tokens[1] == "skybox")) {
-	// 			id      = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
-	// 			shape   = tokens[1];
-	// 			texture = tokens[2];
-	// 			width   = std::stof(tokens[3]);
-	// 			height  = std::stof(tokens[4]);
-	// 			depth   = std::stof(tokens[5]);
-	// 			isSolid = tokens[6] == "true";
-	// 			rotationX = std::stof(tokens[7]);
-	// 			rotationY = std::stof(tokens[8]);
-	// 			rotationZ = std::stof(tokens[9]);
-	// 			positionX = std::stof(tokens[10]);
-	// 			positionY = std::stof(tokens[11]);
-	// 			positionZ = std::stof(tokens[12]);
-	// 			//std::cout << "shape: " << shape << ", tex: " << texture << ", w: " << width << ", h: " << height << ", d: " << depth << ", rX: " << rotationX << ", rY: " << rotationY << ", rZ: " << rotationZ << ", pX: " << positionX << ", pY: " << positionY << ", pZ: " << positionZ << std::endl;
-
-	// 			if (shape == "rectangle")
-	// 			{
-	// 				rectangle rectangle(width, height, rotationX, rotationY, rotationZ);
-	// 				model m(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), rectangle, isSolid);
-	// 				modelPointsCnt += m.modelMesh.tris.size() * 3;
-	// 				models.push_back(std::make_shared<model>(m));
-	// 			}
-	// 			else if (shape == "cuboid")
-	// 			{
-	// 				cuboid cuboid(width, height, depth, rotationX, rotationY, rotationZ);
-	// 				model m(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), cuboid, isSolid);
-	// 				modelPointsCnt += m.modelMesh.tris.size() * 3;
-	// 				models.push_back(std::make_shared<model>(m));
-	// 			}
-	// 			else if (shape == "cube" || shape == "skyBox" || shape == "skybox")
-	// 			{
-	// 				cube cube(std::max(width, std::max(height, depth)), rotationX, rotationY, rotationZ);
-	// 				cubeModel cubeMdl(id, cubePointsCnt, texture, glm::vec3(positionX, positionY, positionZ), cube, isSolid);
-	// 				cubeMdl.isSkyBox = (shape == "skyBox" || shape == "skybox") == true;
-	// 				cubeMdl.isActiveSkyBox = (!existsSkyBox && cubeMdl.isSkyBox); // only the first skyBox is active
-	// 				existsSkyBox = existsSkyBox || cubeMdl.isSkyBox;
-	// 				cubePointsCnt += cubeMdl.modelMesh.tris.size() * 3;
-	// 				models.push_back(std::make_shared<cubeModel>(cubeMdl));
-	// 			}
-	// 		}else if (tokens[0] == "player_position") {
-	// 			positionX = std::stof(tokens[1]);
-	// 			positionY = std::stof(tokens[2]);
-	// 			positionZ = std::stof(tokens[3]);
-	// 			playerPosition = glm::vec3(positionX, positionY, positionZ);
-	// 		}else if (tokens[0] == "light") {
-	// 			light.direction = glm::vec3(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3]));
-	// 			light.color = glm::vec3(std::stoi(tokens[4])/255.0f, std::stoi(tokens[5])/255.0f, std::stoi(tokens[6])/255.0f);
-	// 			light.ambientIntensity = std::stof(tokens[7]);
-	// 			light.diffuseIntensity = std::stof(tokens[8]);
-	// 			light.specularIntensity = std::stof(tokens[9]);
-	// 		}else if (tokens[1] == "point_light") {
-	// 			id = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
-	// 			glm::vec3 position = glm::vec3(std::stof(tokens[2]), std::stof(tokens[3]), std::stof(tokens[4]));
-	// 			glm::vec3 color = glm::vec3(std::stoi(tokens[5])/255.0f, std::stoi(tokens[6])/255.0f, std::stoi(tokens[7])/255.0f);
-	// 			float diffuseIntensity = std::stof(tokens[8]);
-	// 			float specularIntensity = std::stof(tokens[9]);
-	// 			float constant = std::stof(tokens[10]);
-	// 			float linear = std::stof(tokens[11]);
-	// 			float quadratic = std::stof(tokens[12]);
-	// 			PointLight pointLight(position, constant, linear, quadratic);
-	// 			pointLight.id = id;
-	// 			pointLight.color = color;
-	// 			pointLight.diffuseIntensity = diffuseIntensity;
-	// 			pointLight.specularIntensity = specularIntensity;
-	// 			pointLights.push_back(pointLight);
-	// 		}else if (tokens[1] == "spot_light") {
-	// 			id = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
-	// 			glm::vec3 position = glm::vec3(std::stof(tokens[2]), std::stof(tokens[3]), std::stof(tokens[4]));
-	// 			glm::vec3 color = glm::vec3(std::stoi(tokens[5])/255.0f, std::stoi(tokens[6])/255.0f, std::stoi(tokens[7])/255.0f);
-	// 			float diffuseIntensity = std::stof(tokens[8]);
-	// 			float specularIntensity = std::stof(tokens[9]);
-	// 			float constant = std::stof(tokens[10]);
-	// 			float linear = std::stof(tokens[11]);
-	// 			float quadratic = std::stof(tokens[12]);
-	// 			glm::vec3 direction = glm::vec3(std::stof(tokens[13]), std::stof(tokens[14]), std::stof(tokens[15]));
-	// 			float cutoff = std::stof(tokens[16]);
-	// 			float outerCutoff = std::stof(tokens[17]);
-	// 			SpotLight spotLight(position, direction, constant, linear, quadratic, cutoff, outerCutoff);
-	// 			spotLight.id = id;
-	// 			spotLight.color = color;
-	// 			spotLight.diffuseIntensity = diffuseIntensity;
-	// 			spotLight.specularIntensity = specularIntensity;
-	// 			spotLights.push_back(spotLight);
-	// 		}else if (tokens[1] == "flashlight") {
-	// 			id = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
-	// 			glm::vec3 color = glm::vec3(std::stoi(tokens[2])/255.0f, std::stoi(tokens[3])/255.0f, std::stoi(tokens[4])/255.0f);
-	// 			float diffuseIntensity = std::stof(tokens[5]);
-	// 			float specularIntensity = std::stof(tokens[6]);
-	// 			float constant = std::stof(tokens[7]);
-	// 			float linear = std::stof(tokens[8]);
-	// 			float quadratic = std::stof(tokens[9]);
-	// 			float cutoff = std::stof(tokens[10]);
-	// 			float outerCutoff = std::stof(tokens[11]);
-	// 			SpotLight spotLight(glm::vec3(0,0,0), glm::vec3(0,0,0), constant, linear, quadratic, cutoff, outerCutoff);
-	// 			spotLight.id = id;
-	// 			spotLight.color = color;
-	// 			spotLight.diffuseIntensity = diffuseIntensity;
-	// 			spotLight.specularIntensity = specularIntensity;
-	// 			flashLight = spotLight;
-	// 			assignedFlashLight = true;
-	// 		}
-	// 	}
-	// }
-	// std::cout << "loaded " << models.size() << " models.";
-	// // if no point lights,
-	// if (pointLights.size() == 0) {
-	// 	// add one unlit point light if none exists, so that the lighting shader compiles, as it expects at least one point light
-	// 	PointLight pointLight(glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.0f);
-	// 	pointLights.push_back(pointLight);
-	// }
-	// // edit the lighting shader to reflect the number of point lights
-	// Utility::replaceLineInFile("shaders/lighting.glfs", 7, "#define NR_POINT_LIGHTS " + std::to_string(pointLights.size()));
-
-	// // if no spot lights,
-	// if (spotLights.size() == 0) {
-	// 	// add one unlit spot light if none exists, so that the lighting shader compiles, as it expects at least one spot light
-	// 	SpotLight spotLight(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-	// 	spotLights.push_back(spotLight);
-	// }
-	// // edit the lighting shader to reflect the number of spot lights
-	// Utility::replaceLineInFile("shaders/lighting.glfs", 10, "#define NR_SPOT_LIGHTS " + std::to_string(spotLights.size()));
-
+	level->deserializeModels(f, level->models, transform);
 }

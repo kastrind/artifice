@@ -9,6 +9,9 @@
 #include "Constructs3D.h"
 #include "Light.h"
 #include "Utility.h"
+#include "CompoundModel.h"
+
+class CompoundModel;
 
 class Level
 {
@@ -41,9 +44,11 @@ class Level
 
 		bool assignedFlashLight = false;
 
+		void save(std::string levelPath = "");
+
 		void load(std::string levelPath);
 
-		void save(std::string levelPath = "");
+		void deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<model>>& models, Transform* transform = nullptr);
 
 	private:
 
