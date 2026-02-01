@@ -27,6 +27,8 @@ class CompoundModel
 
 		void load(std::string modelPath, Level* level, Transform* transform = nullptr);
 
+		void load(std::string modelPath, Transform* transform = nullptr);
+
 		void save(std::string modelPath = "");
 
 	private:

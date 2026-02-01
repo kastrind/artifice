@@ -241,7 +241,7 @@ class EventController
 
 		bool flashlight(bool* keysPressed, bool* prevKeysPressed);
 
-		bool place(bool* keysPressed);
+		bool place(bool* keysPressed, bool* prevKeysPressed);
 
 		bool remove(bool* keysPressed);
 

@@ -409,6 +409,9 @@ class Engine3D
 
 		void edit(float elapsedTime);
 
+		//compound model placement - returns true if a compound model was placed, false otherwise
+		bool placeCompoundModel();
+
 		int64_t getTimeSinceEpoch();
 
 		std::string shapeTypeToString(shapetype s);

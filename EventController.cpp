@@ -253,12 +253,12 @@ bool EventController::backward(bool* keysPressed)
 
 bool EventController::flashlight(bool* keysPressed, bool* prevKeysPressed)
 {
-	return !prevKeysPressed[SupportedKeys::F] && keysPressed[keyMappings[KeyActions::FLASHLIGHT]];
+	return prevKeysPressed[SupportedKeys::F] && !keysPressed[keyMappings[KeyActions::FLASHLIGHT]];
 }
 
-bool EventController::place(bool* keysPressed)
+bool EventController::place(bool* keysPressed, bool* prevKeysPressed)
 {
-	return keysPressed[keyMappings[KeyActions::PLACE]];
+	return prevKeysPressed[keyMappings[KeyActions::PLACE]] && !keysPressed[keyMappings[KeyActions::PLACE]];
 }
 
 bool EventController::remove(bool* keysPressed)

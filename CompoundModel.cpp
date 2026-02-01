@@ -99,3 +99,18 @@ void CompoundModel::load(std::string modelPath, Level* level, Transform* transfo
 
 	level->deserializeModels(f, level->models, transform);
 }
+
+void CompoundModel::load(std::string modelPath, Transform* transform)
+{
+	this->modelPath = modelPath;
+	printf( "Loading compound model %s\n",  modelPath.c_str() );
+
+	std::ifstream f(modelPath);
+	if (!f.is_open())
+	{
+		printf( "Failed to load model!\n" );
+		return;
+	}
+	Level tempLevel;
+	tempLevel.deserializeModels(f, this->models, transform);
+}
