@@ -292,6 +292,7 @@ class Engine3D
 		std::vector<std::string> compoundModelEditOptions = {"model", "scale", "rotationX/pitch", "rotationY/yaw", "rotationZ/roll"};
 		unsigned short compoundModelEditOptionIndex = 0;
 		unsigned int editingCompoundModelFileNameIndex = 0;
+		float editingScale = 1.0f;
 		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX", "rotationY", "rotationZ", "texture", "isSolid", "collationHeight", "collationWidth"};
 		unsigned short editOptionIndex = 0;
 		std::vector<std::string> lightingEditOptions = {"light type", "preset light"};

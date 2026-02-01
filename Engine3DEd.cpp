@@ -182,11 +182,53 @@ void Engine3D::edit(float elapsedTime)
 				if (++compoundModelEditOptionIndex > compoundModelEditOptions.size() - 1) compoundModelEditOptionIndex = 0;
 				std::cout << "editing: " << compoundModelEditOptions[compoundModelEditOptionIndex] << std::endl;
 
+			// cycles through compound models
 			} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "model" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
-			
 				if (++editingCompoundModelFileNameIndex > compoundModelFileNames.size() - 1) editingCompoundModelFileNameIndex = 0;
 				std::cout << "model: " << compoundModelFileNames[editingCompoundModelFileNameIndex] << std::endl;
+			} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "model" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
+				if (--editingCompoundModelFileNameIndex > compoundModelFileNames.size() - 1) editingCompoundModelFileNameIndex = compoundModelFileNames.size() - 1;
+				std::cout << "model: " << compoundModelFileNames[editingCompoundModelFileNameIndex] << std::endl;
+
+			// decreases/increases scale
+			} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "scale" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
+				editingScale = std::max(editingScale - 0.1f, 0.1f);
+				std::cout << "scale: " << editingScale << std::endl;
+			} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "scale" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
+				editingScale += 0.1f;
+				std::cout << "scale: " << editingScale << std::endl;
+
+			// decreases/increases X rotation
+			} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "rotationX/pitch" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
+				editingRotationX = std::max(editingRotationX - 0.1f, -cfg.M_PI_HALF);
+				if (std::abs(editingRotationX) > 0 && std::abs(editingRotationX) < 0.1f) { editingRotationX = 0.0f; }
+				std::cout << "rotationX/pitch: " << editingRotationX << std::endl;
+			} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "rotationX/pitch" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
+				editingRotationX = std::min(editingRotationX + 0.1f, cfg.M_PI_HALF);
+				if (std::abs(editingRotationX) > 0 && std::abs(editingRotationX) < 0.1f) { editingRotationX = 0.0f; }
+				std::cout << "rotationX/pitch: " << editingRotationX << std::endl;
+
+			// decreases/increases Y rotation
+			} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "rotationY/yaw" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
+				editingRotationY = std::max(editingRotationY - 0.1f, -cfg.M_PI_HALF);
+				if (std::abs(editingRotationY) > 0 && std::abs(editingRotationY) < 0.1f) { editingRotationY = 0.0f; }
+				std::cout << "rotationY/yaw: " << editingRotationY << std::endl;
+			} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "rotationY/yaw" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
+				editingRotationY = std::min(editingRotationY + 0.1f, cfg.M_PI_HALF);
+				if (std::abs(editingRotationY) > 0 && std::abs(editingRotationY) < 0.1f) { editingRotationY = 0.0f; }
+				std::cout << "rotationY/yaw: " << editingRotationY << std::endl;
+
+			// decreases/increases Z rotation
+			} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "rotationZ/roll" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
+				editingRotationZ = std::max(editingRotationZ - 0.1f, -cfg.M_PI_HALF);
+				if (std::abs(editingRotationZ) > 0 && std::abs(editingRotationZ) < 0.1f) { editingRotationZ = 0.0f; }
+				std::cout << "rotationZ/roll: " << editingRotationZ << std::endl;
+			} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "rotationZ/roll" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
+				editingRotationZ = std::min(editingRotationZ + 0.1f, cfg.M_PI_HALF);
+				if (std::abs(editingRotationZ) > 0 && std::abs(editingRotationZ) < 0.1f) { editingRotationZ = 0.0f; }
+				std::cout << "rotationZ/roll: " << editingRotationZ << std::endl;
 			}
+
 			return;
 		}
 
@@ -394,7 +436,7 @@ void Engine3D::edit(float elapsedTime)
 			if (++editOptionIndex > editOptions.size() - 1) editOptionIndex = 0;
 			std::cout << "editing: " << editOptions[editOptionIndex] << std::endl;
 
-		// increases/decreases collation height
+		// decreases/increases collation height
 		} else if (editOptions[editOptionIndex] == "collationHeight" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			collationHeight = std::max(--collationHeight, (unsigned int)1);
 			std::cout << "collation height: " << collationHeight << std::endl;
@@ -402,7 +444,7 @@ void Engine3D::edit(float elapsedTime)
 			collationHeight++;
 			std::cout << "collation height: " << collationHeight << std::endl;
 
-		// increases/decreases collation width
+		// decreases/increases collation width
 		} else if (editOptions[editOptionIndex] == "collationWidth" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			collationWidth = std::max(--collationWidth, (unsigned int)1);
 			std::cout << "collation width: " << collationWidth << std::endl;
@@ -420,7 +462,7 @@ void Engine3D::edit(float elapsedTime)
 			editingShape = (shapetype)edShapeInt;
 			std::cout << "shape: " << shapeTypeToString(editingShape) << std::endl;
 
-		// increases/decreases width
+		// decreases/increases width
 		} else if (editOptions[editOptionIndex] == "width" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			editingWidth = std::max(editingWidth - 0.1f, 0.1f);
 			std::cout << "width: " << editingWidth << std::endl;
@@ -430,7 +472,7 @@ void Engine3D::edit(float elapsedTime)
 			std::cout << "width: " << editingWidth << std::endl;
 			isEdited = true;
 
-		// increases/decreases height
+		// decreases/increases height
 		} else if (editOptions[editOptionIndex] == "height" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			editingHeight = std::max(editingHeight - 0.1f, 0.1f);
 			std::cout << "height: " << editingHeight << std::endl;
@@ -440,7 +482,7 @@ void Engine3D::edit(float elapsedTime)
 			std::cout << "height: " << editingHeight << std::endl;
 			isEdited = true;
 
-		// increases/decreases depth
+		// decreases/increases depth
 		} else if (editOptions[editOptionIndex] == "depth" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			editingDepth = std::max(editingDepth - 0.1f, 0.1f);
 			std::cout << "depth: " << editingDepth << std::endl;
@@ -450,7 +492,7 @@ void Engine3D::edit(float elapsedTime)
 			std::cout << "depth: " << editingDepth << std::endl;
 			isEdited = true;
 
-		// increases/decreases X rotation
+		// decreases/increases X rotation
 		} else if (editOptions[editOptionIndex] == "rotationX" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			editingRotationX = std::max(editingRotationX - 0.1f, -cfg.M_PI_HALF);
 			if (std::abs(editingRotationX) > 0 && std::abs(editingRotationX) < 0.1f) { editingRotationX = 0.0f; }
@@ -460,7 +502,7 @@ void Engine3D::edit(float elapsedTime)
 			if (std::abs(editingRotationX) > 0 && std::abs(editingRotationX) < 0.1f) { editingRotationX = 0.0f; }
 			std::cout << "rotationX: " << editingRotationX << std::endl;
 
-		// increases/decreases Y rotation
+		// decreases/increases Y rotation
 		} else if (editOptions[editOptionIndex] == "rotationY" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			editingRotationY = std::max(editingRotationY - 0.1f, -cfg.M_PI_HALF);
 			if (std::abs(editingRotationY) > 0 && std::abs(editingRotationY) < 0.1f) { editingRotationY = 0.0f; }
@@ -470,7 +512,7 @@ void Engine3D::edit(float elapsedTime)
 			if (std::abs(editingRotationY) > 0 && std::abs(editingRotationY) < 0.1f) { editingRotationY = 0.0f; }
 			std::cout << "rotationY: " << editingRotationY << std::endl;
 
-		// increases/decreases Z rotation
+		// decreases/increases Z rotation
 		} else if (editOptions[editOptionIndex] == "rotationZ" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			editingRotationZ = std::max(editingRotationZ - 0.1f, -cfg.M_PI_HALF);
 			if (std::abs(editingRotationZ) > 0 && std::abs(editingRotationZ) < 0.1f) { editingRotationZ = 0.0f; }
