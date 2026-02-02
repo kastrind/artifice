@@ -256,7 +256,12 @@ bool EventController::flashlight(bool* keysPressed, bool* prevKeysPressed)
 	return prevKeysPressed[SupportedKeys::F] && !keysPressed[keyMappings[KeyActions::FLASHLIGHT]];
 }
 
-bool EventController::place(bool* keysPressed, bool* prevKeysPressed)
+bool EventController::pressPlace(bool* keysPressed, bool* prevKeysPressed)
+{
+	return !prevKeysPressed[keyMappings[KeyActions::PLACE]] && keysPressed[keyMappings[KeyActions::PLACE]];
+}
+
+bool EventController::releasePlace(bool* keysPressed, bool* prevKeysPressed)
 {
 	return prevKeysPressed[keyMappings[KeyActions::PLACE]] && !keysPressed[keyMappings[KeyActions::PLACE]];
 }

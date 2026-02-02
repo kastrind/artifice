@@ -111,6 +111,15 @@ void CompoundModel::load(std::string modelPath, Transform* transform)
 		printf( "Failed to load model!\n" );
 		return;
 	}
+	models.clear();
 	Level tempLevel;
-	tempLevel.deserializeModels(f, this->models, transform);
+	tempLevel.deserializeModels(f, models, transform);
+	if (models.size() > 0) {
+		models[0]->isHeadModel = true;
+	}
+	if (models.size() > 1) {
+		for (size_t i = 1; i < models.size(); ++i) {
+			models[i]->headModel = std::make_shared<model>(*models[0]);
+		}
+	}
 }

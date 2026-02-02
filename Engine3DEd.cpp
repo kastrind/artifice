@@ -368,7 +368,7 @@ void Engine3D::edit(float elapsedTime)
 			}
 		}
 
-		if (isLightingEditingModeEnabled) return;
+		if (isLightingEditingModeEnabled || isModelEditingModeEnabled) return;
 
 		// pressing LCTRL + mouse wheel up/down cycles through edit options
 		if (keysPressed[SupportedKeys::LEFT_CTRL] && eventController->scrollDown(keysPressed, prevKeysPressed)) {

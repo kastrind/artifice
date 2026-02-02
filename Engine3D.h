@@ -289,12 +289,22 @@ class Engine3D
 		bool isFlashLightOn = false;
 
 		//editor user mode specific
+
+		//compound model edit mode specific
+		bool isModelEditingModeEnabled = false;
+		unsigned long compoundModelId = 0;
+		std::vector<std::string> compoundModelFileNames;
 		std::vector<std::string> compoundModelEditOptions = {"model", "scale", "rotationX/pitch", "rotationY/yaw", "rotationZ/roll"};
 		unsigned short compoundModelEditOptionIndex = 0;
 		unsigned int editingCompoundModelFileNameIndex = 0;
 		float editingScale = 1.0f;
-		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX", "rotationY", "rotationZ", "texture", "isSolid", "collationHeight", "collationWidth"};
-		unsigned short editOptionIndex = 0;
+		unsigned long editingCompoundModelPartsCount = 0;
+		bool refreshTransform = false;
+		CompoundModel editingCompoundModel;
+
+		//lighting edit mode specific
+		bool isLightingEditingModeEnabled = false;
+		Preset preset;
 		std::vector<std::string> lightingEditOptions = {"light type", "preset light"};
 		unsigned short lightingEditOptionIndex = 0;
 		std::vector<std::string> lightingTypeOptions = {};
@@ -302,8 +312,10 @@ class Engine3D
 		unsigned short presetDirectionalLightIndex = 0;
 		unsigned short presetPointLightIndex = 0;
 		unsigned short presetSpotLightIndex = 0;
-		float originalCollidingDistanceH = 0;
-		float originalCollidingDistanceV = 0;
+
+		//regular edit mode specific
+		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX", "rotationY", "rotationZ", "texture", "isSolid", "collationHeight", "collationWidth"};
+		unsigned short editOptionIndex = 0;
 		unsigned int collationHeight = 1;
 		unsigned int collationWidth = 1;
 		float editingWidth = 0.1f;
@@ -317,18 +329,14 @@ class Engine3D
 		shapetype editingShape = shapetype::CUBE;
 		unsigned short edShapeInt = 1;
 		bool editingIsSolid = true;
+		float originalCollidingDistanceH = 0;
+		float originalCollidingDistanceV = 0;
 		std::shared_ptr<model> editingModel = nullptr;
 		std::shared_ptr<model> deletingModel = nullptr;
 		std::shared_ptr<model> copyingModel = nullptr;
 		model modelInFocusTmp;
 		unsigned long modelPointsCnt = 0;
 		unsigned long cubePointsCnt = 0;
-		bool isLightingEditingModeEnabled = false;
-		Preset preset;
-
-		bool isModelEditingModeEnabled = false;
-		unsigned long compoundModelId = 0;
-		std::vector<std::string> compoundModelFileNames;
 
 		bool keysPressed[SupportedKeys::ALL_KEYS];
 		bool prevKeysPressed[SupportedKeys::ALL_KEYS];

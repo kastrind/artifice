@@ -1037,9 +1037,18 @@ bool Engine3D::update(float elapsedTime)
 
 		mtx.lock();
 		glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
-		modelMatrix = glm::translate(modelMatrix, mdl.position);
-		modelMatrix = modelMatrix * mdl.rotationMatrix;
-		mdl.modelMatrix = modelMatrix;
+		if (mdl.compoundModelId > 0)
+		{
+			modelMatrix = mdl.modelMatrix;
+		}
+		else
+		{
+			modelMatrix = glm::translate(modelMatrix, mdl.position);
+			modelMatrix = modelMatrix * mdl.rotationMatrix;
+			mdl.modelMatrix = modelMatrix;
+		}
+
+
 
 		mdl.inFocus = false;
 		float minX = 1.0f, maxX = -1.0f, minY = 1.0f, maxY = -1.0f, minZ = 100000.0f, maxZ = -100000.0f;
