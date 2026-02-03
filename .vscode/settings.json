@@ -22,6 +22,8 @@
 		]
 	},
 	"files.associations": {
+		"*.glvs": "glsl",
+		"*.glfs": "glsl",
 		"array": "cpp",
 		"atomic": "cpp",
 		"bit": "cpp",
@@ -83,6 +85,7 @@
 		"map": "cpp",
 		"codecvt": "cpp",
 		"iomanip": "cpp",
-		"set": "cpp"
+		"set": "cpp",
+		"*.bak": "cpp"
 	}
 }

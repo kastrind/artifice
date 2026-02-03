@@ -7,6 +7,7 @@
 #include <vector>
 #include <memory>
 #include "Constructs3D.h"
+#include "Configuration.h"
 #include "Level.h"
 
 class Level;
@@ -25,9 +26,9 @@ class CompoundModel
 
 		std::string modelPath;
 
-		void load(std::string modelPath, Level* level, Transform* transform = nullptr);
-
 		void load(std::string modelPath, Transform* transform = nullptr);
+
+		static std::shared_ptr<CompoundModel> create(std::string modelPath, Transform* transform = nullptr);
 
 		void save(std::string modelPath = "");
 

@@ -299,8 +299,6 @@ class Engine3D
 		unsigned int editingCompoundModelFileNameIndex = 0;
 		float editingScale = 1.0f;
 		unsigned long editingCompoundModelPartsCount = 0;
-		bool refreshTransform = false;
-		CompoundModel editingCompoundModel;
 
 		//lighting edit mode specific
 		bool isLightingEditingModeEnabled = false;

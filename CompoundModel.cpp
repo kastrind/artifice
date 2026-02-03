@@ -85,21 +85,6 @@ void CompoundModel::save(std::string modelPath)
 	f.close();
 }
 
-void CompoundModel::load(std::string modelPath, Level* level, Transform* transform)
-{
-	this->modelPath = modelPath;
-	printf( "Loading compound model %s\n",  modelPath.c_str() );
-
-	std::ifstream f(modelPath);
-	if (!f.is_open())
-	{
-		printf( "Failed to load model!\n" );
-		return;
-	}
-
-	level->deserializeModels(f, level->models, transform);
-}
-
 void CompoundModel::load(std::string modelPath, Transform* transform)
 {
 	this->modelPath = modelPath;
@@ -122,4 +107,11 @@ void CompoundModel::load(std::string modelPath, Transform* transform)
 			models[i]->headModel = std::make_shared<model>(*models[0]);
 		}
 	}
+}
+
+std::shared_ptr<CompoundModel> CompoundModel::create(std::string modelPath, Transform* transform)
+{
+	CompoundModel compModel;
+	compModel.load(modelPath, transform);
+	return std::make_shared<CompoundModel>(compModel);
 }

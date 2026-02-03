@@ -479,9 +479,8 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::m
 void Engine3D::readCompoundModelFileNames()
 {
 	std::string filename;
-	std::string compoundModelsPath = cfg.ASSETS_PATH + cfg.PATH_SEP + "compoundModels";
 	
-	for (const auto & entry : std::filesystem::directory_iterator(compoundModelsPath))
+	for (const auto & entry : std::filesystem::directory_iterator(cfg.COMPOUND_MODELS_PATH))
 	{
 		if (entry.is_regular_file())
 		{

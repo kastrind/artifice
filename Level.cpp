@@ -94,11 +94,6 @@ void Level::load(std::string levelPath)
 
 	deserializeModels(f, models);
 
-	// //TODO: this is temporary, only for testing the loading of the compound model
-	// CompoundModel compmod;
-	// Transform transform(glm::vec3(0.0f, 6.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.5f), glm::vec3(1.0f));
-	// compmod.load("assets/compoundModels/1769593601717.cmdl", this, &transform);
-
 	// if no point lights,
 	if (pointLights.size() == 0) {
 		// add one unlit point light if none exists, so that the lighting shader compiles, as it expects at least one point light

@@ -403,11 +403,10 @@ typedef struct model {
 		unsigned long id;
 		unsigned long compoundModelId = 0;
 		bool isHeadModel = false;
-		std::shared_ptr<model> headModel = nullptr; //for compound models, points to the head model
+		std::shared_ptr<model> headModel = nullptr; // for compound models, points to the head model
 		unsigned long sn;
 		std::string texture;
 		glm::vec3 position;
-		glm::vec3 originalPosition;
 		glm::vec3 localOffset = glm::vec3(0.0f, 0.0f, 0.0f);
 		bool isSolid = true;
 		mesh modelMesh;
@@ -440,7 +439,7 @@ typedef struct model {
 		model() {}
 
 		model(unsigned long id, unsigned long sn, std::string texture, glm::vec3 position, mesh modelMesh, bool isSolid = true)
-		: id(id), sn(sn), texture(texture), position(position), modelMesh(modelMesh), isSolid(isSolid) { originalPosition = position; }
+		: id(id), sn(sn), texture(texture), position(position), modelMesh(modelMesh), isSolid(isSolid) {}
 
 		model(unsigned long id, unsigned long sn, std::string texture, glm::vec3 position, shape& shape, bool isSolid = true)
 		: id(id), sn(sn), texture(texture), position(position), isSolid(isSolid)
@@ -448,7 +447,6 @@ typedef struct model {
 			modelMesh.tris = shape.triangles;
 			modelMesh.shape = shape.type;
 			rotationMatrix = shape.rotationMatrix;
-			originalPosition = position;
 		}
 
 		virtual void render(ArtificeShaderProgram* geometryShader, GLuint gVAO, GLuint gIBO, GLuint textureId, GLuint lightmapId, GLuint normalmapId, GLuint displacementmapId)
@@ -495,31 +493,6 @@ typedef struct model {
 			rotationMatrix = glm::mat4(1.0f);
 			rotationMatrix = glm::rotate(rotationMatrix, thetaRotationX, glm::vec3(1.0f, 0.0f, 0.0f));
 			rotationMatrix = glm::rotate(rotationMatrix, thetaRotationY, glm::vec3(0.0f, 1.0f, 0.0f));
-			rotationMatrix = glm::rotate(rotationMatrix, thetaRotationZ, glm::vec3(0.0f, 0.0f, 1.0f));
-		}
-
-		void rotate(float thetaRotationX, float thetaRotationY, float thetaRotationZ, glm::mat4 initialRotationMatrix) {
-			rotationMatrix = initialRotationMatrix;
-			rotationMatrix = glm::rotate(rotationMatrix, thetaRotationX, glm::vec3(1.0f, 0.0f, 0.0f));
-			rotationMatrix = glm::rotate(rotationMatrix, thetaRotationY, glm::vec3(0.0f, 1.0f, 0.0f));
-			rotationMatrix = glm::rotate(rotationMatrix, thetaRotationZ, glm::vec3(0.0f, 0.0f, 1.0f));
-		}
-
-		void pitch(float thetaRotationX) {
-			rotationMatrix = glm::mat4(1.0f);
-			rotationMatrix = glm::rotate(rotationMatrix, thetaRotationX, glm::vec3(1.0f, 0.0f, 0.0f));
-		}
-
-		void pitch(float thetaRotationX, glm::mat4 initialRotationMatrix) {
-			rotationMatrix = initialRotationMatrix;
-			rotationMatrix = glm::rotate(rotationMatrix, thetaRotationX, glm::vec3(1.0f, 0.0f, 0.0f));
-		}
-
-		void yaw(float thetaRotationY) {
-			rotationMatrix = glm::rotate(rotationMatrix, thetaRotationY, glm::vec3(0.0f, 1.0f, 0.0f));
-		}
-
-		void roll(float thetaRotationZ) {
 			rotationMatrix = glm::rotate(rotationMatrix, thetaRotationZ, glm::vec3(0.0f, 0.0f, 1.0f));
 		}
 
@@ -602,9 +575,9 @@ typedef struct cubeModel : public model {
 		bool isActiveSkyBox = false;
 
 		cubeModel(unsigned long id, unsigned long sn, std::string texture, glm::vec3 position, shape& shape, bool isSolid = true)
-		: model(id, sn, texture, position, shape, isSolid) { originalPosition = position; }
+		: model(id, sn, texture, position, shape, isSolid) {}
 
-		cubeModel(model& m) : model(m) { originalPosition = m.position; }
+		cubeModel(model& m) : model(m) {}
 
 		void render(ArtificeShaderProgram* geometryShader, GLuint gCubeVAO, GLuint gCubeIBO, GLuint textureId, GLuint lightmapId, GLuint normalmapId, GLuint displacementmapId) override
 		{

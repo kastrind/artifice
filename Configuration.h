@@ -22,6 +22,8 @@ typedef struct Configuration
 
 	const std::string PATH_SEP = "/";
 
+	std::string COMPOUND_MODELS_PATH = ASSETS_PATH + PATH_SEP + "compoundModels";
+
 	UserMode USER_MODE = UserMode::EDITOR;
 
 	unsigned int SCREEN_WIDTH = 800;

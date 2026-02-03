@@ -137,7 +137,7 @@ void Engine3D::edit(float elapsedTime)
 						compoundModel.models.push_back(mdl);
 					}
 				}
-				compoundModel.save(cfg.ASSETS_PATH + cfg.PATH_SEP + "compoundModels" + cfg.PATH_SEP + std::to_string(compoundModelId) + ".cmdl");
+				compoundModel.save(cfg.COMPOUND_MODELS_PATH + cfg.PATH_SEP + std::to_string(compoundModelId) + ".cmdl");
 
 			}else {
 				if (level) {

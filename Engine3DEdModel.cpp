@@ -25,59 +25,51 @@ bool Engine3D::placeCompoundModel()
 	} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "scale" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 		editingScale = std::max(editingScale - 0.1f, 0.1f);
 		std::cout << "scale: " << editingScale << std::endl;
-		refreshTransform = true;
 	} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "scale" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 		editingScale += 0.1f;
 		std::cout << "scale: " << editingScale << std::endl;
-		refreshTransform = true;
 
 	// decreases/increases X rotation
 	} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "rotationX/pitch" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 		editingRotationX = std::max(editingRotationX - 0.1f, -cfg.M_PI_HALF);
 		if (std::abs(editingRotationX) > 0 && std::abs(editingRotationX) < 0.1f) { editingRotationX = 0.0f; }
 		std::cout << "rotationX/pitch: " << editingRotationX << std::endl;
-		refreshTransform = true;
 	} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "rotationX/pitch" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 		editingRotationX = std::min(editingRotationX + 0.1f, cfg.M_PI_HALF);
 		if (std::abs(editingRotationX) > 0 && std::abs(editingRotationX) < 0.1f) { editingRotationX = 0.0f; }
 		std::cout << "rotationX/pitch: " << editingRotationX << std::endl;
-		refreshTransform = true;
 
 	// decreases/increases Y rotation
 	} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "rotationY/yaw" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 		editingRotationY = std::max(editingRotationY - 0.1f, -cfg.M_PI_HALF);
 		if (std::abs(editingRotationY) > 0 && std::abs(editingRotationY) < 0.1f) { editingRotationY = 0.0f; }
 		std::cout << "rotationY/yaw: " << editingRotationY << std::endl;
-		refreshTransform = true;
 	} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "rotationY/yaw" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 		editingRotationY = std::min(editingRotationY + 0.1f, cfg.M_PI_HALF);
 		if (std::abs(editingRotationY) > 0 && std::abs(editingRotationY) < 0.1f) { editingRotationY = 0.0f; }
 		std::cout << "rotationY/yaw: " << editingRotationY << std::endl;
-		refreshTransform = true;
 
 	// decreases/increases Z rotation
 	} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "rotationZ/roll" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 		editingRotationZ = std::max(editingRotationZ - 0.1f, -cfg.M_PI_HALF);
 		if (std::abs(editingRotationZ) > 0 && std::abs(editingRotationZ) < 0.1f) { editingRotationZ = 0.0f; }
 		std::cout << "rotationZ/roll: " << editingRotationZ << std::endl;
-		refreshTransform = true;
 	} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "rotationZ/roll" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 		editingRotationZ = std::min(editingRotationZ + 0.1f, cfg.M_PI_HALF);
 		if (std::abs(editingRotationZ) > 0 && std::abs(editingRotationZ) < 0.1f) { editingRotationZ = 0.0f; }
 		std::cout << "rotationZ/roll: " << editingRotationZ << std::endl;
-		refreshTransform = true;
 	}
 
 	if (editingModel == nullptr && eventController->pressPlace(keysPressed, prevKeysPressed)) {
 		glm::vec3 position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
 		if (copyingModel == nullptr)
-		{	
-			Transform transform(position, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(editingScale, editingScale, editingScale));
-			editingCompoundModel.load(cfg.ASSETS_PATH + cfg.PATH_SEP + "compoundModels" + cfg.PATH_SEP + compoundModelFileNames[editingCompoundModelFileNameIndex] + ".cmdl", &transform);
-			editingCompoundModelPartsCount = editingCompoundModel.models.size();
-			glm::vec3 rootPosition = editingCompoundModel.models[0]->originalPosition;
-			for (auto & mdl : editingCompoundModel.models) {
-				mdl->localOffset = mdl->originalPosition - rootPosition;
+		{
+			Transform transform(position, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+			std::shared_ptr<CompoundModel> editingCompoundModel = CompoundModel::create(cfg.COMPOUND_MODELS_PATH + cfg.PATH_SEP + compoundModelFileNames[editingCompoundModelFileNameIndex] + ".cmdl", &transform);
+			editingCompoundModelPartsCount = editingCompoundModel->models.size();
+			glm::vec3 headPosition = editingCompoundModel->models[0]->position;
+			for (auto & mdl : editingCompoundModel->models) {
+				mdl->localOffset = mdl->position - headPosition;
 				addModel(*mdl);
 				std::cout << "added model from compound model with id = " << mdl->id << std::endl;
 			}
@@ -86,33 +78,26 @@ bool Engine3D::placeCompoundModel()
 			//TODO: ADD COPIED MODEL
 
 		}
-		refreshTransform = true;
 		personSpeedFactor /= 100;
 		return true;
 	}
 
 	// if there is a spawned compound model about to be placed
 	if (editingModel != nullptr) {
-		mtx.lock();
 		glm::vec3 position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
-		std::shared_ptr<model> firstPartOfEditingCompoundModel = ptrModelsToRender[ptrModelsToRender.size() - editingCompoundModelPartsCount];
-		//glm::vec3 pivotPosition = firstPartOfEditingCompoundModel->originalPosition;
+		std::shared_ptr<model> editingCompoundModelHead = ptrModelsToRender[ptrModelsToRender.size() - editingCompoundModelPartsCount];
 
-		firstPartOfEditingCompoundModel->position = position;
-
-		firstPartOfEditingCompoundModel->rotate(editingRotationX, editingRotationY, editingRotationZ);
-
-		firstPartOfEditingCompoundModel->modelMatrix = glm::translate(glm::mat4(1.0f), firstPartOfEditingCompoundModel->position) * firstPartOfEditingCompoundModel->rotationMatrix;
-		firstPartOfEditingCompoundModel->modelMatrix = glm::scale(firstPartOfEditingCompoundModel->modelMatrix, glm::vec3(editingScale, editingScale, editingScale));
+		editingCompoundModelHead->position = position;
+		editingCompoundModelHead->rotate(editingRotationX, editingRotationY, editingRotationZ);
+		editingCompoundModelHead->modelMatrix = glm::translate(glm::mat4(1.0f), editingCompoundModelHead->position) * editingCompoundModelHead->rotationMatrix;
+		editingCompoundModelHead->modelMatrix = glm::scale(editingCompoundModelHead->modelMatrix, glm::vec3(editingScale, editingScale, editingScale));
 
 		// go through the vector of pointers to models to render, from the back of the vector up to editingCompoundModelPartsCount number of models, to update their transform
 		for (size_t i = 0; i < editingCompoundModelPartsCount - 1 && i < ptrModelsToRender.size(); ++i) {
 			std::shared_ptr<model> mdl = ptrModelsToRender[ptrModelsToRender.size() - 1 - i];
 			// real-time update of the compound model's transform
-			mdl->modelMatrix = firstPartOfEditingCompoundModel->modelMatrix * glm::translate(glm::mat4(1.0f), mdl->localOffset) * mdl->rotationMatrix;
+			mdl->modelMatrix = editingCompoundModelHead->modelMatrix * glm::translate(glm::mat4(1.0f), mdl->localOffset) * mdl->rotationMatrix;
 		}
-		mtx.unlock();
-		refreshTransform = false;
 	}
 
 	// if the user releases the place key to finish placing the compound model
