@@ -511,41 +511,44 @@ typedef struct model {
 			if (modelMesh.shape == shapetype::RECTANGLE || modelMesh.shape == shapetype::CUBOID) {
 				pt[0] = modelMatrix * modelMesh.tris[0].p[0];
 				pt[1] = modelMatrix * modelMesh.tris[0].p[1];
-				return pt[0].x - pt[1].x;
+				return std::abs(pt[1].x - pt[0].x);
 			}else if (modelMesh.shape == shapetype::CUBE) {
-				pt[0] = modelMatrix * modelMesh.tris[4].p[0];
-				pt[1] = modelMatrix * modelMesh.tris[4].p[1];
-				return pt[1].x - pt[0].x;
+				pt[0] = modelMatrix * modelMesh.tris[5].p[0];
+				pt[1] = modelMatrix * modelMesh.tris[5].p[1];
+				return std::abs(pt[1].x - pt[0].x);
 			}
-			return 0;
 		}
 
 		float getHeight() {
 			glm::vec4 pt[3];
 			if (modelMesh.shape == shapetype::RECTANGLE || modelMesh.shape == shapetype::CUBOID) {
-				pt[0] = modelMatrix * modelMesh.tris[0].p[0];
-				pt[2] = modelMatrix * modelMesh.tris[0].p[2];
-				return pt[0].y - pt[2].y;
+				pt[0] = modelMatrix * modelMesh.tris[0].p[1];
+				pt[1] = modelMatrix * modelMesh.tris[0].p[2];
+				return std::abs(pt[0].y - pt[1].y);
 			}else if (modelMesh.shape == shapetype::CUBE) {
 				pt[0] = modelMatrix * modelMesh.tris[0].p[0];
 				pt[1] = modelMatrix * modelMesh.tris[0].p[1];
-				return pt[0].y - pt[1].y;
+				return std::abs(pt[1].y - pt[0].y);
 			}
-			return 0;
 		}
 
 		float getDepth() {
 			glm::vec4 pt[3];
-			if (modelMesh.shape == shapetype::CUBE || modelMesh.shape == shapetype::CUBOID) {
+			if (modelMesh.shape == shapetype::RECTANGLE) {
+				pt[0] = modelMatrix * modelMesh.tris[0].p[0];
+				pt[1] = modelMatrix * modelMesh.tris[0].p[1];
+				return std::abs(pt[1].z - pt[0].z);
+			}
+			else if (modelMesh.shape == shapetype::CUBOID) {
 				pt[0] = modelMatrix * modelMesh.tris[2].p[0];
 				pt[1] = modelMatrix * modelMesh.tris[2].p[1];
-				return pt[1].z - pt[0].z;
-			}else if (modelMesh.shape == shapetype::RECTANGLE) {
-				pt[0] = modelMatrix * modelMesh.tris[0].p[0];
-				pt[1] = modelMatrix * modelMesh.tris[0].p[2];
-				return pt[1].z - pt[0].z;
+				return std::abs(pt[1].z - pt[0].z);
 			}
-			return 0;
+			else if (modelMesh.shape == shapetype::CUBE) {
+				pt[0] = modelMatrix * modelMesh.tris[0].p[0];
+				pt[1] = modelMatrix * modelMesh.tris[0].p[1];
+				return std::abs(pt[0].z - pt[1].z);
+			}
 		}
 
 		void snapTo(glm::vec3 cameraFront, std::shared_ptr<model> m) {
@@ -559,8 +562,8 @@ typedef struct model {
 			//std::cout << "dpX: " << dpX << ", dpY: " << dpY << ", dpZ: " << dpZ << std::endl;
 			//std::cout << "snapping to model with w h d: " << m->getWidth() << ", " << m->getHeight() << ", " << m->getDepth() << std::endl;
 			if (absDpX > absDpY && absDpX > absDpZ) { position.x += (dpX / absDpX) * m->getWidth(); }
-			if (absDpY > absDpX && absDpY > absDpZ) { position.y += (dpY / absDpY) * m->getHeight(); }
-			if (absDpZ > absDpX && absDpZ > absDpY) { position.z += (dpZ / absDpZ) * m->getDepth(); }
+			if (absDpY > absDpX && absDpY > absDpZ) { position.y += (dpY / absDpY) * m->getHeight();}
+			if (absDpZ > absDpX && absDpZ > absDpY) { position.z += (dpZ / absDpZ) * m->getDepth();}
 		}
 
 		virtual ~model() {}
