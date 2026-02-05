@@ -135,6 +135,9 @@ void Initiator::loadConfiguration()
 				} else if (tokens[0] == "PERSON_SPEED_FACTOR") {
 					cfg->PERSON_SPEED_FACTOR = std::stof(tokens[1]);
 					std::cout << "PERSON_SPEED_FACTOR = " << cfg->PERSON_SPEED_FACTOR << std::endl;
+				} else if (tokens[0] == "EDITOR_SLOWDOWN_PERCENTAGE") {
+					cfg->EDITOR_SLOWDOWN_PERCENTAGE = std::stoi(tokens[1]);
+					std::cout << "EDITOR_SLOWDOWN_PERCENTAGE = " << cfg->EDITOR_SLOWDOWN_PERCENTAGE << std::endl;
 				} else if (tokens[0] == "PERSON_HEIGHT") {
 					cfg->PERSON_HEIGHT = std::stof(tokens[1]);
 					std::cout << "PERSON_HEIGHT = " << cfg->PERSON_HEIGHT << std::endl;

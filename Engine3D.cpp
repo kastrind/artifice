@@ -73,7 +73,7 @@ Engine3D::Engine3D(
 	if (userMode == UserMode::EDITOR)
 	{
 		preset.loadPresetLights();
-		std::cout << "Loaded " << preset.getDirectionalLights().size() << " directional lights, " << preset.getPointLights().size() << " point lights and " << preset.getSpotLights().size() << " spot lights." << std::endl;
+		std::cout << "Loaded preset " << preset.getDirectionalLights().size() << " directional lights, " << preset.getPointLights().size() << " point lights and " << preset.getSpotLights().size() << " spot lights." << std::endl;
 		if (preset.getDirectionalLights().size() > 0)
 		{
 			lightingTypeOptions.push_back("directional");
@@ -1481,6 +1481,21 @@ void Engine3D::move(float elapsedTime)
 	}
 }
 
+void Engine3D::slowDownBy(unsigned int percent)
+{
+	personSpeedFactor -= percent * 0.01f * personSpeedFactor;
+}
+
+void Engine3D::speedUpBy(unsigned int percent)
+{
+	personSpeedFactor += percent * 0.01f * personSpeedFactor;
+}
+
+void Engine3D::resetSpeed()
+{
+	personSpeedFactor = cfg.PERSON_SPEED_FACTOR;
+}
+
 bool Engine3D::stopEngine(std::thread& engineThreadToJoin)
 {
 	printf("Stopping rendering thread...\n");
@@ -1571,6 +1586,19 @@ glm::vec3 Engine3D::getCameraRight() const
 void Engine3D::setPersonPos(glm::vec3 pos)
 {
 	personPos = pos;
+
+	//grid movement for editor mode
+	if (userMode == UserMode::EDITOR) {
+		float gridSize = 0.1f;
+		gridPersonPos.x = std::round(pos.x / gridSize) * gridSize;
+		gridPersonPos.y = std::round(pos.y / gridSize) * gridSize;
+		gridPersonPos.z = std::round(pos.z / gridSize) * gridSize;
+		//std::cout << "person front: " << personFront.x << ", " << personFront.y << ", " << personFront.z << std::endl;
+	}else {
+		gridPersonPos = personPos;
+	}
+
+
 	if (camera.positionMode == camerapositionmode::ATTACHED_TO_PERSON) {
 		glm::vec3 worldOffset = (cameraOffset.x * getPersonRight()) + (cameraOffset.y * getPersonUp()) + (cameraOffset.z * getPersonFront());
 		cameraPos = personPos + worldOffset;
@@ -1585,6 +1613,16 @@ glm::vec3 Engine3D::getPersonPos() const
 void Engine3D::setPersonFront(glm::vec3 pos)
 {
 	personFront = pos;
+
+	if (userMode == UserMode::EDITOR) {
+		float gridSize = 0.1f;
+		gridPersonFront.x = std::round(pos.x / gridSize) * gridSize;
+		gridPersonFront.y = std::round(pos.y / gridSize) * gridSize;
+		gridPersonFront.z = std::round(pos.z / gridSize) * gridSize;
+	}else {
+		gridPersonFront = personFront;
+	}
+
 	if (camera.positionMode == camerapositionmode::ATTACHED_TO_PERSON) {
 		glm::vec3 worldOffset = (cameraOffset.x * getPersonRight()) + (cameraOffset.y * getPersonUp()) + (cameraOffset.z * getPersonFront());
 		cameraFront = glm::normalize(personFront - worldOffset);

@@ -235,17 +235,18 @@ void Engine3D::edit(float elapsedTime)
 			// if lighting type is point or spot and left mouse clicked, place light handle model in the scene
 			if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] &&
 				(lightingTypeOptions[lightingTypeOptionIndex] == "point" || lightingTypeOptions[lightingTypeOptionIndex] == "spot")) {
-				glm::vec3 position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
+				glm::vec3 position = gridPersonPos+ (editingDepth + originalCollidingDistanceH) * gridPersonFront;
 				unsigned long id = getTimeSinceEpoch();
 				addLightHandleModel(id, position);
 				updateVerticesFlag = true;
-				personSpeedFactor /= 100;
+				//personSpeedFactor /= 100;
+				slowDownBy(cfg.EDITOR_SLOWDOWN_PERCENTAGE);
 				isEdited = true;
 			}
 			// if there is a spawned model about to be placed
 			if (editingModel != nullptr) {
 				//real-time update of position and rotation
-				editingModel->position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
+				editingModel->position = gridPersonPos + (editingDepth + originalCollidingDistanceH) * gridPersonFront;
 				editingModel->rotationMatrix[0] = glm::vec4(getCameraRight(), 0.0f);
 				editingModel->rotationMatrix[1] = glm::vec4(glm::normalize(glm::cross(getCameraFront(), getCameraRight())), 0.0f);
 				editingModel->rotationMatrix[2] = glm::vec4(-getCameraFront(), 0.0f);
@@ -263,7 +264,8 @@ void Engine3D::edit(float elapsedTime)
 					addLightHandleModel(editingModel->id, editingModel->position, editingModel->rotationMatrix);
 					editingModel = nullptr;
 					isEdited = true;
-					personSpeedFactor *= 100;
+					//personSpeedFactor *= 100;
+					resetSpeed();
 					std::cout << "placed preset point light: " << pointLight.name << std::endl;
 				// for spot lights
 				}else if (lightingTypeOptions[lightingTypeOptionIndex] == "spot" && preset.getSpotLights().size() > 0) {
@@ -277,7 +279,8 @@ void Engine3D::edit(float elapsedTime)
 					addLightHandleModel(editingModel->id, editingModel->position, editingModel->rotationMatrix);
 					editingModel = nullptr;
 					isEdited = true;
-					personSpeedFactor *= 100;
+					//personSpeedFactor *= 100;
+					resetSpeed();
 					std::cout << "placed preset spot light: " << spotLight.name << std::endl;
 				}
 			}
@@ -505,7 +508,7 @@ void Engine3D::edit(float elapsedTime)
 		}
 
 		if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]) {
-			glm::vec3 position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
+			glm::vec3 position = gridPersonPos + (editingDepth + originalCollidingDistanceH) * gridPersonFront;
 			if (copyingModel == nullptr)
 			{
 				addModel(editingWidth, editingHeight, editingDepth, editingRotationX, editingRotationY, editingRotationZ, editingCubemapNameIndex, editingTextureNameIndex, editingIsSolid, editingShape, position);
@@ -516,14 +519,15 @@ void Engine3D::edit(float elapsedTime)
 				addModel(m);
 				copyingModel.reset();
 			}
-			personSpeedFactor /= 100;
+			//personSpeedFactor /= 100;
+			slowDownBy(cfg.EDITOR_SLOWDOWN_PERCENTAGE);
 			isEdited = true;
 		}
 		
 		// there is a spawned model about to be placed
 		if (editingModel != nullptr) {
 			//real-time update of transformation, texture and isSolid
-			editingModel->position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
+			editingModel->position = gridPersonPos + (editingDepth + originalCollidingDistanceH) * gridPersonFront;
 			editingModel->rotate(editingRotationX, editingRotationY, editingRotationZ);
 			editingModel->scale(editingWidth, editingHeight, editingDepth);
 			editingModel->texture = editingModel->modelMesh.shape == shapetype::CUBE ? cubemapNames[editingCubemapNameIndex] : textureNames[editingTextureNameIndex];
@@ -533,7 +537,8 @@ void Engine3D::edit(float elapsedTime)
 		// releasing left mouse click places a new model
 		if (editingModel != nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK]==false) {
 			std::cout << "starting model placement" << std::endl;
-			personSpeedFactor *= 100;
+			//personSpeedFactor *= 100;
+			resetSpeed();
 			axis heightAlongAxis = axis::Y;
 			axis widthAlongAxis = axis::X;
 			short dirX = personFront.x / std::abs(personFront.x);
@@ -566,7 +571,7 @@ void Engine3D::edit(float elapsedTime)
 
 			model m = *editingModel;
 			//position the model or snap it to the closest in focus
-			m.position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
+			m.position = gridPersonPos + (editingDepth + originalCollidingDistanceH) * gridPersonFront;
 			if (!modelsInFocus.empty()) {
 				auto modelInFocus = *(modelsInFocus.begin());
 				//std::cout << "model in focus id: " << modelInFocus->id << ", editing model id: " << editingModel->id << ", distance: " << modelInFocus->distance << ", editingDepth: " << editingDepth << ", originalCollidingDistanceH: " << originalCollidingDistanceH << std::endl;

@@ -56,7 +56,9 @@ typedef struct Configuration
 
 	float JUMP_SPEED_FACTOR = 5.0f;
 
-	float PERSON_SPEED_FACTOR = 1.5f;
+	float PERSON_SPEED_FACTOR = 0.5f;
+
+	unsigned int EDITOR_SLOWDOWN_PERCENTAGE = 90;
 
 	float PERSON_HEIGHT = 0.15f; //vertical colliding distance
 

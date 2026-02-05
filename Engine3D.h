@@ -342,9 +342,12 @@ class Engine3D
 		std::shared_ptr<Level> level = nullptr;
 
 		//person
-		glm::vec3 personPos;
+		glm::vec3 personPos = glm::vec3(0);
+		glm::vec3 tempPersonPos = glm::vec3(0);
+		glm::vec3 gridPersonPos = glm::vec3(0);
 
 		glm::vec3 personFront;
+		glm::vec3 gridPersonFront;
 
 		glm::vec3 personUp;
 
@@ -402,6 +405,12 @@ class Engine3D
 		void markCoveredModels();
 
 		void move(float elapsedTime);
+
+		void slowDownBy(unsigned int percent);
+
+		void speedUpBy(unsigned int percent);
+
+		void resetSpeed();
 
 		//editor user mode specific
 

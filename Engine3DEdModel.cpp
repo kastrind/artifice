@@ -61,7 +61,7 @@ bool Engine3D::placeCompoundModel()
 	}
 
 	if (editingModel == nullptr && eventController->pressPlace(keysPressed, prevKeysPressed)) {
-		glm::vec3 position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
+		glm::vec3 position = gridPersonPos + (editingDepth + originalCollidingDistanceH) * gridPersonFront;
 		if (copyingModel == nullptr)
 		{
 			Transform transform(position, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
@@ -78,13 +78,14 @@ bool Engine3D::placeCompoundModel()
 			//TODO: ADD COPIED MODEL
 
 		}
-		personSpeedFactor /= 100;
+		//personSpeedFactor /= 100;
+		slowDownBy(cfg.EDITOR_SLOWDOWN_PERCENTAGE);
 		return true;
 	}
 
 	// if there is a spawned compound model about to be placed
 	if (editingModel != nullptr) {
-		glm::vec3 position = personPos + (editingDepth + originalCollidingDistanceH) * personFront;
+		glm::vec3 position = gridPersonPos + (editingDepth + originalCollidingDistanceH) * gridPersonFront;
 		std::shared_ptr<model> editingCompoundModelHead = ptrModelsToRender[ptrModelsToRender.size() - editingCompoundModelPartsCount];
 
 		editingCompoundModelHead->position = position;
@@ -104,7 +105,8 @@ bool Engine3D::placeCompoundModel()
 	if (editingModel != nullptr && eventController->releasePlace(keysPressed, prevKeysPressed)) {
 		editingModel = nullptr;
 		std::cout << "finished placing compound model." << std::endl;
-		personSpeedFactor *= 100;
+		//personSpeedFactor *= 100;
+		resetSpeed();
 	}
 
 	return false;
