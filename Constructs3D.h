@@ -12,6 +12,14 @@
 #include <memory>
 
 
+
+enum class gridprecision {
+	INFINITE,
+	DECIMETER,
+	CENTIMETER
+};
+
+
 typedef enum axis {
 	X,
 	Y,

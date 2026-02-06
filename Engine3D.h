@@ -130,8 +130,6 @@ class Engine3D
 
 		glm::vec3 getPersonRight() const;
 
-		glm::vec3 getLightPos() const;
-
 		glm::mat4 getViewMatrix() const;
 
 		glm::mat4 getViewMatrixNoTranslation() const;
@@ -269,8 +267,6 @@ class Engine3D
 		std::set<std::shared_ptr<model>> finalModelsToRender;
 		std::set<std::shared_ptr<model>, ModelDescendingDistanceComparator> finalTransparentModelsToRender;
 
-		glm::vec3 lightPos;
-
 		Light light;
 		Light selectedLight;
 
@@ -343,10 +339,12 @@ class Engine3D
 
 		//person
 		glm::vec3 personPos = glm::vec3(0);
-		glm::vec3 tempPersonPos = glm::vec3(0);
-		glm::vec3 gridPersonPos = glm::vec3(0);
 
 		glm::vec3 personFront;
+
+		gridprecision gridPrecision = gridprecision::DECIMETER;
+		float gridPrecisionValue = 0.0f;
+		glm::vec3 gridPersonPos = glm::vec3(0);
 		glm::vec3 gridPersonFront;
 
 		glm::vec3 personUp;
@@ -430,5 +428,7 @@ class Engine3D
 		int64_t getTimeSinceEpoch();
 
 		std::string shapeTypeToString(shapetype s);
+
+		std::string gridPrecisionToString(gridprecision gp);
 
 };

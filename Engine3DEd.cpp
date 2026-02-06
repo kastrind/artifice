@@ -156,6 +156,14 @@ void Engine3D::edit(float elapsedTime)
 			mtx.unlock();
 		}
 
+		// switches among the available grid precisions (infinite, decimeter, centimeter)
+		if (eventController->gridPrecision(keysPressed, prevKeysPressed)) {
+			gridPrecision = (gridprecision)( (static_cast<int>(gridPrecision) + 1) % (static_cast<int>(gridprecision::CENTIMETER) + 1) );
+			gridPrecisionValue = (gridPrecision == gridprecision::DECIMETER) ? 0.1f : (gridPrecision == gridprecision::CENTIMETER) ? 0.01f : 0;
+			std::cout << "grid precision: " << gridPrecisionToString(gridPrecision) << std::endl;
+		}
+
+		// toggles model editing mode
 		if (eventController->modelModeToggle(keysPressed, prevKeysPressed)) {
 			isModelEditingModeEnabled = !isModelEditingModeEnabled;
 			if (isModelEditingModeEnabled) {
@@ -175,7 +183,8 @@ void Engine3D::edit(float elapsedTime)
 			return;
 		}
 
-		if (prevKeysPressed[SupportedKeys::L] && !keysPressed[SupportedKeys::L]) {
+		// toggles light editing mode
+		if (eventController->lightModeToggle(keysPressed, prevKeysPressed)) {
 			isLightingEditingModeEnabled = !isLightingEditingModeEnabled;
 			if (isLightingEditingModeEnabled) std::cout << "Lighting editing mode enabled" << std::endl;
 			else std::cout << "Lighting editing mode disabled" << std::endl;
@@ -629,6 +638,20 @@ std::string Engine3D::shapeTypeToString(shapetype s)
 			return "cuboid";
 		case shapetype::CUBE:
 			return "cube";
+		default:
+			return "";
+	}
+}
+
+std::string Engine3D::gridPrecisionToString(gridprecision gp)
+{
+	switch (gp) {
+		case gridprecision::INFINITE:
+			return "infinite";
+		case gridprecision::DECIMETER:
+			return "decimeter";
+		case gridprecision::CENTIMETER:
+			return "centimeter";
 		default:
 			return "";
 	}

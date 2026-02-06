@@ -87,6 +87,8 @@ Engine3D::Engine3D(
 			lightingTypeOptions.push_back("spot");
 		}
 	}
+
+	gridPrecisionValue = (gridPrecision == gridprecision::DECIMETER) ? 0.1f : (gridPrecision == gridprecision::CENTIMETER) ? 0.01f : 0;
 }
 
 std::thread Engine3D::startEngine()
@@ -1588,12 +1590,10 @@ void Engine3D::setPersonPos(glm::vec3 pos)
 	personPos = pos;
 
 	//grid movement for editor mode
-	if (userMode == UserMode::EDITOR) {
-		float gridSize = 0.1f;
-		gridPersonPos.x = std::round(pos.x / gridSize) * gridSize;
-		gridPersonPos.y = std::round(pos.y / gridSize) * gridSize;
-		gridPersonPos.z = std::round(pos.z / gridSize) * gridSize;
-		//std::cout << "person front: " << personFront.x << ", " << personFront.y << ", " << personFront.z << std::endl;
+	if (userMode == UserMode::EDITOR && gridPrecision != gridprecision::INFINITE) {
+		gridPersonPos.x = std::round(pos.x / gridPrecisionValue) * gridPrecisionValue;
+		gridPersonPos.y = std::round(pos.y / gridPrecisionValue) * gridPrecisionValue;
+		gridPersonPos.z = std::round(pos.z / gridPrecisionValue) * gridPrecisionValue;
 	}else {
 		gridPersonPos = personPos;
 	}
@@ -1614,11 +1614,11 @@ void Engine3D::setPersonFront(glm::vec3 pos)
 {
 	personFront = pos;
 
-	if (userMode == UserMode::EDITOR) {
+	if (userMode == UserMode::EDITOR && gridPrecision != gridprecision::INFINITE) {
 		float gridSize = 0.1f;
-		gridPersonFront.x = std::round(pos.x / gridSize) * gridSize;
-		gridPersonFront.y = std::round(pos.y / gridSize) * gridSize;
-		gridPersonFront.z = std::round(pos.z / gridSize) * gridSize;
+		gridPersonFront.x = std::round(pos.x / gridPrecisionValue) * gridPrecisionValue;
+		gridPersonFront.y = std::round(pos.y / gridPrecisionValue) * gridPrecisionValue;
+		gridPersonFront.z = std::round(pos.z / gridPrecisionValue) * gridPrecisionValue;
 	}else {
 		gridPersonFront = personFront;
 	}
@@ -1662,11 +1662,6 @@ void Engine3D::setPersonRight(glm::vec3 pos)
 glm::vec3 Engine3D::getPersonRight() const
 {
 	return personRight;
-}
-
-glm::vec3 Engine3D::getLightPos() const
-{
-	return lightPos;
 }
 
 glm::mat4 Engine3D::getViewMatrix() const

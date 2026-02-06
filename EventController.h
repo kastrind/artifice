@@ -21,6 +21,7 @@ typedef enum
 	A,
 	D,
 	F,
+	G,
 	C,
 	V,
 	L,
@@ -50,6 +51,7 @@ typedef enum
 	FORWARD,
 	BACKWARD,
 	FLASHLIGHT,
+	GRID_PRECISION,
 	COPY,
 	PASTE,
 	PLACE,
@@ -140,6 +142,7 @@ class EventController
 			supportedKeysFromStr["A"] = SupportedKeys::A;
 			supportedKeysFromStr["D"] = SupportedKeys::D;
 			supportedKeysFromStr["F"] = SupportedKeys::F;
+			supportedKeysFromStr["G"] = SupportedKeys::G;
 			supportedKeysFromStr["C"] = SupportedKeys::C;
 			supportedKeysFromStr["V"] = SupportedKeys::V;
 			supportedKeysFromStr["L"] = SupportedKeys::L;
@@ -166,6 +169,7 @@ class EventController
 			keyActionsFromStr["FORWARD"] = KeyActions::FORWARD;
 			keyActionsFromStr["BACKWARD"] = KeyActions::BACKWARD;
 			keyActionsFromStr["FLASHLIGHT"] = KeyActions::FLASHLIGHT;
+			keyActionsFromStr["GRID_PRECISION"] = KeyActions::GRID_PRECISION;
 			keyActionsFromStr["COPY"] = KeyActions::COPY;
 			keyActionsFromStr["PASTE"] = KeyActions::PASTE;
 			keyActionsFromStr["PLACE"] = KeyActions::PLACE;
@@ -183,6 +187,7 @@ class EventController
 			sdlKeyCodeMappings[SupportedKeys::A] = SDL_KeyCode::SDLK_a;
 			sdlKeyCodeMappings[SupportedKeys::D] = SDL_KeyCode::SDLK_d;
 			sdlKeyCodeMappings[SupportedKeys::F] = SDL_KeyCode::SDLK_f;
+			sdlKeyCodeMappings[SupportedKeys::G] = SDL_KeyCode::SDLK_g;
 			sdlKeyCodeMappings[SupportedKeys::C] = SDL_KeyCode::SDLK_c;
 			sdlKeyCodeMappings[SupportedKeys::V] = SDL_KeyCode::SDLK_v;
 			sdlKeyCodeMappings[SupportedKeys::L] = SDL_KeyCode::SDLK_l;
@@ -199,7 +204,8 @@ class EventController
 			mapActionToKey(KeyActions::RIGHT, keyRight, SupportedKeys::D);
 			mapActionToKey(KeyActions::FORWARD, keyForward, SupportedKeys::W);
 			mapActionToKey(KeyActions::BACKWARD, keyBackward, SupportedKeys::S);
-			mapActionToKey(KeyActions::FLASHLIGHT, keyFlashlight, SupportedKeys::S);
+			mapActionToKey(KeyActions::FLASHLIGHT, keyFlashlight, SupportedKeys::F);
+			mapActionToKey(KeyActions::GRID_PRECISION, "G", SupportedKeys::G);
 			mapActionToKey(KeyActions::PLACE, keyPlace, SupportedKeys::MOUSE_LEFT_CLICK);
 			mapActionToKey(KeyActions::REMOVE, keyRemove, SupportedKeys::MOUSE_RIGHT_CLICK);
 			mapActionToKey(KeyActions::NEXT, keyNext, SupportedKeys::MOUSE_WHEEL_UP);
@@ -241,6 +247,8 @@ class EventController
 
 		bool flashlight(bool* keysPressed, bool* prevKeysPressed);
 
+		bool gridPrecision(bool* keysPressed, bool* prevKeysPressed);
+
 		bool pressPlace(bool* keysPressed, bool* prevKeysPressed);
 
 		bool releasePlace(bool* keysPressed, bool* prevKeysPressed);
@@ -258,6 +266,8 @@ class EventController
 		bool scrollUp(bool* keysPressed, bool* prevKeysPressed);
 
 		bool modelModeToggle(bool* keysPressed, bool* prevKeysPressed);
+
+		bool lightModeToggle(bool* keysPressed, bool* prevKeysPressed);
 
 		std::mutex mtx;
 
