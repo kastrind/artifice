@@ -6,7 +6,7 @@ void Engine3D::addModel(float editingWidth, float editingHeight, float editingDe
 	{
 		cube cube(std::max(editingWidth, std::max(editingHeight, editingDepth)), editingRotationX, editingRotationY, editingRotationZ);
 		cubeModel mdl(getTimeSinceEpoch(), cubePointsCnt, cubemapNames[editingCubemapNameIndex], position, cube, editingIsSolid);
-		mdl.compoundModelId = isModelEditingModeEnabled && compoundModelId > 0 ? compoundModelId : 0;
+		mdl.compoundModelId = modelMode == modelmode::CREATE && compoundModelId > 0 ? compoundModelId : 0;
 		cubePointsCnt += mdl.modelMesh.tris.size() * 3;
 		std::cout << "about to place model with id = " << mdl.id << std::endl;
 		mtx.lock();
@@ -21,13 +21,13 @@ void Engine3D::addModel(float editingWidth, float editingHeight, float editingDe
 		{
 			rectangle rectangle(editingWidth, editingHeight, editingRotationX, editingRotationY, editingRotationZ);
 			model mdl(getTimeSinceEpoch(), modelPointsCnt, textureNames[editingTextureNameIndex], position, rectangle, editingIsSolid);
-			mdl.compoundModelId = isModelEditingModeEnabled && compoundModelId > 0 ? compoundModelId : 0;
+			mdl.compoundModelId = modelMode == modelmode::CREATE && compoundModelId > 0 ? compoundModelId : 0;
 			m = mdl;
 		}else if (editingShape == shapetype::CUBOID)
 		{
 			cuboid cuboid(editingWidth, editingHeight, editingDepth, editingRotationX, editingRotationY, editingRotationZ);
 			model mdl(getTimeSinceEpoch(), modelPointsCnt, textureNames[editingTextureNameIndex], position, cuboid, editingIsSolid);
-			mdl.compoundModelId = isModelEditingModeEnabled && compoundModelId > 0 ? compoundModelId : 0;
+			mdl.compoundModelId = modelMode == modelmode::CREATE && compoundModelId > 0 ? compoundModelId : 0;
 			m = mdl;
 		}
 		modelPointsCnt += m.modelMesh.tris.size() * 3;
@@ -58,7 +58,7 @@ void Engine3D::addLightHandleModel(unsigned long id, glm::vec3 position, glm::ma
 void Engine3D::addModel(model& mdl)
 {
 	mdl.id = getTimeSinceEpoch();
-	mdl.compoundModelId = isModelEditingModeEnabled && compoundModelId > 0 ? compoundModelId : 0;
+	mdl.compoundModelId = modelMode == modelmode::CREATE && compoundModelId > 0 ? compoundModelId : 0;
 	std::cout << "about to place cube model with id = " << mdl.id << std::endl;
 	if (mdl.modelMesh.shape == shapetype::CUBE)
 	{
@@ -124,13 +124,12 @@ void Engine3D::edit(float elapsedTime)
 
 	if (eventController != nullptr)
 	{
-		//bool* keysPressed = eventController->getKeysPressed();
 		bool isEdited = false;
 
 		// SAVE level or model on LCTRL + S release
 		if (prevKeysPressed[SupportedKeys::S] && keysPressed[SupportedKeys::S] == false && keysPressed[SupportedKeys::LEFT_CTRL]) {
 			mtx.lock();
-			if (isModelEditingModeEnabled) {
+			if (modelMode == modelmode::CREATE) {
 				CompoundModel compoundModel;
 				for (auto& mdl : ptrModelsToRender) {
 					if (mdl->compoundModelId == compoundModelId) {
@@ -157,27 +156,24 @@ void Engine3D::edit(float elapsedTime)
 		}
 
 		// switches among the available grid precisions (infinite, decimeter, centimeter)
-		if (eventController->gridPrecision(keysPressed, prevKeysPressed)) {
+		if (eventController->gridPrecisionToggle(keysPressed, prevKeysPressed)) {
 			gridPrecision = (gridprecision)( (static_cast<int>(gridPrecision) + 1) % (static_cast<int>(gridprecision::CENTIMETER) + 1) );
 			gridPrecisionValue = (gridPrecision == gridprecision::DECIMETER) ? 0.1f : (gridPrecision == gridprecision::CENTIMETER) ? 0.01f : 0;
 			std::cout << "grid precision: " << gridPrecisionToString(gridPrecision) << std::endl;
 		}
 
-		// toggles model editing mode
+		// toggles model modes (off, create, edit, place)
 		if (eventController->modelModeToggle(keysPressed, prevKeysPressed)) {
-			isModelEditingModeEnabled = !isModelEditingModeEnabled;
-			if (isModelEditingModeEnabled) {
-				std::cout << "Model editing mode enabled" << std::endl;
+			modelMode = (modelmode) ((static_cast<int>(modelMode) + 1) % (static_cast<int>(modelmode::PLACE) + 1));
+			std::cout << "model mode: " << modelModeToString(modelMode) << std::endl;
+			if (modelMode == modelmode::CREATE) {
 				if (compoundModelId == 0) {
 					compoundModelId = getTimeSinceEpoch();
 				}
-
-			} else {
-				std::cout << "Model editing mode disabled" << std::endl;
 			}
 		}
 
-		if (isModelEditingModeEnabled) {
+		if (modelMode == modelmode::PLACE) {
 			isEdited = placeCompoundModel();
 			updateVerticesFlag = isEdited;
 			return;
@@ -380,7 +376,7 @@ void Engine3D::edit(float elapsedTime)
 			}
 		}
 
-		if (isLightingEditingModeEnabled || isModelEditingModeEnabled) return;
+		if (isLightingEditingModeEnabled || modelMode == modelmode::PLACE) return;
 
 		// pressing LCTRL + mouse wheel up/down cycles through edit options
 		if (keysPressed[SupportedKeys::LEFT_CTRL] && eventController->scrollDown(keysPressed, prevKeysPressed)) {
@@ -652,6 +648,22 @@ std::string Engine3D::gridPrecisionToString(gridprecision gp)
 			return "decimeter";
 		case gridprecision::CENTIMETER:
 			return "centimeter";
+		default:
+			return "";
+	}
+}
+
+std::string Engine3D::modelModeToString(modelmode mm)
+{
+	switch (mm) {
+		case modelmode::OFF:
+			return "off";
+		case modelmode::CREATE:
+			return "create";
+		case modelmode::EDIT:
+			return "edit";
+		case modelmode::PLACE:
+			return "place";
 		default:
 			return "";
 	}

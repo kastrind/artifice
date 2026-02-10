@@ -12,20 +12,11 @@
 #include <memory>
 
 
-
-enum class gridprecision {
-	INFINITE,
-	DECIMETER,
-	CENTIMETER
-};
-
-
 typedef enum axis {
 	X,
 	Y,
 	Z
 } axis;
-
 
 typedef enum orientation {
 	NORTH,
@@ -35,7 +26,6 @@ typedef enum orientation {
 	TOP,
 	BOTTOM
 } orientation;
-
 
 typedef enum shapetype {
 	RECTANGLE,

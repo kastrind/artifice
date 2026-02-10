@@ -44,6 +44,20 @@
 #include <algorithm>
 #include <memory>
 
+
+enum class modelmode {
+	OFF,
+	CREATE,
+	EDIT,
+	PLACE
+};
+
+enum class gridprecision {
+	INFINITE,
+	DECIMETER,
+	CENTIMETER
+};
+
 typedef enum camerapositionmode {
 	ATTACHED_TO_PERSON,
 	FIXED
@@ -287,7 +301,7 @@ class Engine3D
 		//editor user mode specific
 
 		//compound model edit mode specific
-		bool isModelEditingModeEnabled = false;
+		modelmode modelMode = modelmode::OFF;
 		unsigned long compoundModelId = 0;
 		std::vector<std::string> compoundModelFileNames;
 		std::vector<std::string> compoundModelEditOptions = {"model", "scale", "rotationX/pitch", "rotationY/yaw", "rotationZ/roll"};
@@ -430,5 +444,7 @@ class Engine3D
 		std::string shapeTypeToString(shapetype s);
 
 		std::string gridPrecisionToString(gridprecision gp);
+
+		std::string modelModeToString(modelmode mm);
 
 };

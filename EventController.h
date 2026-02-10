@@ -59,6 +59,8 @@ typedef enum
 	NEXT,
 	PREVIOUS,
 	JUMP,
+	MODEL_MODE,
+	LIGHT_MODE,
 	ALL_ACTIONS
 } KeyActions;
 
@@ -177,6 +179,9 @@ class EventController
 			keyActionsFromStr["NEXT"] = KeyActions::NEXT;
 			keyActionsFromStr["PREVIOUS"] = KeyActions::PREVIOUS;
 			keyActionsFromStr["JUMP"] = KeyActions::JUMP;
+			keyActionsFromStr["MODEL_MODE"] = KeyActions::MODEL_MODE;
+			keyActionsFromStr["LIGHT_MODE"] = KeyActions::LIGHT_MODE;
+
 
 			sdlKeyCodeMappings[SupportedKeys::UP_ARROW] = SDL_KeyCode::SDLK_UP;
 			sdlKeyCodeMappings[SupportedKeys::DOWN_ARROW] = SDL_KeyCode::SDLK_DOWN;
@@ -204,13 +209,18 @@ class EventController
 			mapActionToKey(KeyActions::RIGHT, keyRight, SupportedKeys::D);
 			mapActionToKey(KeyActions::FORWARD, keyForward, SupportedKeys::W);
 			mapActionToKey(KeyActions::BACKWARD, keyBackward, SupportedKeys::S);
-			mapActionToKey(KeyActions::FLASHLIGHT, keyFlashlight, SupportedKeys::F);
-			mapActionToKey(KeyActions::GRID_PRECISION, "G", SupportedKeys::G);
-			mapActionToKey(KeyActions::PLACE, keyPlace, SupportedKeys::MOUSE_LEFT_CLICK);
-			mapActionToKey(KeyActions::REMOVE, keyRemove, SupportedKeys::MOUSE_RIGHT_CLICK);
-			mapActionToKey(KeyActions::NEXT, keyNext, SupportedKeys::MOUSE_WHEEL_UP);
-			mapActionToKey(KeyActions::PREVIOUS, keyPrevious, SupportedKeys::MOUSE_WHEEL_DOWN);
 			mapActionToKey(KeyActions::JUMP, keyJump, SupportedKeys::SPACE);
+			mapActionToKey(KeyActions::FLASHLIGHT, keyFlashlight, SupportedKeys::F);
+			if (cfg.USER_MODE == UserMode::EDITOR)
+			{
+				mapActionToKey(KeyActions::PLACE, keyPlace, SupportedKeys::MOUSE_LEFT_CLICK);
+				mapActionToKey(KeyActions::REMOVE, keyRemove, SupportedKeys::MOUSE_RIGHT_CLICK);
+				mapActionToKey(KeyActions::NEXT, keyNext, SupportedKeys::MOUSE_WHEEL_UP);
+				mapActionToKey(KeyActions::PREVIOUS, keyPrevious, SupportedKeys::MOUSE_WHEEL_DOWN);
+				mapActionToKey(KeyActions::GRID_PRECISION, "G", SupportedKeys::G);
+				mapActionToKey(KeyActions::MODEL_MODE, "M", SupportedKeys::M);
+				mapActionToKey(KeyActions::LIGHT_MODE, "L", SupportedKeys::L);
+			}
 		}
 
 		bool* getKeysPressed();
@@ -247,8 +257,6 @@ class EventController
 
 		bool flashlight(bool* keysPressed, bool* prevKeysPressed);
 
-		bool gridPrecision(bool* keysPressed, bool* prevKeysPressed);
-
 		bool pressPlace(bool* keysPressed, bool* prevKeysPressed);
 
 		bool releasePlace(bool* keysPressed, bool* prevKeysPressed);
@@ -264,6 +272,8 @@ class EventController
 		bool scrollDown(bool* keysPressed, bool* prevKeysPressed);
 
 		bool scrollUp(bool* keysPressed, bool* prevKeysPressed);
+
+		bool gridPrecisionToggle(bool* keysPressed, bool* prevKeysPressed);
 
 		bool modelModeToggle(bool* keysPressed, bool* prevKeysPressed);
 

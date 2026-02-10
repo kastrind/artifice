@@ -256,11 +256,6 @@ bool EventController::flashlight(bool* keysPressed, bool* prevKeysPressed)
 	return prevKeysPressed[keyMappings[KeyActions::FLASHLIGHT]] && !keysPressed[keyMappings[KeyActions::FLASHLIGHT]];
 }
 
-bool EventController::gridPrecision(bool* keysPressed, bool* prevKeysPressed)
-{
-	return prevKeysPressed[keyMappings[KeyActions::GRID_PRECISION]] && !keysPressed[keyMappings[KeyActions::GRID_PRECISION]];
-}
-
 bool EventController::pressPlace(bool* keysPressed, bool* prevKeysPressed)
 {
 	return !prevKeysPressed[keyMappings[KeyActions::PLACE]] && keysPressed[keyMappings[KeyActions::PLACE]];
@@ -301,14 +296,19 @@ bool EventController::scrollUp(bool* keysPressed, bool* prevKeysPressed)
 	return prevKeysPressed[SupportedKeys::MOUSE_WHEEL_UP]==true && keysPressed[SupportedKeys::MOUSE_WHEEL_UP]==false;
 }
 
+bool EventController::gridPrecisionToggle(bool* keysPressed, bool* prevKeysPressed)
+{
+	return prevKeysPressed[keyMappings[KeyActions::GRID_PRECISION]] && !keysPressed[keyMappings[KeyActions::GRID_PRECISION]];
+}
+
 bool EventController::modelModeToggle(bool* keysPressed, bool* prevKeysPressed)
 {
-	return prevKeysPressed[SupportedKeys::M] && !keysPressed[SupportedKeys::M];
+	return prevKeysPressed[keyMappings[KeyActions::MODEL_MODE]] && !keysPressed[keyMappings[KeyActions::MODEL_MODE]];
 }
 
 bool EventController::lightModeToggle(bool* keysPressed, bool* prevKeysPressed)
 {
-	return prevKeysPressed[SupportedKeys::L] && !keysPressed[SupportedKeys::L];
+	return prevKeysPressed[keyMappings[KeyActions::LIGHT_MODE]] && !keysPressed[keyMappings[KeyActions::LIGHT_MODE]];
 }
 
 

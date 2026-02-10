@@ -89,6 +89,9 @@ Engine3D::Engine3D(
 	}
 
 	gridPrecisionValue = (gridPrecision == gridprecision::DECIMETER) ? 0.1f : (gridPrecision == gridprecision::CENTIMETER) ? 0.01f : 0;
+
+	//initialize keysPressed
+	std::memcpy(keysPressed, eventController->getKeysPressed(), SupportedKeys::ALL_KEYS * sizeof(bool));
 }
 
 std::thread Engine3D::startEngine()
@@ -1038,7 +1041,8 @@ bool Engine3D::update(float elapsedTime)
 
 		mtx.lock();
 		glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
-		if (mdl.compoundModelId > 0)
+		//TODO: perhaps revisit this later
+		if (mdl.compoundModelId > 0 && modelMode != modelmode::CREATE)
 		{
 			modelMatrix = mdl.modelMatrix;
 		}
