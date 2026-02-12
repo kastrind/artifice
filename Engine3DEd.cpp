@@ -6,7 +6,6 @@ void Engine3D::addModel(float editingWidth, float editingHeight, float editingDe
 	{
 		cube cube(std::max(editingWidth, std::max(editingHeight, editingDepth)), editingRotationX, editingRotationY, editingRotationZ);
 		cubeModel mdl(getTimeSinceEpoch(), cubePointsCnt, cubemapNames[editingCubemapNameIndex], position, cube, editingIsSolid);
-		mdl.compoundModelId = modelMode == modelmode::CREATE && compoundModelId > 0 ? compoundModelId : 0;
 		cubePointsCnt += mdl.modelMesh.tris.size() * 3;
 		std::cout << "about to place model with id = " << mdl.id << std::endl;
 		mtx.lock();
@@ -21,13 +20,11 @@ void Engine3D::addModel(float editingWidth, float editingHeight, float editingDe
 		{
 			rectangle rectangle(editingWidth, editingHeight, editingRotationX, editingRotationY, editingRotationZ);
 			model mdl(getTimeSinceEpoch(), modelPointsCnt, textureNames[editingTextureNameIndex], position, rectangle, editingIsSolid);
-			mdl.compoundModelId = modelMode == modelmode::CREATE && compoundModelId > 0 ? compoundModelId : 0;
 			m = mdl;
 		}else if (editingShape == shapetype::CUBOID)
 		{
 			cuboid cuboid(editingWidth, editingHeight, editingDepth, editingRotationX, editingRotationY, editingRotationZ);
 			model mdl(getTimeSinceEpoch(), modelPointsCnt, textureNames[editingTextureNameIndex], position, cuboid, editingIsSolid);
-			mdl.compoundModelId = modelMode == modelmode::CREATE && compoundModelId > 0 ? compoundModelId : 0;
 			m = mdl;
 		}
 		modelPointsCnt += m.modelMesh.tris.size() * 3;
@@ -58,7 +55,6 @@ void Engine3D::addLightHandleModel(unsigned long id, glm::vec3 position, glm::ma
 void Engine3D::addModel(model& mdl)
 {
 	mdl.id = getTimeSinceEpoch();
-	mdl.compoundModelId = modelMode == modelmode::CREATE && compoundModelId > 0 ? compoundModelId : 0;
 	std::cout << "about to place cube model with id = " << mdl.id << std::endl;
 	if (mdl.modelMesh.shape == shapetype::CUBE)
 	{
@@ -162,9 +158,9 @@ void Engine3D::edit(float elapsedTime)
 			std::cout << "grid precision: " << gridPrecisionToString(gridPrecision) << std::endl;
 		}
 
-		// toggles model modes (off, create, edit, place)
+		// toggles model modes (off, create, edit)
 		if (eventController->modelModeToggle(keysPressed, prevKeysPressed)) {
-			modelMode = (modelmode) ((static_cast<int>(modelMode) + 1) % (static_cast<int>(modelmode::PLACE) + 1));
+			modelMode = (modelmode) ((static_cast<int>(modelMode) + 1) % (static_cast<int>(modelmode::EDIT) + 1));
 			std::cout << "model mode: " << modelModeToString(modelMode) << std::endl;
 			if (modelMode == modelmode::CREATE) {
 				if (compoundModelId == 0) {
@@ -173,7 +169,7 @@ void Engine3D::edit(float elapsedTime)
 			}
 		}
 
-		if (modelMode == modelmode::PLACE) {
+		if (placementMode == placementmode::MODEL) {
 			isEdited = placeCompoundModel();
 			updateVerticesFlag = isEdited;
 			return;
@@ -376,7 +372,7 @@ void Engine3D::edit(float elapsedTime)
 			}
 		}
 
-		if (isLightingEditingModeEnabled || modelMode == modelmode::PLACE) return;
+		if (isLightingEditingModeEnabled) return;
 
 		// pressing LCTRL + mouse wheel up/down cycles through edit options
 		if (keysPressed[SupportedKeys::LEFT_CTRL] && eventController->scrollDown(keysPressed, prevKeysPressed)) {
@@ -386,6 +382,14 @@ void Engine3D::edit(float elapsedTime)
 		} else if (keysPressed[SupportedKeys::LEFT_CTRL] && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 			if (++editOptionIndex > editOptions.size() - 1) editOptionIndex = 0;
 			std::cout << "editing: " << editOptions[editOptionIndex] << std::endl;
+
+		// switches between model and shape placement mode (important: must NOT be editing one already)
+		}else if (editOptions[editOptionIndex] == "placement mode" && eventController->scrollDown(keysPressed, prevKeysPressed) && editingModel == nullptr) {
+			placementMode = placementMode == placementmode::SHAPE ? placementmode::MODEL : placementmode::SHAPE;
+			std::cout << "placement mode: " << placementModeToString(placementMode) << std::endl;
+		}else if (editOptions[editOptionIndex] == "placement mode" && eventController->scrollUp(keysPressed, prevKeysPressed) && editingModel == nullptr) {
+			placementMode = placementMode == placementmode::SHAPE ? placementmode::MODEL : placementmode::SHAPE;
+			std::cout << "placement mode: " << placementModeToString(placementMode) << std::endl;
 
 		// decreases/increases collation height
 		} else if (editOptions[editOptionIndex] == "collationHeight" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
@@ -403,12 +407,12 @@ void Engine3D::edit(float elapsedTime)
 			collationWidth++;
 			std::cout << "collation width: " << collationWidth << std::endl;
 
-		// cycles through shapes
-		} else if (editOptions[editOptionIndex] == "shape" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
+		// cycles through shapes (important: must NOT be editing one already)
+		} else if (editOptions[editOptionIndex] == "shape" && eventController->scrollUp(keysPressed, prevKeysPressed) && editingModel == nullptr) {
 			if (++edShapeInt > shapetype::CUBE) edShapeInt = 0;
 			editingShape = (shapetype)edShapeInt;
 			std::cout << "shape: " << shapeTypeToString(editingShape) << std::endl;
-		} else if (editOptions[editOptionIndex] == "shape" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
+		} else if (editOptions[editOptionIndex] == "shape" && eventController->scrollDown(keysPressed, prevKeysPressed) && editingModel == nullptr) {
 			if (--edShapeInt > shapetype::CUBE) edShapeInt = shapetype::CUBE;
 			editingShape = (shapetype)edShapeInt;
 			std::cout << "shape: " << shapeTypeToString(editingShape) << std::endl;
@@ -444,34 +448,34 @@ void Engine3D::edit(float elapsedTime)
 			isEdited = true;
 
 		// decreases/increases X rotation
-		} else if (editOptions[editOptionIndex] == "rotationX" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
+		} else if (editOptions[editOptionIndex] == "rotationX/pitch" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			editingRotationX = std::max(editingRotationX - 0.1f, -cfg.M_PI_HALF);
 			if (std::abs(editingRotationX) > 0 && std::abs(editingRotationX) < 0.1f) { editingRotationX = 0.0f; }
-			std::cout << "rotationX: " << editingRotationX << std::endl;
-		} else if (editOptions[editOptionIndex] == "rotationX" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
+			std::cout << "rotationX/pitch: " << editingRotationX << std::endl;
+		} else if (editOptions[editOptionIndex] == "rotationX/pitch" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 			editingRotationX = std::min(editingRotationX + 0.1f, cfg.M_PI_HALF);
 			if (std::abs(editingRotationX) > 0 && std::abs(editingRotationX) < 0.1f) { editingRotationX = 0.0f; }
-			std::cout << "rotationX: " << editingRotationX << std::endl;
+			std::cout << "rotationX/pitch: " << editingRotationX << std::endl;
 
 		// decreases/increases Y rotation
-		} else if (editOptions[editOptionIndex] == "rotationY" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
+		} else if (editOptions[editOptionIndex] == "rotationY/yaw" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			editingRotationY = std::max(editingRotationY - 0.1f, -cfg.M_PI_HALF);
 			if (std::abs(editingRotationY) > 0 && std::abs(editingRotationY) < 0.1f) { editingRotationY = 0.0f; }
-			std::cout << "rotationY: " << editingRotationY << std::endl;
-		} else if (editOptions[editOptionIndex] == "rotationY" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
+			std::cout << "rotationY/yaw: " << editingRotationY << std::endl;
+		} else if (editOptions[editOptionIndex] == "rotationY/yaw" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 			editingRotationY = std::min(editingRotationY + 0.1f, cfg.M_PI_HALF);
 			if (std::abs(editingRotationY) > 0 && std::abs(editingRotationY) < 0.1f) { editingRotationY = 0.0f; }
-			std::cout << "rotationY: " << editingRotationY << std::endl;
+			std::cout << "rotationY/yaw: " << editingRotationY << std::endl;
 
 		// decreases/increases Z rotation
-		} else if (editOptions[editOptionIndex] == "rotationZ" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
+		} else if (editOptions[editOptionIndex] == "rotationZ/roll" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 			editingRotationZ = std::max(editingRotationZ - 0.1f, -cfg.M_PI_HALF);
 			if (std::abs(editingRotationZ) > 0 && std::abs(editingRotationZ) < 0.1f) { editingRotationZ = 0.0f; }
-			std::cout << "rotationZ: " << editingRotationZ << std::endl;
-		} else if (editOptions[editOptionIndex] == "rotationZ" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
+			std::cout << "rotationZ/roll: " << editingRotationZ << std::endl;
+		} else if (editOptions[editOptionIndex] == "rotationZ/roll" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 			editingRotationZ = std::min(editingRotationZ + 0.1f, cfg.M_PI_HALF);
 			if (std::abs(editingRotationZ) > 0 && std::abs(editingRotationZ) < 0.1f) { editingRotationZ = 0.0f; }
-			std::cout << "rotationZ: " << editingRotationZ << std::endl;
+			std::cout << "rotationZ/roll: " << editingRotationZ << std::endl;
 
 		// cycles through textures
 		} else if (editOptions[editOptionIndex] == "texture" && eventController->scrollUp(keysPressed, prevKeysPressed)) {
@@ -662,8 +666,18 @@ std::string Engine3D::modelModeToString(modelmode mm)
 			return "create";
 		case modelmode::EDIT:
 			return "edit";
-		case modelmode::PLACE:
-			return "place";
+		default:
+			return "";
+	}
+}
+
+std::string Engine3D::placementModeToString(placementmode pm)
+{
+	switch (pm) {
+		case placementmode::SHAPE:
+			return "shape";
+		case placementmode::MODEL:
+			return "model";
 		default:
 			return "";
 	}

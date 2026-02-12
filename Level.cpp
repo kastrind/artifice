@@ -49,26 +49,32 @@ void Level::save(std::string levelPath)
 		{
 			model& m = *ptrModel;
 
+			// only head models of compound models need to be saved
+			if (m.compoundModelId > 0 && !m.isHeadModel)
+			{
+				continue;
+			}
+
 			f << m.id << ",";
 
 			if (m.modelMesh.shape == shapetype::CUBE)
 			{
 				cubeModel& cm = dynamic_cast<cubeModel &>(m);
-				float size = cm.modelMesh.tris[0].p[0].x - cm.modelMesh.tris[2].p[0].x;
+				float size = cm.getLocalWidth();
 				f << ((cm.isSkyBox) ? "skybox" : "cube") << "," << cm.texture << "," << size << "," << size << "," << size;
 			}
 			else if (m.modelMesh.shape == shapetype::CUBOID)
 			{
-				float width = m.modelMesh.tris[0].p[0].x - m.modelMesh.tris[1].p[0].x;
-				float height = m.modelMesh.tris[0].p[0].y - m.modelMesh.tris[0].p[2].y;
-				float depth = m.modelMesh.tris[0].p[0].z - m.modelMesh.tris[2].p[0].z;
+				float width = m.getLocalWidth();
+				float height = m.getLocalHeight();
+				float depth = m.getLocalDepth();
 				f << "cuboid," << m.texture << "," << width << "," << height << "," << depth;
 
 			}
 			else if (m.modelMesh.shape == shapetype::RECTANGLE)
 			{
-				float width = m.modelMesh.tris[0].p[1].x - m.modelMesh.tris[0].p[0].x;
-				float height = m.modelMesh.tris[0].p[0].y - m.modelMesh.tris[0].p[2].y;
+				float width = m.getLocalWidth();
+				float height = m.getLocalHeight();
 				f << "rectangle," << m.texture << "," << width << "," << height << "," <<  "0";
 			}
 			float thetaRotX = atan2(-m.rotationMatrix[2][1], m.rotationMatrix[2][2]);
@@ -192,6 +198,7 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 					rectangle rectangle(width, height, rotationX, rotationY, rotationZ);
 					model m(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), rectangle, isSolid);
 					m.compoundModelId = compoundModelId;
+					m.isHeadModel = compoundModelId > 0; // only head models of compound models were saved
 					modelPointsCnt += m.modelMesh.tris.size() * 3;
 					models.push_back(std::make_shared<model>(m));
 				}
@@ -200,6 +207,7 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 					cuboid cuboid(width, height, depth, rotationX, rotationY, rotationZ);
 					model m(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), cuboid, isSolid);
 					m.compoundModelId = compoundModelId;
+					m.isHeadModel = compoundModelId > 0; // only head models of compound models were saved
 					modelPointsCnt += m.modelMesh.tris.size() * 3;
 					models.push_back(std::make_shared<model>(m));
 				}
@@ -208,6 +216,7 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 					cube cube(std::max(width, std::max(height, depth)), rotationX, rotationY, rotationZ);
 					cubeModel cubeMdl(id, cubePointsCnt, texture, glm::vec3(positionX, positionY, positionZ), cube, isSolid);
 					cubeMdl.compoundModelId = compoundModelId;
+					cubeMdl.isHeadModel = compoundModelId > 0; // only head models of compound models were saved
 					cubeMdl.isSkyBox = (shape == "skyBox" || shape == "skybox") == true;
 					cubeMdl.isActiveSkyBox = (!existsSkyBox && cubeMdl.isSkyBox); // only the first skyBox is active
 					existsSkyBox = existsSkyBox || cubeMdl.isSkyBox;

@@ -48,8 +48,12 @@
 enum class modelmode {
 	OFF,
 	CREATE,
-	EDIT,
-	PLACE
+	EDIT
+};
+
+enum class placementmode : unsigned int  {
+	SHAPE,
+	MODEL
 };
 
 enum class gridprecision {
@@ -304,7 +308,7 @@ class Engine3D
 		modelmode modelMode = modelmode::OFF;
 		unsigned long compoundModelId = 0;
 		std::vector<std::string> compoundModelFileNames;
-		std::vector<std::string> compoundModelEditOptions = {"model", "scale", "rotationX/pitch", "rotationY/yaw", "rotationZ/roll"};
+		std::vector<std::string> compoundModelEditOptions = {"placement mode", "model", "scale", "rotationX/pitch", "rotationY/yaw", "rotationZ/roll"};
 		unsigned short compoundModelEditOptionIndex = 0;
 		unsigned int editingCompoundModelFileNameIndex = 0;
 		float editingScale = 1.0f;
@@ -322,7 +326,8 @@ class Engine3D
 		unsigned short presetSpotLightIndex = 0;
 
 		//regular edit mode specific
-		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX", "rotationY", "rotationZ", "texture", "isSolid", "collationHeight", "collationWidth"};
+		placementmode placementMode = placementmode::SHAPE;
+		std::vector<std::string> editOptions = {"placement mode", "shape", "width", "height", "depth", "rotationX/pitch", "rotationY/yaw", "rotationZ/roll", "texture", "isSolid", "collationHeight", "collationWidth"};
 		unsigned short editOptionIndex = 0;
 		unsigned int collationHeight = 1;
 		unsigned int collationWidth = 1;
@@ -446,5 +451,7 @@ class Engine3D
 		std::string gridPrecisionToString(gridprecision gp);
 
 		std::string modelModeToString(modelmode mm);
+
+		std::string placementModeToString(placementmode pm);
 
 };

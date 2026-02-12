@@ -415,6 +415,7 @@ typedef struct model {
 		bool isInFOV = true;
 		bool removeFlag = false;
 		bool isCovered = false;
+		bool isTouched = false;
 		boundingbox bbox;
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		glm::mat4 rotationMatrix = glm::mat4(1.0f);
@@ -517,6 +518,19 @@ typedef struct model {
 			}
 		}
 
+		float getLocalWidth() {
+			glm::vec4 pt[3];
+			if (modelMesh.shape == shapetype::RECTANGLE || modelMesh.shape == shapetype::CUBOID) {
+				pt[0] = modelMesh.tris[0].p[0];
+				pt[1] = modelMesh.tris[0].p[1];
+				return std::abs(pt[1].x - pt[0].x);
+			}else if (modelMesh.shape == shapetype::CUBE) {
+				pt[0] = modelMesh.tris[5].p[0];
+				pt[1] = modelMesh.tris[5].p[1];
+				return std::abs(pt[1].x - pt[0].x);
+			}
+		}
+
 		float getHeight() {
 			glm::vec4 pt[3];
 			if (modelMesh.shape == shapetype::RECTANGLE || modelMesh.shape == shapetype::CUBOID) {
@@ -526,6 +540,19 @@ typedef struct model {
 			}else if (modelMesh.shape == shapetype::CUBE) {
 				pt[0] = modelMatrix * modelMesh.tris[0].p[0];
 				pt[1] = modelMatrix * modelMesh.tris[0].p[1];
+				return std::abs(pt[1].y - pt[0].y);
+			}
+		}
+
+		float getLocalHeight() {
+			glm::vec4 pt[3];
+			if (modelMesh.shape == shapetype::RECTANGLE || modelMesh.shape == shapetype::CUBOID) {
+				pt[0] = modelMesh.tris[0].p[1];
+				pt[1] = modelMesh.tris[0].p[2];
+				return std::abs(pt[0].y - pt[1].y);
+			}else if (modelMesh.shape == shapetype::CUBE) {
+				pt[0] = modelMesh.tris[0].p[0];
+				pt[1] = modelMesh.tris[0].p[1];
 				return std::abs(pt[1].y - pt[0].y);
 			}
 		}
@@ -545,6 +572,25 @@ typedef struct model {
 			else if (modelMesh.shape == shapetype::CUBE) {
 				pt[0] = modelMatrix * modelMesh.tris[0].p[0];
 				pt[1] = modelMatrix * modelMesh.tris[0].p[1];
+				return std::abs(pt[0].z - pt[1].z);
+			}
+		}
+
+		float getLocalDepth() {
+			glm::vec4 pt[3];
+			if (modelMesh.shape == shapetype::RECTANGLE) {
+				pt[0] = modelMesh.tris[0].p[0];
+				pt[1] = modelMesh.tris[0].p[1];
+				return std::abs(pt[1].z - pt[0].z);
+			}
+			else if (modelMesh.shape == shapetype::CUBOID) {
+				pt[0] = modelMesh.tris[2].p[0];
+				pt[1] = modelMesh.tris[2].p[1];
+				return std::abs(pt[1].z - pt[0].z);
+			}
+			else if (modelMesh.shape == shapetype::CUBE) {
+				pt[0] = modelMesh.tris[0].p[0];
+				pt[1] = modelMesh.tris[0].p[1];
 				return std::abs(pt[0].z - pt[1].z);
 			}
 		}

@@ -1042,7 +1042,7 @@ bool Engine3D::update(float elapsedTime)
 		mtx.lock();
 		glm::mat4 modelMatrix = glm::mat4(1.0f); //make sure to initialize matrix to identity matrix first
 		//TODO: perhaps revisit this later
-		if (mdl.compoundModelId > 0 && modelMode != modelmode::CREATE)
+		if (mdl.isTouched)
 		{
 			modelMatrix = mdl.modelMatrix;
 		}
