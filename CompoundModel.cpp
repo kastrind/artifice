@@ -15,7 +15,7 @@ void CompoundModel::save(std::string modelPath)
 	}
 	else
 	{
-		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ compoundModelId" << std::endl;
+		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ" << std::endl;
 
 		bool is_first = true;
 		glm::vec3 first_position(0.0f);
@@ -55,9 +55,8 @@ void CompoundModel::save(std::string modelPath)
 				first_position = m.position;
 				f << ",0,0,0";
 			}else { // else position is relative to first
-				f << "," << m.position.x - first_position.x << "," << m.position.y - first_position.y << "," << m.position.z - first_position.z;
+				f << "," << m.position.x - first_position.x << "," << m.position.y - first_position.y << "," << m.position.z - first_position.z << std::endl;
 			}
-			f << "," << m.compoundModelId << std::endl;
 
 			is_first = false;
 		}
@@ -98,20 +97,35 @@ void CompoundModel::load(std::string modelPath, Transform* transform)
 	}
 	models.clear();
 	Level tempLevel;
-	tempLevel.deserializeModels(f, models, transform);
+	tempLevel.modelPointsCnt = modelPointsCnt;
+	tempLevel.cubePointsCnt = cubePointsCnt;
+	tempLevel.deserializeModels(f, models);
 	if (models.size() > 0) {
+		models[0]->compoundModelId = id;
 		models[0]->isHeadModel = true;
+		models[0]->rotate(transform->rotation.x, transform->rotation.y, transform->rotation.z);
+		models[0]->modelMatrix = glm::translate(glm::mat4(1.0f), transform->position) * models[0]->rotationMatrix;
+		models[0]->modelMatrix = glm::scale(models[0]->modelMatrix, transform->scale);
+		models[0]->position = models[0]->modelMatrix[3];
+		models[0]->isTouched = true;
 	}
 	if (models.size() > 1) {
 		for (size_t i = 1; i < models.size(); ++i) {
-			models[i]->headModel = std::make_shared<model>(*models[0]);
+			models[i]->compoundModelId = id;
+			models[i]->headModel = models[0];
+			models[i]->localOffset = models[i]->position;
+			models[i]->modelMatrix = models[0]->modelMatrix * glm::translate(glm::mat4(1.0f), models[i]->localOffset) * models[i]->rotationMatrix;
+			models[i]->position = models[i]->modelMatrix[3];
+			models[i]->isTouched = true;
 		}
 	}
+	modelPointsCnt = tempLevel.modelPointsCnt;
+	cubePointsCnt = tempLevel.cubePointsCnt;
 }
 
-std::shared_ptr<CompoundModel> CompoundModel::create(std::string modelPath, Transform* transform)
+std::shared_ptr<CompoundModel> CompoundModel::create(std::string modelPath, Transform* transform, unsigned long modelPointsCntOffset, unsigned long cubePointsCntOffset, unsigned long id)
 {
-	CompoundModel compModel;
+	CompoundModel compModel(modelPointsCntOffset, cubePointsCntOffset, id);
 	compModel.load(modelPath, transform);
 	return std::make_shared<CompoundModel>(compModel);
 }

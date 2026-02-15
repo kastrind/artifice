@@ -1,8 +1,8 @@
-# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ compoundModelId
-1769670111148,rectangle,brickwall,0.1,0.1,0,true,-0,0,-0,0,0,0,1769670105594
-1769670127362,rectangle,brickwallPainted,0.1,0.1,0,true,-0,0,-0.3,-0.00228465,0.00429368,0.0474827,1769670105594
-1769670128799,rectangle,brickwallPainted,0.1,0.1,0,true,-0,0,-0.9,0.0142158,0.00463808,0.11686,1769670105594
-1769670131187,rectangle,brickwallPainted,0.1,0.1,0,true,-0,0,-1.5708,0.039166,-0.000762343,0.213705,1769670105594
-1769670135799,rectangle,brickwallPainted,0.1,0.1,0,true,-0,0,0.8,-0.025949,-0.0171349,0.309093,1769670105594
-1769670137532,rectangle,brickwallPainted,0.1,0.1,0,true,-0,0,1.5,-0.00254536,-0.0159605,0.406293,1769670105594
-1769670139041,rectangle,brickwallPainted,0.1,0.1,0,true,-0,0,1.5708,0.0215388,-0.0155716,0.504133,1769670105594
+# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ
+1769670111148,rectangle,brickwall,0.1,0.1,0,true,-0,0,-0,0,0,0
+1769670127362,rectangle,brickwallPainted,0.1,0.1,0,true,-0,0,-0.3,-0.00228465,0.00429368,0.0474827
+1769670128799,rectangle,brickwallPainted,0.1,0.1,0,true,-0,0,-0.9,0.0142158,0.00463808,0.11686
+1769670131187,rectangle,brickwallPainted,0.1,0.1,0,true,-0,0,-1.5708,0.039166,-0.000762343,0.213705
+1769670135799,rectangle,brickwallPainted,0.1,0.1,0,true,-0,0,0.8,-0.025949,-0.0171349,0.309093
+1769670137532,rectangle,brickwallPainted,0.1,0.1,0,true,-0,0,1.5,-0.00254536,-0.0159605,0.406293
+1769670139041,rectangle,brickwallPainted,0.1,0.1,0,true,-0,0,1.5708,0.0215388,-0.0155716,0.504133

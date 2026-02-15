@@ -43,17 +43,30 @@ void Level::save(std::string levelPath)
 			}
 			f << sl.id << "," << "spot_light," << sl.position.x << "," << sl.position.y << "," << sl.position.z << "," << sl.color.r * 255 << "," << sl.color.g * 255 << "," << sl.color.b * 255 << "," << sl.diffuseIntensity << "," << sl.specularIntensity << "," << sl.constant << "," << sl.linear << "," << sl.quadratic << "," << sl.direction.x << "," << sl.direction.y << "," << sl.direction.z << "," << sl.cutoff << "," << sl.outerCutoff << std::endl;
 		}
-
-		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ compoundModelId" << std::endl;
+		f << "# for compound models:" << std::endl;
+		f << "# id compoundModel scale rotationX rotationY rotationZ positionX positionY positionZ compoundModelId" << std::endl;
+		f << "# for primitive models:" << std::endl;
+		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ" << std::endl;
 		for (auto &ptrModel : models)
 		{
 			model& m = *ptrModel;
 
-			// only head models of compound models need to be saved
+			// skip, because only head models of compound models need to be saved
 			if (m.compoundModelId > 0 && !m.isHeadModel)
 			{
 				continue;
 			}
+			// for compound models: saves head models of compound models
+			else if (m.compoundModelId > 0 && m.isHeadModel)
+			{
+				float thetaRotX = atan2(-m.rotationMatrix[2][1], m.rotationMatrix[2][2]);
+				float thetaRotY = atan2(m.rotationMatrix[2][0], sqrt(m.rotationMatrix[2][1] * m.rotationMatrix[2][1] + m.rotationMatrix[2][2] * m.rotationMatrix[2][2]));
+				float thetaRotZ = atan2(-m.rotationMatrix[1][0], m.rotationMatrix[0][0]);
+				f << m.id << ",compoundModel," << m.headModelScale << "," << thetaRotX << "," << thetaRotY << "," << thetaRotZ << "," << m.position.x << "," << m.position.y << "," << m.position.z << "," << m.compoundModelId << std::endl;
+				continue;
+			}
+
+			// the rest saves primitive models
 
 			f << m.id << ",";
 
@@ -80,7 +93,7 @@ void Level::save(std::string levelPath)
 			float thetaRotX = atan2(-m.rotationMatrix[2][1], m.rotationMatrix[2][2]);
 			float thetaRotY = atan2(m.rotationMatrix[2][0], sqrt(m.rotationMatrix[2][1] * m.rotationMatrix[2][1] + m.rotationMatrix[2][2] * m.rotationMatrix[2][2]));
 			float thetaRotZ = atan2(-m.rotationMatrix[1][0], m.rotationMatrix[0][0]);
-			f << "," << (m.isSolid ? "true" : "false") << "," << thetaRotX << "," << thetaRotY << "," << thetaRotZ << "," << m.position.x << "," << m.position.y << "," << m.position.z << "," << m.compoundModelId << std::endl;
+			f << "," << (m.isSolid ? "true" : "false") << "," << thetaRotX << "," << thetaRotY << "," << thetaRotZ << "," << m.position.x << "," << m.position.y << "," << m.position.z << std::endl;
 		}
 	}
 	f.close();
@@ -120,7 +133,7 @@ void Level::load(std::string levelPath)
 
 }
 
-void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<model>>& models, Transform* transform)
+void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<model>>& models)
 {
 	bool existsSkyBox = false;
 
@@ -137,8 +150,6 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 
 		unsigned long id;
 		char* idEndPtr;
-		unsigned long compoundModelId = 0;
-		char* compoundModelIdEndPtr;
 
 		std::string shape, texture;
 		bool isSolid;
@@ -163,7 +174,7 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 				tokens[++i] = token;
 			}
 
-			if (i == NUM_ATTRIBUTES - 5 && (tokens[1] == "rectangle" || tokens[1] == "cuboid" || tokens[1] == "cube" || tokens[1] == "skyBox" || tokens[1] == "skybox")) {
+			if (i == NUM_ATTRIBUTES - 6 && (tokens[1] == "rectangle" || tokens[1] == "cuboid" || tokens[1] == "cube" || tokens[1] == "skyBox" || tokens[1] == "skybox")) {
 				id      = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
 				shape   = tokens[1];
 				texture = tokens[2];
@@ -178,27 +189,12 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 				positionY = std::stof(tokens[11]);
 				positionZ = std::stof(tokens[12]);
 
-				if (transform != nullptr) {
-					positionX = transform->position.x + positionX * transform->scale.x;
-					positionY = transform->position.y + positionY * transform->scale.y;
-					positionZ = transform->position.z + positionZ * transform->scale.z;
-					rotationX += transform->rotation.x;
-					rotationY += transform->rotation.y;
-					rotationZ += transform->rotation.z;
-					width  *= transform->scale.x;
-					height *= transform->scale.y;
-					depth  *= transform->scale.z;
-				}
-
-				compoundModelId = std::strtoul(tokens[13].c_str(), &compoundModelIdEndPtr, 0);
-				//std::cout << "shape: " << shape << ", tex: " << texture << ", w: " << width << ", h: " << height << ", d: " << depth << ", rX: " << rotationX << ", rY: " << rotationY << ", rZ: " << rotationZ << ", pX: " << positionX << ", pY: " << positionY << ", pZ: " << positionZ << ", compoundModelId: " << compoundModelId << std::endl;
+				//std::cout << "shape: " << shape << ", tex: " << texture << ", w: " << width << ", h: " << height << ", d: " << depth << ", rX: " << rotationX << ", rY: " << rotationY << ", rZ: " << rotationZ << ", pX: " << positionX << ", pY: " << positionY << ", pZ: " << positionZ << std::endl;
 
 				if (shape == "rectangle")
 				{
 					rectangle rectangle(width, height, rotationX, rotationY, rotationZ);
 					model m(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), rectangle, isSolid);
-					m.compoundModelId = compoundModelId;
-					m.isHeadModel = compoundModelId > 0; // only head models of compound models were saved
 					modelPointsCnt += m.modelMesh.tris.size() * 3;
 					models.push_back(std::make_shared<model>(m));
 				}
@@ -206,8 +202,6 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 				{
 					cuboid cuboid(width, height, depth, rotationX, rotationY, rotationZ);
 					model m(id, modelPointsCnt, texture, glm::vec3(positionX, positionY, positionZ), cuboid, isSolid);
-					m.compoundModelId = compoundModelId;
-					m.isHeadModel = compoundModelId > 0; // only head models of compound models were saved
 					modelPointsCnt += m.modelMesh.tris.size() * 3;
 					models.push_back(std::make_shared<model>(m));
 				}
@@ -215,12 +209,11 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 				{
 					cube cube(std::max(width, std::max(height, depth)), rotationX, rotationY, rotationZ);
 					cubeModel cubeMdl(id, cubePointsCnt, texture, glm::vec3(positionX, positionY, positionZ), cube, isSolid);
-					cubeMdl.compoundModelId = compoundModelId;
-					cubeMdl.isHeadModel = compoundModelId > 0; // only head models of compound models were saved
 					cubeMdl.isSkyBox = (shape == "skyBox" || shape == "skybox") == true;
 					cubeMdl.isActiveSkyBox = (!existsSkyBox && cubeMdl.isSkyBox); // only the first skyBox is active
 					existsSkyBox = existsSkyBox || cubeMdl.isSkyBox;
 					cubePointsCnt += cubeMdl.modelMesh.tris.size() * 3;
+
 					models.push_back(std::make_shared<cubeModel>(cubeMdl));
 				}
 			}else if (tokens[0] == "player_position") {
@@ -284,8 +277,25 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 				spotLight.specularIntensity = specularIntensity;
 				flashLight = spotLight;
 				assignedFlashLight = true;
+			}else if (i == NUM_ATTRIBUTES - 9 && tokens[1]== "compoundModel") {
+				id = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
+				float scale = std::stof(tokens[2]);
+				rotationX = std::stof(tokens[3]);
+				rotationY = std::stof(tokens[4]);
+				rotationZ = std::stof(tokens[5]);
+				positionX = std::stof(tokens[6]);
+				positionY = std::stof(tokens[7]);
+				positionZ = std::stof(tokens[8]);
+				unsigned long compoundModelId;
+				char* compoundModelIdEndPtr;
+				compoundModelId = std::strtoul(tokens[9].c_str(), &compoundModelIdEndPtr, 0);
+
+				glm::vec3 headPosition = glm::vec3(positionX, positionY, positionZ);
+				Transform transform(headPosition, glm::vec3(rotationX, rotationY, rotationZ), glm::vec3(scale));
+				std::shared_ptr<CompoundModel> cm = CompoundModel::create(cfg.COMPOUND_MODELS_PATH + cfg.PATH_SEP + std::to_string(compoundModelId) + ".cmdl", &transform, modelPointsCnt, cubePointsCnt, compoundModelId);
+				models.insert(models.end(), cm->models.begin(), cm->models.end());
 			}
 		}
 	}
-	std::cout << "loaded " << models.size() << " models." << std::endl;
+	std::cout << "Loaded " << models.size() << " models." << std::endl;
 }

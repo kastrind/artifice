@@ -1,2 +1,2 @@
-# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ compoundModelId
-1770679920199,rectangle,brickwall,4.5,0.1,0,true,-0,0,-0,0,0,0,1770679893143
+# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ
+1770679920199,rectangle,brickwall,4.5,0.1,0,true,-0,0,-0,0,0,0

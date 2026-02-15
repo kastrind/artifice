@@ -100,6 +100,7 @@ bool Engine3D::placeCompoundModel()
 		editingCompoundModelHead->rotate(editingRotationX, editingRotationY, editingRotationZ);
 		editingCompoundModelHead->modelMatrix = glm::translate(glm::mat4(1.0f), editingCompoundModelHead->position) * editingCompoundModelHead->rotationMatrix;
 		editingCompoundModelHead->modelMatrix = glm::scale(editingCompoundModelHead->modelMatrix, glm::vec3(editingScale, editingScale, editingScale));
+		editingCompoundModelHead->headModelScale = editingScale;
 		editingCompoundModelHead->isTouched = true;
 
 		// go through the vector of pointers to models to render, from the back of the vector up to editingCompoundModelPartsCount number of models, to update their transform
@@ -107,6 +108,7 @@ bool Engine3D::placeCompoundModel()
 			std::shared_ptr<model> mdl = ptrModelsToRender[ptrModelsToRender.size() - 1 - i];
 			// real-time update of the compound model's transform
 			mdl->modelMatrix = editingCompoundModelHead->modelMatrix * glm::translate(glm::mat4(1.0f), mdl->localOffset) * mdl->rotationMatrix;
+			mdl->headModelScale = editingScale;
 			mdl->isTouched = true;
 		}
 	}
@@ -121,6 +123,7 @@ bool Engine3D::placeCompoundModel()
 		editingCompoundModelHead->rotate(editingRotationX, editingRotationY, editingRotationZ);
 		// scale this way to update the triangles
 		editingCompoundModelHead->scale(editingCompoundModelHead->getLocalWidth() * editingScale, editingCompoundModelHead->getLocalHeight() * editingScale, editingCompoundModelHead->getLocalDepth() * editingScale);
+		editingCompoundModelHead->headModelScale = editingScale;
 		editingCompoundModelHead->isTouched = false;
 
 		editingModel = nullptr;

@@ -48,7 +48,7 @@ class Level
 
 		void load(std::string levelPath);
 
-		void deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<model>>& models, Transform* transform = nullptr);
+		void deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<model>>& models);
 
 	private:
 
