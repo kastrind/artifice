@@ -419,7 +419,7 @@ typedef struct model {
 		boundingbox bbox;
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		glm::mat4 rotationMatrix = glm::mat4(1.0f);
-		float headModelScale = 1.0f;
+		glm::vec3 headModelScale = glm::vec3(1.0f);
 
 		unsigned short frameIndex = 0;
 		unsigned short frameRows = 1;

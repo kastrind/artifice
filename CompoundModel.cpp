@@ -15,6 +15,8 @@ void CompoundModel::save(std::string modelPath)
 	}
 	else
 	{
+		f << "# metadata compoundModelId" << std::endl;
+		f << "metadata," << id << std::endl;
 		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ" << std::endl;
 
 		bool is_first = true;
@@ -100,12 +102,15 @@ void CompoundModel::load(std::string modelPath, Transform* transform)
 	tempLevel.modelPointsCnt = modelPointsCnt;
 	tempLevel.cubePointsCnt = cubePointsCnt;
 	tempLevel.deserializeModels(f, models);
+	id = tempLevel.meta.compoundModelId;
+	std::cout << "loaded compoundmodelid: " << id << std::endl;
 	if (models.size() > 0) {
 		models[0]->compoundModelId = id;
 		models[0]->isHeadModel = true;
 		models[0]->rotate(transform->rotation.x, transform->rotation.y, transform->rotation.z);
 		models[0]->modelMatrix = glm::translate(glm::mat4(1.0f), transform->position) * models[0]->rotationMatrix;
 		models[0]->modelMatrix = glm::scale(models[0]->modelMatrix, transform->scale);
+		models[0]->headModelScale = transform->scale;
 		models[0]->position = models[0]->modelMatrix[3];
 		models[0]->isTouched = true;
 	}

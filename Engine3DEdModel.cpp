@@ -75,11 +75,8 @@ bool Engine3D::placeCompoundModel()
 			Transform transform(position, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 			std::shared_ptr<CompoundModel> editingCompoundModel = CompoundModel::create(cfg.COMPOUND_MODELS_PATH + cfg.PATH_SEP + compoundModelFileNames[editingCompoundModelFileNameIndex] + ".cmdl", &transform);
 			editingCompoundModelPartsCount = editingCompoundModel->models.size();
-			glm::vec3 headPosition = editingCompoundModel->models[0]->position;
-			for (auto & mdl : editingCompoundModel->models) { 
-				mdl->localOffset = mdl->position - headPosition;
+			for (auto & mdl : editingCompoundModel->models) {
 				addModel(*mdl);
-				std::cout << "added model from compound model with id = " << mdl->compoundModelId << std::endl;
 			}
 		}else
 		{
@@ -100,31 +97,28 @@ bool Engine3D::placeCompoundModel()
 		editingCompoundModelHead->rotate(editingRotationX, editingRotationY, editingRotationZ);
 		editingCompoundModelHead->modelMatrix = glm::translate(glm::mat4(1.0f), editingCompoundModelHead->position) * editingCompoundModelHead->rotationMatrix;
 		editingCompoundModelHead->modelMatrix = glm::scale(editingCompoundModelHead->modelMatrix, glm::vec3(editingScale, editingScale, editingScale));
-		editingCompoundModelHead->headModelScale = editingScale;
-		editingCompoundModelHead->isTouched = true;
+		editingCompoundModelHead->headModelScale = glm::vec3(editingScale);
 
 		// go through the vector of pointers to models to render, from the back of the vector up to editingCompoundModelPartsCount number of models, to update their transform
 		for (size_t i = 0; i < editingCompoundModelPartsCount - 1 && i < ptrModelsToRender.size(); ++i) {
 			std::shared_ptr<model> mdl = ptrModelsToRender[ptrModelsToRender.size() - 1 - i];
 			// real-time update of the compound model's transform
 			mdl->modelMatrix = editingCompoundModelHead->modelMatrix * glm::translate(glm::mat4(1.0f), mdl->localOffset) * mdl->rotationMatrix;
-			mdl->headModelScale = editingScale;
-			mdl->isTouched = true;
 		}
 	}
 
 	// if the user releases the place key to finish placing the compound model
 	if (editingModel != nullptr && eventController->releasePlace(keysPressed, prevKeysPressed)) {
 
-		glm::vec3 position = gridPersonPos + (editingDepth + originalCollidingDistanceH) * gridPersonFront;
-		std::shared_ptr<model> editingCompoundModelHead = ptrModelsToRender[ptrModelsToRender.size() - editingCompoundModelPartsCount];
+		// glm::vec3 position = gridPersonPos + (editingDepth + originalCollidingDistanceH) * gridPersonFront;
+		// std::shared_ptr<model> editingCompoundModelHead = ptrModelsToRender[ptrModelsToRender.size() - editingCompoundModelPartsCount];
 
-		editingCompoundModelHead->position = position;
-		editingCompoundModelHead->rotate(editingRotationX, editingRotationY, editingRotationZ);
-		// scale this way to update the triangles
-		editingCompoundModelHead->scale(editingCompoundModelHead->getLocalWidth() * editingScale, editingCompoundModelHead->getLocalHeight() * editingScale, editingCompoundModelHead->getLocalDepth() * editingScale);
-		editingCompoundModelHead->headModelScale = editingScale;
-		editingCompoundModelHead->isTouched = false;
+		// editingCompoundModelHead->position = position;
+		// editingCompoundModelHead->rotate(editingRotationX, editingRotationY, editingRotationZ);
+		// // scale this way to update the triangles
+		// editingCompoundModelHead->scale(editingCompoundModelHead->getLocalWidth() * editingScale, editingCompoundModelHead->getLocalHeight() * editingScale, editingCompoundModelHead->getLocalDepth() * editingScale);
+		// editingCompoundModelHead->headModelScale = glm::vec3(editingScale);
+		// editingCompoundModelHead->isTouched = false;
 
 		editingModel = nullptr;
 		std::cout << "finished placing compound model." << std::endl;

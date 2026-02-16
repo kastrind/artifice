@@ -15,6 +15,13 @@ class CompoundModel;
 
 class Level
 {
+	private:
+
+		class metadata {
+			public:
+				unsigned long compoundModelId = 0;
+		};
+
 	public:
 
 		static const unsigned int NUM_ATTRIBUTES = 18;
@@ -44,12 +51,12 @@ class Level
 
 		bool assignedFlashLight = false;
 
+		metadata meta;
+
 		void save(std::string levelPath = "");
 
 		void load(std::string levelPath);
 
 		void deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<model>>& models);
-
-	private:
 
 };

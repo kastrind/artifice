@@ -1,3 +1,5 @@
+# metadata compoundModelId
+metadata,1769561498152
 # id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ
 1769561510446,cube,steel_border_wooden_box,0.1,0.1,0.1,true,-0,0,-0,0,0,0
 1769561512457,cube,steel_border_wooden_box,0.1,0.1,0.1,true,-0,0,-0,0.113377,-0.00238657,-0.0195928

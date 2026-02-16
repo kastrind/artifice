@@ -1,3 +1,5 @@
+# metadata compoundModelId
+metadata,1769593191065
 # id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ
 1769593239832,cube,lightbox,0.1,0.1,0.1,true,0.6,-0.3,-0,0,0,0
 1769593240845,cube,lightbox,0.1,0.1,0.1,true,0.6,-0.3,-0,-0.0349042,0.018907,0.150693
