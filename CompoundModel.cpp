@@ -17,6 +17,9 @@ void CompoundModel::save(std::string modelPath)
 	{
 		f << "# metadata compoundModelId" << std::endl;
 		f << "metadata," << id << std::endl;
+		f << "# for compound model heads:" << std::endl;
+		f << "# id compoundModel scaleX scaleY scaleZ rotationX rotationY rotationZ positionX positionY positionZ compoundModelId" << std::endl;
+		f << "# for primitive models (shapes):" << std::endl;
 		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ" << std::endl;
 
 		bool is_first = true;
@@ -25,6 +28,28 @@ void CompoundModel::save(std::string modelPath)
 		for (auto &ptrModel : models) // to avoid confusion, models can be rectangles, cuboids or cubes, and are parts of the whole compound model
 		{
 			model& m = *ptrModel;
+
+			// skip, because only head models of compound models need to be saved
+			if (m.compoundModelId > 0 && !m.isHeadModel)
+			{
+				continue;
+			}
+			// for compound models: saves head models of compound models
+			else if (m.compoundModelId > 0 && m.isHeadModel)
+			{
+				float thetaRotX = atan2(-m.rotationMatrix[2][1], m.rotationMatrix[2][2]);
+				float thetaRotY = atan2(m.rotationMatrix[2][0], sqrt(m.rotationMatrix[2][1] * m.rotationMatrix[2][1] + m.rotationMatrix[2][2] * m.rotationMatrix[2][2]));
+				float thetaRotZ = atan2(-m.rotationMatrix[1][0], m.rotationMatrix[0][0]);
+				f << m.id << ",compoundModel," << "1,1,1," << thetaRotX << "," << thetaRotY << "," << thetaRotZ;
+				if (is_first) { // first model position is always 0, 0, 0
+					first_position = m.position;
+					f << ",0,0,0," << m.compoundModelId << std::endl;
+					is_first = false;
+				}else { // else position is relative to first
+					f << "," << m.position.x - first_position.x << "," << m.position.y - first_position.y << "," << m.position.z - first_position.z << "," << m.compoundModelId << std::endl;
+				}
+				continue;
+			}
 
 			f << m.id << ",";
 
@@ -46,7 +71,7 @@ void CompoundModel::save(std::string modelPath)
 			{
 				float width = m.modelMesh.tris[0].p[1].x - m.modelMesh.tris[0].p[0].x;
 				float height = m.modelMesh.tris[0].p[0].y - m.modelMesh.tris[0].p[2].y;
-				f << "rectangle," << m.texture << "," << width << "," << height << "," <<  "0";
+				f << "rectangle," << m.texture << "," << width << "," << height << "," << "0";
 			}
 			float thetaRotX = atan2(-m.rotationMatrix[2][1], m.rotationMatrix[2][2]);
 			float thetaRotY = atan2(m.rotationMatrix[2][0], sqrt(m.rotationMatrix[2][1] * m.rotationMatrix[2][1] + m.rotationMatrix[2][2] * m.rotationMatrix[2][2]));
@@ -55,12 +80,11 @@ void CompoundModel::save(std::string modelPath)
 
 			if (is_first) { // first model position is always 0, 0, 0
 				first_position = m.position;
-				f << ",0,0,0";
+				f << ",0,0,0" << std::endl;
+				is_first = false;
 			}else { // else position is relative to first
 				f << "," << m.position.x - first_position.x << "," << m.position.y - first_position.y << "," << m.position.z - first_position.z << std::endl;
 			}
-
-			is_first = false;
 		}
 
 		//TODO: save lights of the model too

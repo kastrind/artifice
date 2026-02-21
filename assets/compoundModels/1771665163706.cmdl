@@ -1,0 +1,10 @@
+# metadata compoundModelId
+metadata,1771665163706
+# for compound model heads:
+# id compoundModel scaleX scaleY scaleZ rotationX rotationY rotationZ positionX positionY positionZ compoundModelId
+# for primitive models (shapes):
+# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ
+1771665148735,cube,box,0.1,0.1,0.1,true,-0,0,-0,0,0,0
+1771665149114,cube,box,0.1,0.1,0.1,true,-0,0,-0,0,0,0.2
+1771665149368,cube,box,0.1,0.1,0.1,true,-0,0,-0,0,0,0.3
+1771665157162,compoundModel,1,1,1,-0,0,-0,0.0999999,0.145,0.2,1769561498152

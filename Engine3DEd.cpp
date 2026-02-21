@@ -166,6 +166,17 @@ void Engine3D::edit(float elapsedTime)
 				if (compoundModelId == 0) {
 					compoundModelId = getTimeSinceEpoch();
 				}
+				CompoundModel compoundModel(compoundModelId);
+				for (auto& mdl : ptrModelsToRender) {
+					if (mdl->isInDOF && mdl->isInFOV) {
+						compoundModel.models.push_back(mdl);
+					}
+				}
+				if (compoundModel.models.size() > 0) {
+					compoundModel.save(cfg.COMPOUND_MODELS_PATH + cfg.PATH_SEP + std::to_string(compoundModelId) + ".cmdl");
+				}else {
+					std::cout << "No models in view to save compound model!" << std::endl;
+				}
 			}
 		}
 
@@ -387,9 +398,15 @@ void Engine3D::edit(float elapsedTime)
 		}else if (editOptions[editOptionIndex] == "placement mode" && eventController->scrollDown(keysPressed, prevKeysPressed) && editingModel == nullptr) {
 			placementMode = placementMode == placementmode::SHAPE ? placementmode::MODEL : placementmode::SHAPE;
 			std::cout << "placement mode: " << placementModeToString(placementMode) << std::endl;
+			if (placementMode == placementmode::MODEL) {
+				readCompoundModelFileNames();
+			}
 		}else if (editOptions[editOptionIndex] == "placement mode" && eventController->scrollUp(keysPressed, prevKeysPressed) && editingModel == nullptr) {
 			placementMode = placementMode == placementmode::SHAPE ? placementmode::MODEL : placementmode::SHAPE;
 			std::cout << "placement mode: " << placementModeToString(placementMode) << std::endl;
+			if (placementMode == placementmode::MODEL) {
+				readCompoundModelFileNames();
+			}
 
 		// decreases/increases collation height
 		} else if (editOptions[editOptionIndex] == "collationHeight" && eventController->scrollDown(keysPressed, prevKeysPressed)) {

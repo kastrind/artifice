@@ -484,6 +484,7 @@ void Engine3D::loadTextures(std::map<std::string, GLuint>& textureIdsMap, std::m
 void Engine3D::readCompoundModelFileNames()
 {
 	std::string filename;
+	compoundModelFileNames.clear();
 	
 	for (const auto & entry : std::filesystem::directory_iterator(cfg.COMPOUND_MODELS_PATH))
 	{
@@ -497,6 +498,7 @@ void Engine3D::readCompoundModelFileNames()
 			compoundModelFileNames.push_back(filename);
 		}
 	}
+	//std::cout << "read " << compoundModelFileNames.size() << " compound models" << std::endl;
 }
 
 void Engine3D::loadCubemaps(std::map<std::string, GLuint>& cubemapIdsMap, std::map<std::string, GLuint>& cubeLightmapIdsMap, std::map<std::string, GLuint>& cubeNormalmapIdsMap, std::map<std::string, GLuint>& cubeDisplacementmapIdsMap)

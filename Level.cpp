@@ -43,9 +43,9 @@ void Level::save(std::string levelPath)
 			}
 			f << sl.id << "," << "spot_light," << sl.position.x << "," << sl.position.y << "," << sl.position.z << "," << sl.color.r * 255 << "," << sl.color.g * 255 << "," << sl.color.b * 255 << "," << sl.diffuseIntensity << "," << sl.specularIntensity << "," << sl.constant << "," << sl.linear << "," << sl.quadratic << "," << sl.direction.x << "," << sl.direction.y << "," << sl.direction.z << "," << sl.cutoff << "," << sl.outerCutoff << std::endl;
 		}
-		f << "# for compound models:" << std::endl;
+		f << "# for compound model heads:" << std::endl;
 		f << "# id compoundModel scaleX scaleY scaleZ rotationX rotationY rotationZ positionX positionY positionZ compoundModelId" << std::endl;
-		f << "# for primitive models:" << std::endl;
+		f << "# for primitive models (shapes):" << std::endl;
 		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ" << std::endl;
 		for (auto &ptrModel : models)
 		{
@@ -88,7 +88,7 @@ void Level::save(std::string levelPath)
 			{
 				float width = m.getLocalWidth();
 				float height = m.getLocalHeight();
-				f << "rectangle," << m.texture << "," << width << "," << height << "," <<  "0";
+				f << "rectangle," << m.texture << "," << width << "," << height << "," << "0";
 			}
 			float thetaRotX = atan2(-m.rotationMatrix[2][1], m.rotationMatrix[2][2]);
 			float thetaRotY = atan2(m.rotationMatrix[2][0], sqrt(m.rotationMatrix[2][1] * m.rotationMatrix[2][1] + m.rotationMatrix[2][2] * m.rotationMatrix[2][2]));

@@ -2,7 +2,6 @@
 
 bool Engine3D::placeCompoundModel()
 {
-	readCompoundModelFileNames();
 
 	// pressing LCTRL + mouse wheel up/down cycles through edit options
 	if (keysPressed[SupportedKeys::LEFT_CTRL] && eventController->scrollDown(keysPressed, prevKeysPressed)) {
@@ -17,15 +16,21 @@ bool Engine3D::placeCompoundModel()
 	}else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "placement mode" && eventController->scrollDown(keysPressed, prevKeysPressed) && editingModel == nullptr) {
 		placementMode = placementMode == placementmode::SHAPE ? placementmode::MODEL : placementmode::SHAPE;
 		std::cout << "placement mode: " << placementModeToString(placementMode) << std::endl;
+		if (placementMode == placementmode::MODEL) {
+			readCompoundModelFileNames();
+		}
 	}else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "placement mode" && eventController->scrollUp(keysPressed, prevKeysPressed) && editingModel == nullptr) {
 		placementMode = placementMode == placementmode::SHAPE ? placementmode::MODEL : placementmode::SHAPE;
 		std::cout << "placement mode: " << placementModeToString(placementMode) << std::endl;
+		if (placementMode == placementmode::MODEL) {
+			readCompoundModelFileNames();
+		}
 
 	// cycles through compound models (important: must NOT be editing one already)
-	} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "model" && eventController->scrollUp(keysPressed, prevKeysPressed) && editingModel == nullptr) {
+	} else if (compoundModelFileNames.size() > 0 && compoundModelEditOptions[compoundModelEditOptionIndex] == "model" && eventController->scrollUp(keysPressed, prevKeysPressed) && editingModel == nullptr) {
 		if (++editingCompoundModelFileNameIndex > compoundModelFileNames.size() - 1) editingCompoundModelFileNameIndex = 0;
 		std::cout << "model: " << compoundModelFileNames[editingCompoundModelFileNameIndex] << std::endl;
-	} else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "model" && eventController->scrollDown(keysPressed, prevKeysPressed) && editingModel == nullptr) {
+	} else if (compoundModelFileNames.size() > 0 && compoundModelEditOptions[compoundModelEditOptionIndex] == "model" && eventController->scrollDown(keysPressed, prevKeysPressed) && editingModel == nullptr) {
 		if (--editingCompoundModelFileNameIndex > compoundModelFileNames.size() - 1) editingCompoundModelFileNameIndex = compoundModelFileNames.size() - 1;
 		std::cout << "model: " << compoundModelFileNames[editingCompoundModelFileNameIndex] << std::endl;
 
