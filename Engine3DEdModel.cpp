@@ -98,6 +98,7 @@ bool Engine3D::placeCompoundModel()
 		glm::vec3 position = gridPersonPos + (editingDepth + originalCollidingDistanceH) * gridPersonFront;
 		std::shared_ptr<model> editingCompoundModelHead = ptrModelsToRender[ptrModelsToRender.size() - editingCompoundModelPartsCount];
 
+		editingCompoundModelHead->isRootModel = true;
 		editingCompoundModelHead->position = position;
 		editingCompoundModelHead->rotate(editingRotationX, editingRotationY, editingRotationZ);
 		editingCompoundModelHead->modelMatrix = glm::translate(glm::mat4(1.0f), editingCompoundModelHead->position) * editingCompoundModelHead->rotationMatrix;

@@ -1,5 +1,5 @@
 # player position positionX positionY positionZ
-player_position,-1.65092,-0.393415,-2.81045
+player_position,2.51041,-1.66305,-3.7159
 # light positionX positionY positionZ colorR colorG colorB ambientIntensity diffuseIntensity specularIntensity
 light,0,-1,0,128,128,128,0.3,0.5,0.9
 # id flashlight colorR colorG colorB diffuseIntensity specularIntensity constant linear quadratic cutoff outerCutoff
@@ -39,7 +39,7 @@ light,0,-1,0,128,128,128,0.3,0.5,0.9
 1763545526286,spot_light,-0.347811,-0.845659,2.06181,255,255,255,0.5,0.9,1,0.7,1.8,-0.151053,-0.987565,0.043577,15,20
 1763545531463,spot_light,-0.391685,-0.885703,1.72197,255,255,255,0.5,0.9,1,0.7,1.8,-0.0279237,-0.999605,0.00303668,15,20
 # for compound model heads:
-# id compoundModel scaleX scaleY scaleZ rotationX rotationY rotationZ positionX positionY positionZ compoundModelId
+# id compoundModel scaleX scaleY scaleZ rotationX rotationY rotationZ positionX positionY positionZ compoundModelId isRoot
 # for primitive models (shapes):
 # id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ
 633205914,cube,lightbox,0.1,0.1,0.1,true,-0,0,-0,0,0,0
@@ -741,12 +741,8 @@ light,0,-1,0,128,128,128,0.3,0.5,0.9
 1770930534715,cube,box,0.1,0.1,0.1,true,0.3,-0.4,-0.7,-1.91,-0.27,-0.28
 1770930534715,cube,box,0.1,0.1,0.1,true,0.3,-0.4,-0.7,-1.91,-0.27,-0.18
 1770930534715,cube,box,0.1,0.1,0.1,true,0.3,-0.4,-0.7,-1.91,-0.27,-0.08
-1769593239832,compoundModel,1,1,1,-0,1,-0,-2.92,0.14,-1.44,1769593191065
-1769374920644,compoundModel,1,1,1,-0,1,-0,-2.92,0.54,-1.44,1769374916530
-1769593680972,compoundModel,1,1,1,-0,0,-0,-3.5,0.4,-2.35,1769593601717
-1769564201910,compoundModel,1,1,1,-0,0,-0,-3.385,0.66,-3.035,1771666530869
-1769566334108,compoundModel,1,1,1,-0,0,-0,-3.23,0.66,-3.12,1771666530869
-1769564201910,compoundModel,1,1,1,-0,0,-0,-3.395,0.585,-3.015,1771666530869
-1769566334108,compoundModel,1,1,1,-0,0,-0,-3.24,0.585,-3.1,1771666530869
-1771792822729,compoundModel,1,1,1,-0,0,-0,-2.335,-0.04,-3.455,1771666530869
-1771792822729,compoundModel,1,1,1,-0,0,-0,-2.18,-0.04,-3.54,1771666530869
+1769593239832,compoundModelRoot,1,1,1,-0,1,-0,-2.92,0.14,-1.44,1769593191065
+1769374920644,compoundModelRoot,1,1,1,-0,1,-0,-2.92,0.54,-1.44,1769374916530
+1769593680972,compoundModelRoot,1,1,1,-0,0,-0,-3.5,0.4,-2.35,1769593601717
+1769564201910,compoundModelRoot,1,1,1,-0,0,-0,-3.385,0.66,-3.035,1771666530869
+1771798209514,compoundModelRoot,1,1,1,-0,0,-0,1.765,-1.47,-3.255,1769593191065

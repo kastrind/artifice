@@ -44,25 +44,25 @@ void Level::save(std::string levelPath)
 			f << sl.id << "," << "spot_light," << sl.position.x << "," << sl.position.y << "," << sl.position.z << "," << sl.color.r * 255 << "," << sl.color.g * 255 << "," << sl.color.b * 255 << "," << sl.diffuseIntensity << "," << sl.specularIntensity << "," << sl.constant << "," << sl.linear << "," << sl.quadratic << "," << sl.direction.x << "," << sl.direction.y << "," << sl.direction.z << "," << sl.cutoff << "," << sl.outerCutoff << std::endl;
 		}
 		f << "# for compound model heads:" << std::endl;
-		f << "# id compoundModel scaleX scaleY scaleZ rotationX rotationY rotationZ positionX positionY positionZ compoundModelId" << std::endl;
+		f << "# id compoundModel scaleX scaleY scaleZ rotationX rotationY rotationZ positionX positionY positionZ compoundModelId isRoot" << std::endl;
 		f << "# for primitive models (shapes):" << std::endl;
 		f << "# id shape texture width height depth isSolid rotationX rotationY rotationZ positionX positionY positionZ" << std::endl;
 		for (auto &ptrModel : models)
 		{
 			model& m = *ptrModel;
 
-			// skip, because only head models of compound models need to be saved
-			if (m.compoundModelId > 0 && !m.isHeadModel)
+			// skip, because only root models of compound models need to be saved
+			if (m.compoundModelId > 0 && !m.isRootModel)
 			{
 				continue;
 			}
-			// for compound models: saves head models of compound models
-			else if (m.compoundModelId > 0 && m.isHeadModel)
+			// for compound models: saves root models of compound models
+			else if (m.compoundModelId > 0 && m.isRootModel)
 			{
 				float thetaRotX = atan2(-m.rotationMatrix[2][1], m.rotationMatrix[2][2]);
 				float thetaRotY = atan2(m.rotationMatrix[2][0], sqrt(m.rotationMatrix[2][1] * m.rotationMatrix[2][1] + m.rotationMatrix[2][2] * m.rotationMatrix[2][2]));
 				float thetaRotZ = atan2(-m.rotationMatrix[1][0], m.rotationMatrix[0][0]);
-				f << m.id << ",compoundModel," << m.headModelScale.x << "," << m.headModelScale.y << "," << m.headModelScale.z << "," << thetaRotX << "," << thetaRotY << "," << thetaRotZ << "," << m.position.x << "," << m.position.y << "," << m.position.z << "," << m.compoundModelId << std::endl;
+				f << m.id << ",compoundModelRoot," << m.headModelScale.x << "," << m.headModelScale.y << "," << m.headModelScale.z << "," << thetaRotX << "," << thetaRotY << "," << thetaRotZ << "," << m.position.x << "," << m.position.y << "," << m.position.z << "," << m.compoundModelId << std::endl;
 				continue;
 			}
 
@@ -277,7 +277,7 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 				spotLight.specularIntensity = specularIntensity;
 				flashLight = spotLight;
 				assignedFlashLight = true;
-			}else if (i == NUM_ATTRIBUTES - 7 && tokens[1]== "compoundModel") {
+			}else if (i == NUM_ATTRIBUTES - 7 && (tokens[1] == "compoundModelRoot" || tokens[1] == "compoundModel")) {
 				id = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
 				float scaleX = std::stof(tokens[2]);
 				float scaleY = std::stof(tokens[3]);
@@ -295,6 +295,9 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 				glm::vec3 headPosition = glm::vec3(positionX, positionY, positionZ);
 				Transform transform(headPosition, glm::vec3(rotationX, rotationY, rotationZ), glm::vec3(scaleX, scaleY, scaleZ));
 				std::shared_ptr<CompoundModel> cm = CompoundModel::create(cfg.COMPOUND_MODELS_PATH + cfg.PATH_SEP + std::to_string(compoundModelId) + ".cmdl", &transform, modelPointsCnt, cubePointsCnt, compoundModelId);
+				if (tokens[1] == "compoundModelRoot") {
+					cm->models[0]->isRootModel = true;
+				}
 				models.insert(models.end(), cm->models.begin(), cm->models.end());
 			}else if (i == 1 && tokens[0]== "metadata") {
 				char* compoundModelIdEndPtr;

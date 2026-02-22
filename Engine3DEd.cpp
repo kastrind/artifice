@@ -123,19 +123,34 @@ void Engine3D::edit(float elapsedTime)
 		bool isEdited = false;
 
 		// SAVE level or model on LCTRL + S release
-		if (prevKeysPressed[SupportedKeys::S] && keysPressed[SupportedKeys::S] == false && keysPressed[SupportedKeys::LEFT_CTRL]) {
+		if (prevKeysPressed[SupportedKeys::S] && keysPressed[SupportedKeys::S] == false && keysPressed[SupportedKeys::LEFT_CTRL])
+		{
 			mtx.lock();
-			if (modelMode == modelmode::CREATE) {
-				CompoundModel compoundModel;
-				for (auto& mdl : ptrModelsToRender) {
-					if (mdl->compoundModelId == compoundModelId) {
+			if (modelMode == modelmode::CREATE)
+			{
+				CompoundModel compoundModel(compoundModelId);
+				for (auto& mdl : ptrModelsToRender)
+				{
+					if (mdl->isInDOF && mdl->isInFOV)
+					{
 						compoundModel.models.push_back(mdl);
 					}
 				}
-				compoundModel.save(cfg.COMPOUND_MODELS_PATH + cfg.PATH_SEP + std::to_string(compoundModelId) + ".cmdl");
+				if (compoundModel.models.size() > 0)
+				{
+					compoundModel.save(cfg.COMPOUND_MODELS_PATH + cfg.PATH_SEP + std::to_string(compoundModelId) + ".cmdl");
+					compoundModelId = getTimeSinceEpoch();
+				}
+				else
+				{
+					std::cout << "No models in view to save compound model!" << std::endl;
+				}
 
-			}else {
-				if (level) {
+			}
+			else if (modelMode == modelmode::OFF)
+			{
+				if (level)
+				{
 					level->light = light;
 					level->pointLights = pointLights;
 					level->spotLights = spotLights;
@@ -165,17 +180,6 @@ void Engine3D::edit(float elapsedTime)
 			if (modelMode == modelmode::CREATE) {
 				if (compoundModelId == 0) {
 					compoundModelId = getTimeSinceEpoch();
-				}
-				CompoundModel compoundModel(compoundModelId);
-				for (auto& mdl : ptrModelsToRender) {
-					if (mdl->isInDOF && mdl->isInFOV) {
-						compoundModel.models.push_back(mdl);
-					}
-				}
-				if (compoundModel.models.size() > 0) {
-					compoundModel.save(cfg.COMPOUND_MODELS_PATH + cfg.PATH_SEP + std::to_string(compoundModelId) + ".cmdl");
-				}else {
-					std::cout << "No models in view to save compound model!" << std::endl;
 				}
 			}
 		}
