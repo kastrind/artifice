@@ -1,5 +1,7 @@
 #include "CompoundModel.h"
 
+std::set<unsigned long> CompoundModel::loadedIds;
+
 void CompoundModel::save(std::string modelPath)
 {
 	if (modelPath.empty()) {
@@ -128,7 +130,8 @@ void CompoundModel::load(std::string modelPath, Transform* transform)
 	tempLevel.deserializeModels(f, models);
 	id = tempLevel.meta.compoundModelId;
 	std::cout << "loaded compoundmodelid: " << id << std::endl;
-	if (models.size() > 0) {
+	if (models.size() > 0)
+	{
 		models[0]->compoundModelId = id;
 		models[0]->isHeadModel = true;
 		models[0]->rotate(transform->rotation.x, transform->rotation.y, transform->rotation.z);
@@ -138,8 +141,10 @@ void CompoundModel::load(std::string modelPath, Transform* transform)
 		models[0]->position = models[0]->modelMatrix[3];
 		models[0]->isTouched = true;
 	}
-	if (models.size() > 1) {
-		for (size_t i = 1; i < models.size(); ++i) {
+	if (models.size() > 1)
+	{
+		for (size_t i = 1; i < models.size(); ++i)
+		{
 			models[i]->compoundModelId = id;
 			models[i]->headModel = models[0];
 			models[i]->localOffset = models[i]->position;
@@ -155,6 +160,29 @@ void CompoundModel::load(std::string modelPath, Transform* transform)
 std::shared_ptr<CompoundModel> CompoundModel::create(std::string modelPath, Transform* transform, unsigned long modelPointsCntOffset, unsigned long cubePointsCntOffset, unsigned long id)
 {
 	CompoundModel compModel(modelPointsCntOffset, cubePointsCntOffset, id);
+	if (!registerLoadedId(id)) { // circular dependency protection
+		throw std::runtime_error("Circular dependency detected while loading compoound model " + std::to_string(id) + " from path " + modelPath);
+	}
 	compModel.load(modelPath, transform);
+	unregisterLoadedId(id); // circular dependency protection pt2
 	return std::make_shared<CompoundModel>(compModel);
+}
+
+bool CompoundModel::registerLoadedId(unsigned long id) {
+	if (id>0) {
+		auto result = loadedIds.insert(id);
+		bool inserted = result.second;
+		// std::cout << "Inserted? " << std::boolalpha << inserted << ", contents: ";
+		// for (const auto& value : loadedIds) {
+		// 	std::cout << value << " ";
+		// }
+		// std::cout << std::endl;
+		return inserted;
+	}
+	return true;
+}
+
+void CompoundModel::unregisterLoadedId(unsigned long id) {
+	loadedIds.erase(id);
+	// std::cout << "Erased " << id << " from set." << std::endl;
 }

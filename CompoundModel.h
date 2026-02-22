@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <set>
+#include <stdexcept>
 #include "Constructs3D.h"
 #include "Configuration.h"
 #include "Level.h"
@@ -40,5 +42,14 @@ class CompoundModel
 		void save(std::string modelPath = "");
 
 	private:
+
+		// keeps track of loaded compound models to protect from circular dependencies
+		static std::set<unsigned long> loadedIds;
+
+		// registers loading compound models to protect from circular dependencies
+		static bool registerLoadedId(unsigned long id);
+
+		// un-registers loaded compound models to protect from circular dependencies
+		static void unregisterLoadedId(unsigned long id);
 
 };
