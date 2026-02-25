@@ -184,6 +184,49 @@ void Engine3D::edit(float elapsedTime)
 			}
 		}
 
+		for (auto& mdl : ptrModelsToRender) {
+			// if (mdl->isInDOF && mdl->isInFOV && mdl->isRootModel) {
+				// std::cout << "located compound model root with id " << mdl->compoundModelId << std::endl;
+			// }
+		}
+
+		if (placementMode == placementmode::MODEL) {
+			if (modelIdToDelete == 0 && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] && modelsInFocus.size() > 0) {
+				mtx.lock();
+				auto modelInFocus = *(modelsInFocus.begin());
+				mtx.unlock();
+				if (modelInFocus->isRootModel) {
+					std::cout << "1 located compound model root with id " << modelInFocus->compoundModelId << std::endl;
+					modelIdToDelete = modelInFocus->id;
+				}else if (modelInFocus->isHeadModel) {
+					std::cout << "2 located compound model root with id " << modelInFocus->rootModel->compoundModelId << std::endl;
+					modelIdToDelete = modelInFocus->rootModel->id;
+				}else if (modelInFocus->compoundModelId > 0) {
+					std::cout << "3 located compound model root with id " << modelInFocus->headModel->rootModel->compoundModelId << std::endl;
+					modelIdToDelete = modelInFocus->headModel->rootModel->id;
+				}
+			}else if (modelIdToDelete > 0 && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK]==false) {
+				for (auto& mdl : ptrModelsToRender) {
+					if (mdl->compoundModelId == 0) continue;
+					if ( (mdl->id == modelIdToDelete) ||
+					(mdl->isHeadModel && mdl->rootModel->id == modelIdToDelete) ||
+					(!mdl->isHeadModel && mdl->headModel != nullptr && mdl->headModel->rootModel->id == modelIdToDelete)
+					) {
+						modelsToDelete.push_back(mdl);
+						std::cout << "shall delete model with id " << mdl->id << std::endl;
+					}
+				}
+				std::cout << "models to delete: " << modelsToDelete.size() << std::endl;
+				for (auto& mdl : modelsToDelete) {
+					removeModel(mdl);
+					isEdited = true;
+				}
+				modelsToDelete.clear();
+				modelIdToDelete = 0;
+				return;
+			}
+		}
+
 		if (placementMode == placementmode::MODEL) {
 			isEdited = placeCompoundModel();
 			updateVerticesFlag = isEdited;
@@ -377,8 +420,8 @@ void Engine3D::edit(float elapsedTime)
 				if (!deletingModel->isSolid && deletingModel->modelMesh.shape == shapetype::RECTANGLE && deletingModel->texture == "transparent") {
 					std::cout << "Cannot delete light handle model in normal editing mode. Press L to toggle lighting editing mode." << std::endl;
 				}else {
-				removeModel(deletingModel);
-				isEdited = true;
+					removeModel(deletingModel);
+					isEdited = true;
 				}
 				deletingModel.reset();
 			}else {

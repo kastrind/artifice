@@ -313,6 +313,8 @@ class Engine3D
 		unsigned int editingCompoundModelFileNameIndex = 0;
 		float editingScale = 1.0f;
 		unsigned long editingCompoundModelPartsCount = 0;
+		unsigned long modelIdToDelete = 0;
+		std::vector<std::shared_ptr<model>> modelsToDelete;
 
 		//lighting edit mode specific
 		bool isLightingEditingModeEnabled = false;

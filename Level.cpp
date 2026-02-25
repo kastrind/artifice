@@ -295,8 +295,14 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 				glm::vec3 headPosition = glm::vec3(positionX, positionY, positionZ);
 				Transform transform(headPosition, glm::vec3(rotationX, rotationY, rotationZ), glm::vec3(scaleX, scaleY, scaleZ));
 				std::shared_ptr<CompoundModel> cm = CompoundModel::create(cfg.COMPOUND_MODELS_PATH + cfg.PATH_SEP + std::to_string(compoundModelId) + ".cmdl", &transform, modelPointsCnt, cubePointsCnt, compoundModelId);
-				if (tokens[1] == "compoundModelRoot") {
+				if (tokens[1] == "compoundModelRoot") { // mark the compound models root
 					cm->models[0]->isRootModel = true;
+					cm->models[0]->id = id;
+					for (auto& mdl : cm->models) { // make head models point to the compound model root
+						if (mdl->isHeadModel) {
+							mdl->rootModel = cm->models[0];
+						}
+					}
 				}
 				models.insert(models.end(), cm->models.begin(), cm->models.end());
 			}else if (i == 1 && tokens[0]== "metadata") {

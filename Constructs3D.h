@@ -401,6 +401,7 @@ typedef struct model {
 		unsigned long id;
 		unsigned long compoundModelId = 0;
 		bool isRootModel = false; // for compound models, a root compound model is not contained by any other compound model
+		std::shared_ptr<model> rootModel = nullptr; // for compound models, points to the root compound model
 		bool isHeadModel = false; // for compound models, a head model is the first model contained
 		std::shared_ptr<model> headModel = nullptr; // for compound models, points to the head model
 		unsigned long sn;
