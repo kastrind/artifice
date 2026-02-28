@@ -306,13 +306,6 @@ bool EventController::modelModeToggle(bool* keysPressed, bool* prevKeysPressed)
 	return prevKeysPressed[keyMappings[KeyActions::MODEL_MODE]] && !keysPressed[keyMappings[KeyActions::MODEL_MODE]];
 }
 
-bool EventController::lightModeToggle(bool* keysPressed, bool* prevKeysPressed)
-{
-	return prevKeysPressed[keyMappings[KeyActions::LIGHT_MODE]] && !keysPressed[keyMappings[KeyActions::LIGHT_MODE]];
-}
-
-
-
 void EventController::bufferKeysPressed()
 {
 	mtx.lock();

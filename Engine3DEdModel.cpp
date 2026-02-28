@@ -14,13 +14,13 @@ bool Engine3D::placeCompoundModel()
 
 	// switches between model and shape placement mode (important: must NOT be editing one already)
 	}else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "placement mode" && eventController->scrollDown(keysPressed, prevKeysPressed) && editingModel == nullptr) {
-		placementMode = placementMode == placementmode::SHAPE ? placementmode::MODEL : placementmode::SHAPE;
+		placementMode = (placementmode)( (static_cast<int>(placementMode) + 1) % (static_cast<int>(placementmode::LIGHT) + 1) );
 		std::cout << "placement mode: " << placementModeToString(placementMode) << std::endl;
 		if (placementMode == placementmode::MODEL) {
 			readCompoundModelFileNames();
 		}
 	}else if (compoundModelEditOptions[compoundModelEditOptionIndex] == "placement mode" && eventController->scrollUp(keysPressed, prevKeysPressed) && editingModel == nullptr) {
-		placementMode = placementMode == placementmode::SHAPE ? placementmode::MODEL : placementmode::SHAPE;
+		placementMode = (placementmode)( (static_cast<int>(placementMode) + 1) % (static_cast<int>(placementmode::LIGHT) + 1) );
 		std::cout << "placement mode: " << placementModeToString(placementMode) << std::endl;
 		if (placementMode == placementmode::MODEL) {
 			readCompoundModelFileNames();

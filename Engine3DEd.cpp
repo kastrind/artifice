@@ -184,12 +184,6 @@ void Engine3D::edit(float elapsedTime)
 			}
 		}
 
-		for (auto& mdl : ptrModelsToRender) {
-			// if (mdl->isInDOF && mdl->isInFOV && mdl->isRootModel) {
-				// std::cout << "located compound model root with id " << mdl->compoundModelId << std::endl;
-			// }
-		}
-
 		if (placementMode == placementmode::MODEL) {
 			if (modelIdToDelete == 0 && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK] && modelsInFocus.size() > 0) {
 				mtx.lock();
@@ -234,10 +228,10 @@ void Engine3D::edit(float elapsedTime)
 		}
 
 		// toggles light editing mode
-		if (eventController->lightModeToggle(keysPressed, prevKeysPressed)) {
-			isLightingEditingModeEnabled = !isLightingEditingModeEnabled;
-			if (isLightingEditingModeEnabled) std::cout << "Lighting editing mode enabled" << std::endl;
-			else std::cout << "Lighting editing mode disabled" << std::endl;
+		if (placementMode == placementmode::LIGHT) {
+			isLightingEditingModeEnabled = true;
+		}else {
+			isLightingEditingModeEnabled = false;
 		}
 
 		if (isLightingEditingModeEnabled) {
@@ -443,13 +437,13 @@ void Engine3D::edit(float elapsedTime)
 
 		// switches between model and shape placement mode (important: must NOT be editing one already)
 		}else if (editOptions[editOptionIndex] == "placement mode" && eventController->scrollDown(keysPressed, prevKeysPressed) && editingModel == nullptr) {
-			placementMode = placementMode == placementmode::SHAPE ? placementmode::MODEL : placementmode::SHAPE;
+			placementMode = (placementmode)( (static_cast<int>(placementMode) + 1) % (static_cast<int>(placementmode::LIGHT) + 1) );
 			std::cout << "placement mode: " << placementModeToString(placementMode) << std::endl;
 			if (placementMode == placementmode::MODEL) {
 				readCompoundModelFileNames();
 			}
 		}else if (editOptions[editOptionIndex] == "placement mode" && eventController->scrollUp(keysPressed, prevKeysPressed) && editingModel == nullptr) {
-			placementMode = placementMode == placementmode::SHAPE ? placementmode::MODEL : placementmode::SHAPE;
+			placementMode = (placementmode)( (static_cast<int>(placementMode) + 1) % (static_cast<int>(placementmode::LIGHT) + 1) );
 			std::cout << "placement mode: " << placementModeToString(placementMode) << std::endl;
 			if (placementMode == placementmode::MODEL) {
 				readCompoundModelFileNames();
@@ -742,6 +736,8 @@ std::string Engine3D::placementModeToString(placementmode pm)
 			return "shape";
 		case placementmode::MODEL:
 			return "model";
+		case placementmode::LIGHT:
+			return "light";
 		default:
 			return "";
 	}

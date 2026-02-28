@@ -60,7 +60,6 @@ typedef enum
 	PREVIOUS,
 	JUMP,
 	MODEL_MODE,
-	LIGHT_MODE,
 	ALL_ACTIONS
 } KeyActions;
 
@@ -180,7 +179,6 @@ class EventController
 			keyActionsFromStr["PREVIOUS"] = KeyActions::PREVIOUS;
 			keyActionsFromStr["JUMP"] = KeyActions::JUMP;
 			keyActionsFromStr["MODEL_MODE"] = KeyActions::MODEL_MODE;
-			keyActionsFromStr["LIGHT_MODE"] = KeyActions::LIGHT_MODE;
 
 
 			sdlKeyCodeMappings[SupportedKeys::UP_ARROW] = SDL_KeyCode::SDLK_UP;
@@ -219,7 +217,6 @@ class EventController
 				mapActionToKey(KeyActions::PREVIOUS, keyPrevious, SupportedKeys::MOUSE_WHEEL_DOWN);
 				mapActionToKey(KeyActions::GRID_PRECISION, "G", SupportedKeys::G);
 				mapActionToKey(KeyActions::MODEL_MODE, "M", SupportedKeys::M);
-				mapActionToKey(KeyActions::LIGHT_MODE, "L", SupportedKeys::L);
 			}
 		}
 
@@ -276,8 +273,6 @@ class EventController
 		bool gridPrecisionToggle(bool* keysPressed, bool* prevKeysPressed);
 
 		bool modelModeToggle(bool* keysPressed, bool* prevKeysPressed);
-
-		bool lightModeToggle(bool* keysPressed, bool* prevKeysPressed);
 
 		std::mutex mtx;
 

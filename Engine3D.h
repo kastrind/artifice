@@ -53,7 +53,8 @@ enum class modelmode {
 
 enum class placementmode : unsigned int  {
 	SHAPE,
-	MODEL
+	MODEL,
+	LIGHT
 };
 
 enum class gridprecision {
