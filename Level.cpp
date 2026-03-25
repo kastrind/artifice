@@ -131,6 +131,7 @@ void Level::load(std::string levelPath)
 	// edit the lighting shader to reflect the number of spot lights
 	Utility::replaceLineInFile("shaders/lighting.glfs", 10, "#define NR_SPOT_LIGHTS " + std::to_string(spotLights.size()));
 
+	f.close();
 }
 
 void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<model>>& models)

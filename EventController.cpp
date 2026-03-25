@@ -306,6 +306,11 @@ bool EventController::modelModeToggle(bool* keysPressed, bool* prevKeysPressed)
 	return prevKeysPressed[keyMappings[KeyActions::MODEL_MODE]] && !keysPressed[keyMappings[KeyActions::MODEL_MODE]];
 }
 
+bool EventController::placementModeToggle(bool* keysPressed, bool* prevKeysPressed)
+{
+	return prevKeysPressed[keyMappings[KeyActions::PLACEMENT_MODE]] && !keysPressed[keyMappings[KeyActions::PLACEMENT_MODE]];
+}
+
 void EventController::bufferKeysPressed()
 {
 	mtx.lock();

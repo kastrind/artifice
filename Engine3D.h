@@ -309,7 +309,9 @@ class Engine3D
 		modelmode modelMode = modelmode::OFF;
 		unsigned long compoundModelId = 0;
 		std::vector<std::string> compoundModelFileNames;
-		std::vector<std::string> compoundModelEditOptions = {"placement mode", "model", "scale", "rotationX/pitch", "rotationY/yaw", "rotationZ/roll"};
+		std::map<std::string, uint64_t> compoundModelFileNames2Ids;
+		std::map<uint64_t, std::string> compoundModelIds2FileNames;
+		std::vector<std::string> compoundModelEditOptions = {"model", "scale", "rotationX/pitch", "rotationY/yaw", "rotationZ/roll"};
 		unsigned short compoundModelEditOptionIndex = 0;
 		unsigned int editingCompoundModelFileNameIndex = 0;
 		float editingScale = 1.0f;
@@ -318,7 +320,6 @@ class Engine3D
 		std::vector<std::shared_ptr<model>> modelsToDelete;
 
 		//lighting edit mode specific
-		bool isLightingEditingModeEnabled = false;
 		Preset preset;
 		std::vector<std::string> lightingEditOptions = {"light type", "preset light"};
 		unsigned short lightingEditOptionIndex = 0;
@@ -330,7 +331,7 @@ class Engine3D
 
 		//regular edit mode specific
 		placementmode placementMode = placementmode::SHAPE;
-		std::vector<std::string> editOptions = {"placement mode", "shape", "width", "height", "depth", "rotationX/pitch", "rotationY/yaw", "rotationZ/roll", "texture", "isSolid", "collationHeight", "collationWidth"};
+		std::vector<std::string> editOptions = {"shape", "width", "height", "depth", "rotationX/pitch", "rotationY/yaw", "rotationZ/roll", "texture", "isSolid", "collationHeight", "collationWidth"};
 		unsigned short editOptionIndex = 0;
 		unsigned int collationHeight = 1;
 		unsigned int collationWidth = 1;

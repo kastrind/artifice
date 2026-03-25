@@ -147,6 +147,26 @@ void Engine3D::edit(float elapsedTime)
 				}
 
 			}
+			else if (modelMode == modelmode::EDIT)
+			{
+				CompoundModel compoundModel(compoundModelId);
+				for (auto& mdl : ptrModelsToRender)
+				{
+					if (mdl->isInDOF && mdl->isInFOV)
+					{
+						compoundModel.models.push_back(mdl);
+					}
+				}
+				if (compoundModel.models.size() > 0)
+				{
+					compoundModel.save(cfg.COMPOUND_MODELS_PATH + cfg.PATH_SEP + compoundModelFileNames[editingCompoundModelFileNameIndex] + ".cmdl");
+					compoundModelId = getTimeSinceEpoch();
+				}
+				else
+				{
+					std::cout << "No models in view to save compound model!" << std::endl;
+				}
+			}
 			else if (modelMode == modelmode::OFF)
 			{
 				if (level)
@@ -181,6 +201,15 @@ void Engine3D::edit(float elapsedTime)
 				if (compoundModelId == 0) {
 					compoundModelId = getTimeSinceEpoch();
 				}
+			}
+		}
+
+					// switches between model and shape placement mode (important: must NOT be editing one already)
+		if ((eventController->placementModeToggle(keysPressed, prevKeysPressed)) && editingModel == nullptr) {
+			placementMode = (placementmode)( (static_cast<int>(placementMode) + 1) % (static_cast<int>(placementmode::LIGHT) + 1) );
+			std::cout << "placement mode: " << placementModeToString(placementMode) << std::endl;
+			if (placementMode == placementmode::MODEL) {
+				readCompoundModelFileNames();
 			}
 		}
 
@@ -227,14 +256,7 @@ void Engine3D::edit(float elapsedTime)
 			return;
 		}
 
-		// toggles light editing mode
 		if (placementMode == placementmode::LIGHT) {
-			isLightingEditingModeEnabled = true;
-		}else {
-			isLightingEditingModeEnabled = false;
-		}
-
-		if (isLightingEditingModeEnabled) {
 			// pressing LCTRL + mouse wheel up/down cycles through lighting edit options
 			if (keysPressed[SupportedKeys::LEFT_CTRL] && eventController->scrollDown(keysPressed, prevKeysPressed)) {
 				if (--lightingEditOptionIndex > lightingEditOptions.size() - 1) lightingEditOptionIndex = lightingEditOptions.size() - 1;
@@ -243,6 +265,7 @@ void Engine3D::edit(float elapsedTime)
 			} else if (keysPressed[SupportedKeys::LEFT_CTRL] && eventController->scrollUp(keysPressed, prevKeysPressed)) {
 				if (++lightingEditOptionIndex > lightingEditOptions.size() - 1) lightingEditOptionIndex = 0;
 				std::cout << "editing: " << lightingEditOptions[lightingEditOptionIndex] << std::endl;
+		
 
 			// switches among light types
 			} else if (lightingEditOptions[lightingEditOptionIndex] == "light type" && eventController->scrollDown(keysPressed, prevKeysPressed)) {
@@ -378,7 +401,7 @@ void Engine3D::edit(float elapsedTime)
 		// releases right mouse click to delete the model in focus
 		} else if (deletingModel != nullptr && deletingModel->removeFlag==false && keysPressed[SupportedKeys::MOUSE_RIGHT_CLICK]==false) {
 			// if lighting edit mode is enabled and the deleted model is a light handle, remove point/spot light with the same id
-			if (isLightingEditingModeEnabled && !deletingModel->isSolid && deletingModel->modelMesh.shape == shapetype::RECTANGLE && deletingModel->texture == "transparent") {
+			if (placementMode == placementmode::LIGHT && !deletingModel->isSolid && deletingModel->modelMesh.shape == shapetype::RECTANGLE && deletingModel->texture == "transparent") {
 				bool found = false;
 				for (auto it = pointLights.begin(); it != pointLights.end(); ++it) {
 					if ( it->id == deletingModel->id ) {
@@ -410,21 +433,21 @@ void Engine3D::edit(float elapsedTime)
 						}
 					}
 				}
-			}else if (!isLightingEditingModeEnabled) {
+			}else if (placementMode != placementmode::LIGHT) {
 				if (!deletingModel->isSolid && deletingModel->modelMesh.shape == shapetype::RECTANGLE && deletingModel->texture == "transparent") {
-					std::cout << "Cannot delete light handle model in normal editing mode. Press L to toggle lighting editing mode." << std::endl;
+					std::cout << "Cannot delete light handle model in shape/model placement mode." << std::endl;
 				}else {
 					removeModel(deletingModel);
 					isEdited = true;
 				}
 				deletingModel.reset();
 			}else {
-				std::cout << "Cannot delete model that is not a light handle in lighting editing mode. Press L to toggle lighting editing mode." << std::endl;
+				std::cout << "Cannot delete model that is not a light handle in lighting placement mode." << std::endl;
 				deletingModel.reset();
 			}
 		}
 
-		if (isLightingEditingModeEnabled) return;
+		if (placementMode == placementmode::LIGHT) return;
 
 		// pressing LCTRL + mouse wheel up/down cycles through edit options
 		if (keysPressed[SupportedKeys::LEFT_CTRL] && eventController->scrollDown(keysPressed, prevKeysPressed)) {
@@ -435,19 +458,19 @@ void Engine3D::edit(float elapsedTime)
 			if (++editOptionIndex > editOptions.size() - 1) editOptionIndex = 0;
 			std::cout << "editing: " << editOptions[editOptionIndex] << std::endl;
 
-		// switches between model and shape placement mode (important: must NOT be editing one already)
-		}else if (editOptions[editOptionIndex] == "placement mode" && eventController->scrollDown(keysPressed, prevKeysPressed) && editingModel == nullptr) {
-			placementMode = (placementmode)( (static_cast<int>(placementMode) + 1) % (static_cast<int>(placementmode::LIGHT) + 1) );
-			std::cout << "placement mode: " << placementModeToString(placementMode) << std::endl;
-			if (placementMode == placementmode::MODEL) {
-				readCompoundModelFileNames();
-			}
-		}else if (editOptions[editOptionIndex] == "placement mode" && eventController->scrollUp(keysPressed, prevKeysPressed) && editingModel == nullptr) {
-			placementMode = (placementmode)( (static_cast<int>(placementMode) + 1) % (static_cast<int>(placementmode::LIGHT) + 1) );
-			std::cout << "placement mode: " << placementModeToString(placementMode) << std::endl;
-			if (placementMode == placementmode::MODEL) {
-				readCompoundModelFileNames();
-			}
+		// // switches between model and shape placement mode (important: must NOT be editing one already)
+		// }else if (editOptions[editOptionIndex] == "placement mode" && eventController->scrollDown(keysPressed, prevKeysPressed) && editingModel == nullptr) {
+		// 	placementMode = (placementmode)( (static_cast<int>(placementMode) + 1) % (static_cast<int>(placementmode::LIGHT) + 1) );
+		// 	std::cout << "placement mode: " << placementModeToString(placementMode) << std::endl;
+		// 	if (placementMode == placementmode::MODEL) {
+		// 		readCompoundModelFileNames();
+		// 	}
+		// }else if (editOptions[editOptionIndex] == "placement mode" && eventController->scrollUp(keysPressed, prevKeysPressed) && editingModel == nullptr) {
+		// 	placementMode = (placementmode)( (static_cast<int>(placementMode) + 1) % (static_cast<int>(placementmode::LIGHT) + 1) );
+		// 	std::cout << "placement mode: " << placementModeToString(placementMode) << std::endl;
+		// 	if (placementMode == placementmode::MODEL) {
+		// 		readCompoundModelFileNames();
+		// 	}
 
 		// decreases/increases collation height
 		} else if (editOptions[editOptionIndex] == "collationHeight" && eventController->scrollDown(keysPressed, prevKeysPressed)) {

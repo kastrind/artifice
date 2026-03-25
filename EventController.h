@@ -26,6 +26,7 @@ typedef enum
 	V,
 	L,
 	M,
+	P,
 	MOUSE_LEFT,
 	MOUSE_RIGHT,
 	MOUSE_UP,
@@ -60,6 +61,7 @@ typedef enum
 	PREVIOUS,
 	JUMP,
 	MODEL_MODE,
+	PLACEMENT_MODE,
 	ALL_ACTIONS
 } KeyActions;
 
@@ -148,6 +150,7 @@ class EventController
 			supportedKeysFromStr["V"] = SupportedKeys::V;
 			supportedKeysFromStr["L"] = SupportedKeys::L;
 			supportedKeysFromStr["M"] = SupportedKeys::M;
+			supportedKeysFromStr["P"] = SupportedKeys::P;
 			supportedKeysFromStr["MOUSE_LEFT"] = SupportedKeys::MOUSE_LEFT;
 			supportedKeysFromStr["MOUSE_RIGHT"] = SupportedKeys::MOUSE_RIGHT;
 			supportedKeysFromStr["MOUSE_UP"] = SupportedKeys::MOUSE_UP;
@@ -179,6 +182,7 @@ class EventController
 			keyActionsFromStr["PREVIOUS"] = KeyActions::PREVIOUS;
 			keyActionsFromStr["JUMP"] = KeyActions::JUMP;
 			keyActionsFromStr["MODEL_MODE"] = KeyActions::MODEL_MODE;
+			keyActionsFromStr["PLACEMENT_MODE"] = KeyActions::PLACEMENT_MODE;
 
 
 			sdlKeyCodeMappings[SupportedKeys::UP_ARROW] = SDL_KeyCode::SDLK_UP;
@@ -195,6 +199,7 @@ class EventController
 			sdlKeyCodeMappings[SupportedKeys::V] = SDL_KeyCode::SDLK_v;
 			sdlKeyCodeMappings[SupportedKeys::L] = SDL_KeyCode::SDLK_l;
 			sdlKeyCodeMappings[SupportedKeys::M] = SDL_KeyCode::SDLK_m;
+			sdlKeyCodeMappings[SupportedKeys::P] = SDL_KeyCode::SDLK_p;
 			sdlKeyCodeMappings[SupportedKeys::LEFT_CTRL] = SDL_KeyCode::SDLK_LCTRL;
 			sdlKeyCodeMappings[SupportedKeys::LEFT_SHIFT] = SDL_KeyCode::SDLK_LSHIFT;
 			sdlKeyCodeMappings[SupportedKeys::LEFT_ALT] = SDL_KeyCode::SDLK_LALT;
@@ -217,6 +222,7 @@ class EventController
 				mapActionToKey(KeyActions::PREVIOUS, keyPrevious, SupportedKeys::MOUSE_WHEEL_DOWN);
 				mapActionToKey(KeyActions::GRID_PRECISION, "G", SupportedKeys::G);
 				mapActionToKey(KeyActions::MODEL_MODE, "M", SupportedKeys::M);
+				mapActionToKey(KeyActions::PLACEMENT_MODE, "P", SupportedKeys::P);
 			}
 		}
 
@@ -273,6 +279,8 @@ class EventController
 		bool gridPrecisionToggle(bool* keysPressed, bool* prevKeysPressed);
 
 		bool modelModeToggle(bool* keysPressed, bool* prevKeysPressed);
+
+		bool placementModeToggle(bool* keysPressed, bool* prevKeysPressed);
 
 		std::mutex mtx;
 
