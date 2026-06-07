@@ -37,6 +37,7 @@
 #include <set>
 #include <list>
 #include <map>
+#include <cstdint>
 #include <thread>
 #include <atomic>
 #include <mutex>
@@ -307,7 +308,7 @@ class Engine3D
 
 		//compound model edit mode specific
 		modelmode modelMode = modelmode::OFF;
-		unsigned long compoundModelId = 0;
+		uint64_t compoundModelId = 0;
 		std::vector<std::string> compoundModelFileNames;
 		std::map<std::string, uint64_t> compoundModelFileNames2Ids;
 		std::map<uint64_t, std::string> compoundModelIds2FileNames;
@@ -315,8 +316,8 @@ class Engine3D
 		unsigned short compoundModelEditOptionIndex = 0;
 		unsigned int editingCompoundModelFileNameIndex = 0;
 		float editingScale = 1.0f;
-		unsigned long editingCompoundModelPartsCount = 0;
-		unsigned long modelIdToDelete = 0;
+		uint64_t editingCompoundModelPartsCount = 0;
+		uint64_t modelIdToDelete = 0;
 		std::vector<std::shared_ptr<model>> modelsToDelete;
 
 		//lighting edit mode specific
@@ -352,8 +353,8 @@ class Engine3D
 		std::shared_ptr<model> deletingModel = nullptr;
 		std::shared_ptr<model> copyingModel = nullptr;
 		model modelInFocusTmp;
-		unsigned long modelPointsCnt = 0;
-		unsigned long cubePointsCnt = 0;
+		uint64_t modelPointsCnt = 0;
+		uint64_t cubePointsCnt = 0;
 
 		bool keysPressed[SupportedKeys::ALL_KEYS];
 		bool prevKeysPressed[SupportedKeys::ALL_KEYS];
@@ -439,7 +440,7 @@ class Engine3D
 
 		void addModel(model& mdl);
 
-		void addLightHandleModel(unsigned long id, glm::vec3 position, glm::mat4 rotationMatrix = glm::mat4(1.0f));
+		void addLightHandleModel(uint64_t id, glm::vec3 position, glm::mat4 rotationMatrix = glm::mat4(1.0f));
 
 		void removeModel(std::shared_ptr<model> m);
 

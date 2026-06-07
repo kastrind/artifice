@@ -37,7 +37,7 @@ void Engine3D::addModel(float editingWidth, float editingHeight, float editingDe
 	}
 }
 
-void Engine3D::addLightHandleModel(unsigned long id, glm::vec3 position, glm::mat4 rotationMatrix) {
+void Engine3D::addLightHandleModel(uint64_t id, glm::vec3 position, glm::mat4 rotationMatrix) {
 	model m;
 	rectangle rectangle(0.01f, 0.01f, 0.0f, 0.0f, 0.0f);
 	model mdl(id, modelPointsCnt, "transparent", position, rectangle, false);
@@ -81,12 +81,12 @@ void Engine3D::removeModel(std::shared_ptr<model> m)
 {
 	mtx.lock();
 	m->removeFlag = true;
-	unsigned long i = 0;
+	uint64_t i = 0;
 	for (i; i < ptrModelsToRender.size(); i++)
 	{
 		if (ptrModelsToRender[i]->removeFlag) break;
 	}
-	unsigned long removeIndex = i;
+	uint64_t removeIndex = i;
 	std::cout << "removing model with index = " << i << " and sn = " << ptrModelsToRender[i]->sn << std::endl;
 	if (m->modelMesh.shape == shapetype::CUBE)
 	{
@@ -312,7 +312,7 @@ void Engine3D::edit(float elapsedTime)
 			if (editingModel == nullptr && keysPressed[SupportedKeys::MOUSE_LEFT_CLICK] &&
 				(lightingTypeOptions[lightingTypeOptionIndex] == "point" || lightingTypeOptions[lightingTypeOptionIndex] == "spot")) {
 				glm::vec3 position = gridPersonPos+ (editingDepth + originalCollidingDistanceH) * gridPersonFront;
-				unsigned long id = getTimeSinceEpoch();
+				uint64_t id = getTimeSinceEpoch();
 				addLightHandleModel(id, position);
 				updateVerticesFlag = true;
 				//personSpeedFactor /= 100;

@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <cstdint>
 #include "Constructs3D.h"
 #include "Light.h"
 #include "Utility.h"
@@ -19,7 +20,7 @@ class Level
 
 		class metadata {
 			public:
-				unsigned long compoundModelId = 0;
+				uint64_t compoundModelId = 0;
 		};
 
 	public:
@@ -35,9 +36,9 @@ class Level
 
 		std::string levelPath;
 
-		unsigned long modelPointsCnt = 0;
+		uint64_t modelPointsCnt = 0;
 
-		unsigned long cubePointsCnt = 0;
+		uint64_t cubePointsCnt = 0;
 
 		glm::vec3 playerPosition;
 

@@ -10,6 +10,7 @@
 #include <vector>
 #include <iostream>
 #include <memory>
+#include <cstdint>
 
 
 typedef enum axis {
@@ -398,13 +399,13 @@ typedef struct model {
 
 	public:
 
-		unsigned long id;
-		unsigned long compoundModelId = 0;
+		uint64_t id;
+		uint64_t compoundModelId = 0;
 		bool isRootModel = false; // for compound models, a root compound model is not contained by any other compound model
 		std::shared_ptr<model> rootModel = nullptr; // for compound models, points to the root compound model
 		bool isHeadModel = false; // for compound models, a head model is the first model contained
 		std::shared_ptr<model> headModel = nullptr; // for compound models, points to the head model
-		unsigned long sn;
+		uint64_t sn;
 		std::string texture;
 		glm::vec3 position;
 		glm::vec3 localOffset = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -436,14 +437,14 @@ typedef struct model {
 		glm::vec3 front = glm::vec3(0.0, 1.0, 0.0);
 		float highestY = 0.0f;
 		float lowestY = 0.0f;
-		unsigned long ignoreForCycles = 0;
+		uint64_t ignoreForCycles = 0;
 
 		model() {}
 
-		model(unsigned long id, unsigned long sn, std::string texture, glm::vec3 position, mesh modelMesh, bool isSolid = true)
+		model(uint64_t id, uint64_t sn, std::string texture, glm::vec3 position, mesh modelMesh, bool isSolid = true)
 		: id(id), sn(sn), texture(texture), position(position), modelMesh(modelMesh), isSolid(isSolid) {}
 
-		model(unsigned long id, unsigned long sn, std::string texture, glm::vec3 position, shape& shape, bool isSolid = true)
+		model(uint64_t id, uint64_t sn, std::string texture, glm::vec3 position, shape& shape, bool isSolid = true)
 		: id(id), sn(sn), texture(texture), position(position), isSolid(isSolid)
 		{
 			modelMesh.tris = shape.triangles;
@@ -624,7 +625,7 @@ typedef struct cubeModel : public model {
 		bool isSkyBox = false;
 		bool isActiveSkyBox = false;
 
-		cubeModel(unsigned long id, unsigned long sn, std::string texture, glm::vec3 position, shape& shape, bool isSolid = true)
+		cubeModel(uint64_t id, uint64_t sn, std::string texture, glm::vec3 position, shape& shape, bool isSolid = true)
 		: model(id, sn, texture, position, shape, isSolid) {}
 
 		cubeModel(model& m) : model(m) {}

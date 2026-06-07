@@ -1,14 +1,14 @@
-
 #pragma once
 
 #include <glm/glm.hpp>
 #include <string>
+#include <cstdint>
 
 class Light {
 
 	public:
 
-		unsigned long id = 0;
+		uint64_t id = 0;
 
 		glm::vec3 direction;
 

@@ -35,9 +35,6 @@ class Preset
 				s << line;
 				s >> streamstring;
 
-				unsigned long id;
-				char* idEndPtr;
-
 				//std::cout << " line: " << line << std::endl;
 
 				if (streamstring.c_str()[0] == '#')
@@ -107,6 +104,7 @@ class Preset
 					}
 				}
 			}
+			f.close();
 		}
 
 		std::vector<Light>& getDirectionalLights() {

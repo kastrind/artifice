@@ -149,7 +149,7 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 		s << line;
 		s >> streamstring;
 
-		unsigned long id;
+		uint64_t id;
 		char* idEndPtr;
 
 		std::string shape, texture;
@@ -176,7 +176,7 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 			}
 
 			if (i == NUM_ATTRIBUTES - 6 && (tokens[1] == "rectangle" || tokens[1] == "cuboid" || tokens[1] == "cube" || tokens[1] == "skyBox" || tokens[1] == "skybox")) {
-				id      = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
+				id      = std::strtoull(tokens[0].c_str(), &idEndPtr, 0);
 				shape   = tokens[1];
 				texture = tokens[2];
 				width   = std::stof(tokens[3]);
@@ -229,7 +229,7 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 				light.diffuseIntensity = std::stof(tokens[8]);
 				light.specularIntensity = std::stof(tokens[9]);
 			}else if (tokens[1] == "point_light") {
-				id = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
+				id = std::strtoull(tokens[0].c_str(), &idEndPtr, 0);
 				glm::vec3 position = glm::vec3(std::stof(tokens[2]), std::stof(tokens[3]), std::stof(tokens[4]));
 				glm::vec3 color = glm::vec3(std::stoi(tokens[5])/255.0f, std::stoi(tokens[6])/255.0f, std::stoi(tokens[7])/255.0f);
 				float diffuseIntensity = std::stof(tokens[8]);
@@ -244,7 +244,7 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 				pointLight.specularIntensity = specularIntensity;
 				pointLights.push_back(pointLight);
 			}else if (tokens[1] == "spot_light") {
-				id = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
+				id = std::strtoull(tokens[0].c_str(), &idEndPtr, 0);
 				glm::vec3 position = glm::vec3(std::stof(tokens[2]), std::stof(tokens[3]), std::stof(tokens[4]));
 				glm::vec3 color = glm::vec3(std::stoi(tokens[5])/255.0f, std::stoi(tokens[6])/255.0f, std::stoi(tokens[7])/255.0f);
 				float diffuseIntensity = std::stof(tokens[8]);
@@ -262,7 +262,7 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 				spotLight.specularIntensity = specularIntensity;
 				spotLights.push_back(spotLight);
 			}else if (tokens[1] == "flashlight") {
-				id = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
+				id = std::strtoull(tokens[0].c_str(), &idEndPtr, 0);
 				glm::vec3 color = glm::vec3(std::stoi(tokens[2])/255.0f, std::stoi(tokens[3])/255.0f, std::stoi(tokens[4])/255.0f);
 				float diffuseIntensity = std::stof(tokens[5]);
 				float specularIntensity = std::stof(tokens[6]);
@@ -279,7 +279,7 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 				flashLight = spotLight;
 				assignedFlashLight = true;
 			}else if (i == NUM_ATTRIBUTES - 7 && (tokens[1] == "compoundModelRoot" || tokens[1] == "compoundModel")) {
-				id = std::strtoul(tokens[0].c_str(), &idEndPtr, 0);
+				id = std::strtoull(tokens[0].c_str(), &idEndPtr, 0);
 				float scaleX = std::stof(tokens[2]);
 				float scaleY = std::stof(tokens[3]);
 				float scaleZ = std::stof(tokens[4]);
@@ -289,9 +289,9 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 				positionX = std::stof(tokens[8]);
 				positionY = std::stof(tokens[9]);
 				positionZ = std::stof(tokens[10]);
-				unsigned long compoundModelId;
+				uint64_t compoundModelId;
 				char* compoundModelIdEndPtr;
-				compoundModelId = std::strtoul(tokens[11].c_str(), &compoundModelIdEndPtr, 0);
+				compoundModelId = std::strtoull(tokens[11].c_str(), &compoundModelIdEndPtr, 0);
 
 				glm::vec3 headPosition = glm::vec3(positionX, positionY, positionZ);
 				Transform transform(headPosition, glm::vec3(rotationX, rotationY, rotationZ), glm::vec3(scaleX, scaleY, scaleZ));
@@ -308,7 +308,7 @@ void Level::deserializeModels(std::ifstream& f, std::vector<std::shared_ptr<mode
 				models.insert(models.end(), cm->models.begin(), cm->models.end());
 			}else if (i == 1 && tokens[0]== "metadata") {
 				char* compoundModelIdEndPtr;
-				meta.compoundModelId = std::strtoul(tokens[1].c_str(), &compoundModelIdEndPtr, 0);
+				meta.compoundModelId = std::strtoull(tokens[1].c_str(), &compoundModelIdEndPtr, 0);
 			}
 		}
 	}

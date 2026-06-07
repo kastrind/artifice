@@ -1,6 +1,6 @@
 #include "CompoundModel.h"
 
-std::set<unsigned long> CompoundModel::loadedIds;
+std::set<uint64_t> CompoundModel::loadedIds;
 
 void CompoundModel::save(std::string modelPath)
 {
@@ -157,7 +157,7 @@ void CompoundModel::load(std::string modelPath, Transform* transform)
 	cubePointsCnt = tempLevel.cubePointsCnt;
 }
 
-std::shared_ptr<CompoundModel> CompoundModel::create(std::string modelPath, Transform* transform, unsigned long modelPointsCntOffset, unsigned long cubePointsCntOffset, unsigned long id)
+std::shared_ptr<CompoundModel> CompoundModel::create(std::string modelPath, Transform* transform, uint64_t modelPointsCntOffset, uint64_t cubePointsCntOffset, uint64_t id)
 {
 	CompoundModel compModel(modelPointsCntOffset, cubePointsCntOffset, id);
 	if (!registerLoadedId(id)) { // circular dependency protection
@@ -168,7 +168,7 @@ std::shared_ptr<CompoundModel> CompoundModel::create(std::string modelPath, Tran
 	return std::make_shared<CompoundModel>(compModel);
 }
 
-bool CompoundModel::registerLoadedId(unsigned long id) {
+bool CompoundModel::registerLoadedId(uint64_t id) {
 	if (id>0) {
 		auto result = loadedIds.insert(id);
 		bool inserted = result.second;
@@ -182,7 +182,7 @@ bool CompoundModel::registerLoadedId(unsigned long id) {
 	return true;
 }
 
-void CompoundModel::unregisterLoadedId(unsigned long id) {
+void CompoundModel::unregisterLoadedId(uint64_t id) {
 	loadedIds.erase(id);
 	// std::cout << "Erased " << id << " from set." << std::endl;
 }
