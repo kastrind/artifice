@@ -499,9 +499,56 @@ void Engine3D::readCompoundModelFileNames()
 			}
 			compoundModelFileNames.push_back(filename);
 
-			uint64_t compoundModelId = std::strtoull(filename.c_str(), NULL, 0);
+			std::ifstream f(entry.path());
+			if (!f.is_open())
+			{
+				throw std::runtime_error("Failed to read compound model from path " + filename);
+			}
+
+			uint64_t compoundModelId = 0;
+
+			while (!f.eof())
+			{
+				char line[256];
+				f.getline(line, 256);
+
+				std::stringstream s;
+				std::string streamstring;
+		
+				s << line;
+				s >> streamstring;
+
+				//std::cout << " line: " << line << std::endl;
+
+				if (streamstring.c_str()[0] == '#')
+				{
+					//std::cout << "ignoring comment " << streamstring.c_str() << std::endl;
+					continue;
+				}
+				else
+				{
+					std::string linestring(line);
+					std::istringstream ss(linestring);
+					std::string token;
+					unsigned int i = -1;
+					std::string tokens[Level::NUM_ATTRIBUTES];
+					while(std::getline(ss, token, ',')) {
+						if (i == 1 && tokens[0] == "metadata") break;
+						tokens[++i] = token;
+					}
+					if (i == 1 && tokens[0]== "metadata") {
+						char* compoundModelIdEndPtr;
+						compoundModelId = std::strtoul(tokens[1].c_str(), &compoundModelIdEndPtr, 0);
 			compoundModelFileNames2Ids[filename] = compoundModelId;
 			compoundModelIds2FileNames[compoundModelId] = filename;
+		}
+	}
+}
+			f.close();
+			if (compoundModelId == 0)
+			{
+				throw std::runtime_error("Failed to read compound model id from path " + filename);
+			}
 		}
 	}
 }

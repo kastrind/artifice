@@ -46,6 +46,14 @@ OBJ_NAME = artifice
 all : $(SRCS)
 	$(CC) $(SRCS) $(INCLUDE_PATHS) $(LIBRARY_PATHS) $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME)
 
+TEST_SRCS = tests/test_main.cpp tests/geometry_tests.cpp tests/lighting_tests.cpp
+TEST_OBJ_NAME = artifice_tests
+TEST_LINKER_FLAGS = $(LINKER_FLAGS) -lgtest -lgtest_main -lpthread
+
+test : $(TEST_SRCS)
+	$(CC) $(TEST_SRCS) $(INCLUDE_PATHS) $(LIBRARY_PATHS) $(COMPILER_FLAGS) $(TEST_LINKER_FLAGS) -o $(TEST_OBJ_NAME)
+	./$(TEST_OBJ_NAME)
+
 link :
 	$(CC) ${OBJS} $(INCLUDE_PATHS) $(LIBRARY_PATHS) $(LINKER_FLAGS) -o ${OBJ_NAME}
 
