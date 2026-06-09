@@ -42,7 +42,7 @@ C:\msys64\mingw64\bin>mklink make mingw32-make.exe
 
 1. Install these packages:
 ```
-sudo apt install libsdl2-dev libglew-dev libgl1-mesa-dev libglm-dev
+sudo apt install libsdl2-dev libglew-dev libgl1-mesa-dev libglm-dev libgtest-dev
 ```
 
 2. Enter `make all`

@@ -1,4 +1,5 @@
 artifice
+artifice_tests
 *.exe
 *.o
 *.tmp.cpp
